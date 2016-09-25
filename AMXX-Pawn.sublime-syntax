@@ -160,6 +160,7 @@ contexts:
       push:
         - match: \)
           scope: function.parens.pawn
+          pop: true
         - include: main
         - include: function_block
     - match: '^[ ;]*([A-Za-z_]\w*:)?([A-Za-z_][\w_]*)[\s]*(\()'
@@ -170,6 +171,7 @@ contexts:
       push:
         - match: \)
           scope: function.parens.pawn
+          pop: true
         - include: main
         - include: function_block
 

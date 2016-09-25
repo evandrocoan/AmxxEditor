@@ -181,15 +181,16 @@ class AMXXEditor(sublime_plugin.EventListener):
 			link_web = None
 			
 		html  = '<style>'+ g_inteltip_style +'</style>'
-			
+		html += '<div class="top">'
 		html += '<a class="file" href="'+link_local+'">'+include+'</a>'
 		if link_web :
 			html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
 			
-		html += '<br><br>'
+		html += '</div><div class="bottom">'
 		
 		html += '<span class="func_type">Location:</span><br>'
 		html += '<span class="func_name">'+file_name+'</span>'
+		html += '</div>'
 			
 		view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
 	
@@ -246,8 +247,6 @@ class AMXXEditor(sublime_plugin.EventListener):
 				html += '<span class="return">Return:</span> <span class="return_type">'+found[4]+'</span>'
 			
 			html += '</div>'									############################## END
-			
-			print_debug(0, "html:[%s]" % html)
 			
 			view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
 			view.add_regions("inteltip", [ word_region ], "inteltip.pawn")
@@ -1213,7 +1212,7 @@ def print_debug(level, msg) :
 		print("[AMXX-Editor]: " + msg)
 #}
 
-EDITOR_VERSION = "2.0"
+EDITOR_VERSION = "2.1"
 FUNC_TYPES = [ "Function", "Public", "Stock", "Forward", "Native" ]
 
 g_constants_list = set()
