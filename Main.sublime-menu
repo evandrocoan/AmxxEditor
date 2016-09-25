@@ -14,14 +14,12 @@
 			},
 			{ "caption": "-" },
 			{
-				"command": "open_file",
-				"args": {"file": "${packages}/amxmodx/example-settings.sublime-settings"},
-				"caption": "View Example Settings"
-			},
-			{
-				"command": "open_file",
-				"args": {"file": "${packages}/User/amxx.sublime-settings"},
-				"caption": "Edit User Settings"
+				"command": "edit_settings", "args":
+				{
+					"base_file": "${packages}/amxmodx/amxx.sublime-settings",
+					"default": "{\n\t$0\n}\n"
+				},
+				"caption": "Edit Settings"
 			},
 			{ "caption": "-" },
 			{
@@ -33,5 +31,5 @@
 				"caption": "New Plug-In"
 			}
 		]
-    }
+	}
 ]

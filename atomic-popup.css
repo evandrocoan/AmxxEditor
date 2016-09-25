@@ -1,18 +1,18 @@
 html {
-	background-color: #333;
+	background-color: #334;
 	margin: -5px;
 	font-family: verdana;
 	font-size: 11px;
 }
 .top {
-	background-color: #2A2A2A;
+	background-color: #2A2A33;
 	padding: 5px 10px 7px 10px;
 	border-top-right-radius: 10px;
 	border-top-left-radius: 10px;
 }
 
 .bottom {
-	background-color: #262626;
+	background-color: #262633;
 	margin-top: 5px;
 	padding: 5px 10px 5px 10px;	
 }

@@ -46,7 +46,7 @@ def new_file(type):
 
 	view.set_syntax_file('AMXX-Pawn.sublime-syntax')
 	view.set_name('untitled.'+type)
-		
+	
 	plugin_template = sublime.load_resource("Packages/amxmodx/default."+type)
 	plugin_template = plugin_template.replace("\r", "")
 	
@@ -57,10 +57,16 @@ class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
 #{
 	def run(self):
 	#{
-		about = "Sublime AMXX-Editor v"+ EDITOR_VERSION +" by Destro\n\n"
-		about += "Credits:\n"
-		about += "ppalex7 (SourcePawn Completions)\n"
-		about += "sasske (white-pawn.tmTheme)"
+		about = "Sublime AMXX-Editor v"+ EDITOR_VERSION +" by Destro\n\n\n"
+		
+		about += "CREDITs:\n"
+		about += "- Great:\n"
+		about += "   ppalex7   (SourcePawn Completions)\n\n"
+		
+		about += "- Contributors:\n"
+		about += "   sasske    (white color scheme)\n"
+		about += "   addons_zz (npp color scheme)\n"
+		about += "   KliPPy    (build version)\n"
 		
 		sublime.message_dialog(about)
 	#}
@@ -102,11 +108,43 @@ def check_update(bycommand=0) :
 	#}
 #}
 		
+class AmxxBuildVerCommand(sublime_plugin.TextCommand):
+	def run(self, edit):
+		region = self.view.find("^#define\s+(?:PLUGIN_)?VERSION\s+\".+\"", 0, sublime.IGNORECASE)
+		if region == None :
+			region = self.view.find("new\s+const\s+(?:PLUGIN_)?VERSION\s*\[\s*\]\s*=\s*\".+\"", 0, sublime.IGNORECASE)
+			if region == None :
+				return
+		
+		line = self.view.substr(region)
+		result = re.match("(.*\"(?:v)?\d{1,2}\.\d{1,2}\.(?:\d{1,2}-)?)(\d+)(b(?:eta)?)?\"", line)
+		if not result :
+			return
+
+		build = int(result.group(2))
+		build += 1
+		
+		beta = result.group(3)
+		if not beta :
+			beta = ""
+		
+		self.view.replace(edit, region, result.group(1) + str(build) + beta + '\"')
+				
 class AMXXEditor(sublime_plugin.EventListener):
 	def __init__(self) :
 		process_thread.start()
 		self.delay_queue = None
 		file_observer.start()
+
+	def on_window_command(self, window, cmd, args) :
+		if cmd != "build" :
+			return
+			
+		view = window.active_view()
+		if not self.is_amxmodx_file(view) or not g_enable_buildversion :
+			return
+			
+		view.run_command("amxx_build_ver")
 
 	def on_selection_modified(self, view) :
 		if not self.is_amxmodx_file(view) or not g_enable_inteltip :
@@ -150,7 +188,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 			
 		html += '<br><br>'
 		
-		html += '<span class="func_type">Ubicacion:</span><br>'
+		html += '<span class="func_type">Location:</span><br>'
 		html += '<span class="func_name">'+file_name+'</span>'
 			
 		view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
@@ -191,12 +229,14 @@ class AMXXEditor(sublime_plugin.EventListener):
 				link_web = ''
 			
 			html  = '<style>'+ g_inteltip_style +'</style>'
+			html += '<div class="top">'							############################## TOP
 			
 			html += '<a class="file" href="'+link_local+'">'+os.path.basename(found[2])+'</a>'
 			if link_web:
 				html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
 				
-			html += '<br><br>'
+			html += '</div><div class="bottom">'		############################## BOTTOM
+			
 			html += '<span class="func_type">'+FUNC_TYPES[found[3]]+':</span> <span class="func_name">'+found[0]+'</span>'
 			html += '<br>'
 			html += '<span class="params">Params:</span> <span class="params_definition">('+ simple_escape(found[1]) +')</span>'
@@ -204,6 +244,10 @@ class AMXXEditor(sublime_plugin.EventListener):
 			
 			if found[4] :
 				html += '<span class="return">Return:</span> <span class="return_type">'+found[4]+'</span>'
+			
+			html += '</div>'									############################## END
+			
+			print_debug(0, "html:[%s]" % html)
 			
 			view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
 			view.add_regions("inteltip", [ word_region ], "inteltip.pawn")
@@ -269,10 +313,10 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 	def on_query_completions(self, view, prefix, locations):
 		if not self.is_amxmodx_file(view):
-			return
+			return None
 			
-		if not view.match_selector(locations[0], 'source.sma -string -comment -constant') :
-			return []
+		if view.match_selector(locations[0], 'source.sma string') :
+			return ([], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 		
 		return (self.generate_funcset(view.file_name()), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 
@@ -328,12 +372,13 @@ def settings_modified(register_callback = False) :
 		file_name = sublime.packages_path() + "/User/amxx.sublime-settings"
 		
 		if not os.path.isfile(file_name):
-			default = sublime.load_resource("Packages/amxmodx/example-settings.sublime-settings")
+			default = sublime.load_resource("Packages/amxmodx/amxx.sublime-settings")
+			default = default.replace("Example:", "User Setting:")
 			f = open(file_name, 'w')
 			f.write(default)
 			f.close()
-		
-		sublime.active_window().open_file(file_name)
+
+		sublime.active_window().run_command("edit_settings", {"base_file": "${packages}/amxmodx/amxx.sublime-settings", "default": "{\n\t$0\n}\n"})
 		return
 	#}
 		
@@ -408,9 +453,10 @@ def save_others_settings(settings) :
 	g_inteltip_style = g_inteltip_style.replace("\r", "") # fix win/linux newlines
 	
 	# cache setting
-	global g_enable_inteltip, g_debug_level
-	g_enable_inteltip 	= settings.get('enable_inteltip', True)
-	g_debug_level		= settings.get('debug_level', 0)
+	global g_enable_inteltip, g_enable_buildversion, g_debug_level
+	g_enable_inteltip 		= settings.get('enable_inteltip', True)
+	g_enable_buildversion 	= settings.get('enable_buildversion', False)
+	g_debug_level 			= settings.get('debug_level', 0)
 #}
 	
 def fix_path(settings, key) :
@@ -619,6 +665,7 @@ class pawnParse :
 		print_debug(2, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
 		
 		self.file 				= pFile
+		self.file_name			= os.path.basename(node.file_name)
 		self.node 				= node
 		self.found_comment 		= False
 		self.found_enum 		= False
@@ -651,7 +698,7 @@ class pawnParse :
 		self.save_const_timer 	= None
 		self.constants_count 	= len(g_constants_list)
 		
-		constants = "true|false"
+		constants = "___test"
 		for const in g_constants_list :
 			constants += "|" + const
 			
@@ -779,7 +826,26 @@ class pawnParse :
 			name = fixname.group(1)
 			g_constants_list.add(name)
 	#}
+	
+	def add_enum(self, buffer) :
+	#{
+		buffer = buffer.strip()
+		if buffer == '' :
+			return
 			
+		split = buffer.split('[')
+
+		self.add_autocomplete(buffer, 'enum', split[0])
+		self.add_constant(split[0])
+		
+		print_debug(2, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
+	#}
+	
+	def add_autocomplete(self, name, info, autocomplete) :
+	#{
+		self.node.funcs.add((name +'  \t'+  self.file_name +' - '+ info, autocomplete))
+	#}
+		
 	def start_parse(self) :
 	#{
 		while True :
@@ -837,7 +903,7 @@ class pawnParse :
 			buffer = ''
 			name = define.group(1)
 			value = define.group(2).strip()
-			self.node.funcs.add((name + '  (define: ' + value + ')', name))
+			self.add_autocomplete(name, 'define: '+value, name)
 			self.add_constant(name)
 			
 			print_debug(2, "(analyzer) parse_define add: [%s]" % name)
@@ -862,7 +928,7 @@ class pawnParse :
 			value = value[0:newline]
 		#}
 		
-		self.node.funcs.add((name + '  (const: ' + value + ')', name))
+		self.add_autocomplete(name, 'const: '+value, name)
 		self.add_constant(name)
 		print_debug(2, "(analyzer) parse_const add: [%s]" % name)
 	#}
@@ -930,7 +996,7 @@ class pawnParse :
 						varName = varName.strip()
 						
 						if (varName != '') :
-							self.node.funcs.add((varName + '  (variable)', varName))
+							self.add_autocomplete(varName, 'var', varName)
 							print_debug(2, "(analyzer) parse_variable add: [%s]" % varName)
 							
 						varName = ''
@@ -959,7 +1025,7 @@ class pawnParse :
 			#{
 				varName = varName.strip()
 				if varName != '' :
-					self.node.funcs.add((varName + '  (variable)', varName))
+					self.add_autocomplete(varName, 'var', varName)
 					print_debug(2, "(analyzer) parse_variable add: [%s]" % varName)
 			#}
 			else :
@@ -980,7 +1046,7 @@ class pawnParse :
 			buffer = buffer[0:pos]
 			self.found_enum = False
 
-		self.enum_contents = '%s%s' % (self.enum_contents, buffer)
+		self.enum_contents = '%s\n%s' % (self.enum_contents, buffer)
 		buffer = ''
 
 		ignore = False
@@ -991,32 +1057,25 @@ class pawnParse :
 
 			for c in self.enum_contents :
 			#{
-				if c == '=' :
+				if c == '=' or c == '#' :
 					ignore = True
+				elif c == '\n':
+					ignore = False
 				elif c == ':' :
 					buffer = ''
 					continue
 				elif c == ',' :
-					buffer = buffer.strip()
-					if buffer != '' :
-						self.node.funcs.add((buffer + '  (enum)', buffer))
-						self.add_constant(buffer)
-						print_debug(2, "(analyzer) parse_enum add: [%s]" % buffer)
-
-					ignore = False
+					self.add_enum(buffer)
 					buffer = ''
+					
+					ignore = False
 					continue
 
 				if not ignore :
 					buffer += c
 			#}
 
-			buffer = buffer.strip()
-			if buffer != '' :
-				self.node.funcs.add((buffer + '  (enum)', buffer))
-				self.add_constant(buffer)
-				print_debug(2, "(analyzer) parse_enum add: [%s]" % buffer)
-
+			self.add_enum(buffer)
 			buffer = ''
 		#}
 	#}
@@ -1122,7 +1181,7 @@ class pawnParse :
 			
 		autocomplete += ')'
 		
-		self.node.funcs.add((funcname + '  ('+ FUNC_TYPES[type] +')', autocomplete))
+		self.add_autocomplete(funcname, FUNC_TYPES[type].lower(), autocomplete)
 		self.node.doct.add((funcname, func[func.find("(")+1:-1], self.node.file_name, type, returntype))
 		
 		print_debug(2, "(analyzer) parse_params add: [%s]" % func)
@@ -1154,12 +1213,13 @@ def print_debug(level, msg) :
 		print("[AMXX-Editor]: " + msg)
 #}
 
-EDITOR_VERSION = "1.9"
+EDITOR_VERSION = "2.0"
 FUNC_TYPES = [ "Function", "Public", "Stock", "Forward", "Native" ]
 
 g_constants_list = set()
 g_inteltip_style = ""
 g_enable_inteltip = True
+g_enable_buildversion = False
 g_debug_level = 0
 g_include_dir = "."
 

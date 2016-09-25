@@ -1,4 +1,4 @@
-/* First, save the file !   -   Sublime AMXX Editor v1.9 */
+/* First, save the file !   -   Sublime AMXX Editor v2.0 */
 
 #include <amxmodx>
 // #include <amxmisc>

@@ -20,7 +20,10 @@ contexts:
     - include: check_brackets
 
     # Constants
+    - match: (true|false)
+      scope: constant.language
     - include: Packages/amxmodx/const.sublime-syntax
+
 
   ########################################################
 
@@ -184,7 +187,7 @@ contexts:
 
 
   function_call:
-    - match: \s*([A-Za-z_][\w_]*)[\s]*(\()
+    - match: \s*([A-Za-z_][\w_]*)[\s|\\n]*(\()
       captures:
         1: support.function.call.pawn
         2: function.parens.pawn
@@ -262,8 +265,11 @@ contexts:
     - match: (~|&|\||\^|<<|>>)
       scope: keyword.operator.bitwise.pawn
 
-    - match: (\,)
+    - match: (\,|;)
       scope: keyword.coma.pawn
+
+    - match: ({|})
+      scope: keyword.brace.pawn
   ########################################################
 
 

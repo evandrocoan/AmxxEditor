@@ -3,34 +3,34 @@
 <plist version="1.0">
 <dict>
 	<key>author</key>
-	<string>Destro</string>
+	<string>Jeroen van der Ham/Sam Deering/Addons zz/Destro</string>
 	<key>name</key>
-	<string>Dark - Sublime AMXX-Editor</string>
+	<string>Notepad++ - Sublime AMXX-Editor</string>
 	<key>settings</key>
 	<array>
 		<dict>
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#111111</string>
-				<key>caret</key>
-				<string>#10B2E8</string>
-				<key>foreground</key>
-				<string>#B6C1CC</string>
-				<key>invisibles</key>
-				<string>#CAE2FB3D</string>
-				<key>lineHighlight</key>
-				<string>#10B2E844</string>
-				<key>selection</key>
-				<string>#DDF0FF33</string>
-				<key>bracketsForeground</key>
-				<string>#ffff00ff</string>
-				<key>bracketsOptions</key>
-				<string>underline</string>
-				<key>guide</key>
-				<string>#353535</string>
-				<key>stackGuide</key>
-				<string>#ffffffff</string>
+                <string>#FFFFFF</string>
+                <key>guide</key>
+                <string>#8c8c8c</string>
+                <key>stackGuide</key>
+                <string>#8c8c8c</string>
+                <key>activeGuide</key>
+                <string>#FF0000</string>
+                <key>caret</key>
+                <string>#000000</string>
+                <key>foreground</key>
+                <string>#000000</string>
+                <key>popupCss</key>
+                <string><![CDATA[ html { background-color: #B9B9B9; }]]></string>
+                <key>invisibles</key>
+                <string>#B3B3B3</string>
+                <key>lineHighlight</key>
+                <string>#DADAFF</string>
+                <key>selection</key>
+				<string>#B9B9B9</string>
 			</dict>
 		</dict>
 		
@@ -44,7 +44,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#754D08</string>
+				<string>#008000</string>
 			</dict>
 		</dict>
 
@@ -56,7 +56,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#3C7D96</string>
+				<string>#FF8000</string>
 			</dict>
 		</dict>
 		<dict>
@@ -79,6 +79,8 @@
 			<dict>
 				<key>fontStyle</key>
 				<string>bold</string>
+				<key>foreground</key>
+				<string>#0000FF</string>
 			</dict>
 		</dict>
 		
@@ -89,10 +91,8 @@
 			<string>support.function.definition.pawn</string>
 			<key>settings</key>
 			<dict>
-				<key>fontStyle</key>
-				<string>bold</string>
 				<key>foreground</key>
-				<string>#89BDFF</string>
+				<string>#000090</string>
 			</dict>
 		</dict>
 		<dict>
@@ -103,7 +103,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#3880D1</string>
+				<string>#600000</string>
 			</dict>
 		</dict>
 		<dict>
@@ -116,7 +116,7 @@
 				<key>fontStyle</key>
 				<string>bold</string>
 				<key>foreground</key>
-				<string>#575A7D</string>
+				<string>#505090</string>
 			</dict>
 		</dict>
 		<dict>
@@ -140,8 +140,8 @@
 			<string>entity.name.constant.preprocessor</string>
 			<key>settings</key>
 			<dict>
-				<key>foreground</key>
-				<string>#CF8506</string>
+                <key>foreground</key>
+				<string>#804000</string>
 			</dict>
 		</dict>
 		<dict>
@@ -152,7 +152,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#B4DE0D</string>
+				<string>#ff0000</string>
 			</dict>
 		</dict>
 
@@ -163,8 +163,8 @@
 			<string>keyword.other.preprocessor</string>
 			<key>settings</key>
 			<dict>
-				<key>foreground</key>
-				<string>#FFA60D</string>
+                <key>foreground</key>
+				<string>#804000</string>
 			</dict>
 		</dict>
 		<dict>
@@ -174,8 +174,8 @@
 			<string>keyword.other.preprocessor.group</string>
 			<key>settings</key>
 			<dict>
-				<key>foreground</key>
-				<string>#B4DE0D</string>
+                <key>foreground</key>
+				<string>#804000</string>
 			</dict>
 		</dict>
 		<dict>
@@ -186,7 +186,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#738F10</string>
+				<string>#0000FF</string>
 			</dict>
 		</dict>
 		<dict>
@@ -197,9 +197,10 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#BAAE09</string>
+				<string>#000080</string>
 			</dict>
 		</dict>
+
 		<dict>
 			<key>name</key>
 			<string>Pawn brackets</string>
@@ -210,7 +211,7 @@
 				<key>fontStyle</key>
 				<string>bold</string>
 				<key>foreground</key>
-				<string>#738F10</string>
+				<string>#000080</string>
 			</dict>
 		</dict>
 		<dict>
@@ -223,7 +224,7 @@
 				<key>fontStyle</key>
 				<string>bold</string>
 				<key>foreground</key>
-				<string>#738F10</string>
+				<string>#000080</string>
 			</dict>
 		</dict>
 		<dict>
@@ -234,7 +235,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#9A72B5</string>
+				<string>#000080</string>
 			</dict>
 		</dict>
 		<dict>
@@ -245,7 +246,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#9A72B5</string>
+				<string>#000080</string>
 			</dict>
 		</dict>
 		
@@ -256,10 +257,8 @@
 			<string>storage.type.function.pawn</string>
 			<key>settings</key>
 			<dict>
-				<key>fontStyle</key>
-				<string>bold</string>
 				<key>foreground</key>
-				<string>#5BC718</string>
+				<string>#9700CC</string>
 			</dict>
 		</dict>
 		<dict>
@@ -269,8 +268,10 @@
 			<string>storage.type.vars.pawn</string>
 			<key>settings</key>
 			<dict>
+				<key>fontStyle</key>
+				<string>bold</string>
 				<key>foreground</key>
-				<string>#5BC718</string>
+				<string>#0000FF</string>
 			</dict>
 		</dict>
 		<dict>
@@ -283,7 +284,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#4EAD13</string>
+				<string>#3366CC</string>
 			</dict>
 		</dict>
 		
@@ -297,7 +298,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#7F98BA</string>
+				<string>#000</string>
 			</dict>
 		</dict>
 		
@@ -311,7 +312,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#aa0000</string>
+				<string>#808080</string>
 			</dict>
 		</dict>
 		<dict>
@@ -322,7 +323,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#A8430C</string>
+				<string>#333</string>
 			</dict>
 		</dict>
 		
@@ -334,7 +335,7 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#ff2D5699</string>
+				<string>#ff000099</string>
 				<key>foreground</key>
 				<string>#000000</string>
 			</dict>
