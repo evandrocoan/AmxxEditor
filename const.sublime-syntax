@@ -1,0 +1,7 @@
+%YAML 1.2
+---
+scope: source.sma
+contexts:
+  main:
+    - match: \b(__test)\b
+      scope: constant.vars.pawn

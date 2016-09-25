@@ -1,0 +1,8 @@
+html { background-color: #333;color: #888; }
+.file { color: #07C6E3; }
+.func_type { color: #E3DB00; }
+.func_name { color: #F53900; }
+.params { color: #E3DB00; }
+.params_definition {  }
+.return { color: #E3DB00; }
+.return_type {  }

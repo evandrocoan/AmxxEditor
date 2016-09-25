@@ -1,0 +1,37 @@
+[
+	{
+		"caption": "AmxMod-X ",
+		"id": "amxmodx",
+		"children":
+		[
+			{
+				"command": "about_amxx_editor",
+				"caption": "About AMXX-Editor"
+			},
+			{
+				"command": "update_amxx_editor",
+				"caption": "Check for Updates"
+			},
+			{ "caption": "-" },
+			{
+				"command": "open_file",
+				"args": {"file": "${packages}/amxmodx/example-settings.sublime-settings"},
+				"caption": "View Example Settings"
+			},
+			{
+				"command": "open_file",
+				"args": {"file": "${packages}/User/amxx.sublime-settings"},
+				"caption": "Edit User Settings"
+			},
+			{ "caption": "-" },
+			{
+				"command": "new_amxx_include",
+				"caption": "New Include"
+			},
+			{
+				"command": "new_amxx_plugin",
+				"caption": "New Plug-In"
+			}
+		]
+    }
+]
