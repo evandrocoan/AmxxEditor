@@ -413,7 +413,7 @@ def is_invalid_settings(settings) :
 def save_others_settings(settings) :
 #{
 	# check package path
-	packages_path = sublime.packages_path() + "\\amxmodx"
+	packages_path = sublime.packages_path() + "/amxmodx"
 	if not os.path.isdir(packages_path) :
 		os.mkdir(packages_path)
 	
@@ -467,7 +467,7 @@ def fix_path(settings, key) :
 	
 	path = os.path.normpath(org_path)
 	if os.path.isdir(path):
-		path += '\\'
+		path += '/'
 		
 	settings.set(key, path)
 #}
@@ -703,7 +703,7 @@ class pawnParse :
 			
 		syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b(" + constants + ")\\b\n      scope: constant.vars.pawn"
 		
-		file_name = sublime.packages_path() + "\\amxmodx\\const.sublime-syntax"
+		file_name = sublime.packages_path() + "/amxmodx/const.sublime-syntax"
 		
 		f = open(file_name, 'w')
 		f.write(syntax)
