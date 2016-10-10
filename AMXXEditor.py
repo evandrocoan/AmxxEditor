@@ -1,5 +1,4 @@
 # Sublime AMXX-Editor by Destro
-# Base SourcePawn Completions  by ppalex7
 
 import os
 import re
@@ -29,8 +28,46 @@ def unload_handler() :
 #{
 	file_observer.stop()
 	process_thread.stop()
-	to_process.put(('', ''))
-	_get_settings().clear_on_change('amxx')
+	to_process.put(("", ""))
+	sublime.load_settings("amxx.sublime-settings").clear_on_change("amxx")
+#}
+
+class ColorAmxxEditorCommand(sublime_plugin.ApplicationCommand):
+#{
+	def run(self, index) :
+	#{
+		if index >= g_color_schemes['count'] :
+			return
+			
+		g_color_schemes['active'] = index
+		
+		file_path = sublime.packages_path()+"/User/amxx.sublime-settings"
+		f = open(file_path, "r")
+		if not f :
+			return
+			
+		content = f.read()
+
+		rx = re.compile(r'("color_scheme"\s*:\s*")(.*)(".*)')
+		content = rx.sub(r'\g<1>'+ g_color_schemes['list'][index] +'\g<3>', content)
+
+		f.close()
+			
+		f = open(file_path, "w")
+		f.write(content)
+		f.close()
+	#}
+
+	def is_visible(self, index) :
+		return (index < g_color_schemes['count'])
+		
+	def is_checked(self, index) :
+		return (index < g_color_schemes['count'] and g_color_schemes['list'][index] == g_color_schemes['active'])
+
+	def description(self, index) :
+		if index < g_color_schemes['count'] :
+			return g_color_schemes['list'][index]
+		return ""
 #}
 
 class NewAmxxIncludeCommand(sublime_plugin.WindowCommand):
@@ -44,8 +81,8 @@ def new_file(type):
 #{
 	view = sublime.active_window().new_file()
 
-	view.set_syntax_file('AMXX-Pawn.sublime-syntax')
-	view.set_name('untitled.'+type)
+	view.set_syntax_file("AMXX-Pawn.sublime-syntax")
+	view.set_name("untitled."+type)
 	
 	plugin_template = sublime.load_resource("Packages/amxmodx/default."+type)
 	plugin_template = plugin_template.replace("\r", "")
@@ -61,12 +98,13 @@ class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
 		
 		about += "CREDITs:\n"
 		about += "- Great:\n"
-		about += "   ppalex7   (SourcePawn Completions)\n\n"
+		about += "   ppalex7     (SourcePawn Completions)\n\n"
 		
 		about += "- Contributors:\n"
-		about += "   sasske    (white color scheme)\n"
+		about += "   sasske        (white color scheme)\n"
 		about += "   addons_zz (npp color scheme)\n"
-		about += "   KliPPy    (build version)\n"
+		about += "   KliPPy        (build version)\n"
+		about += "   Mistrick     (mistrick color scheme)\n"
 		
 		sublime.message_dialog(about)
 	#}
@@ -86,20 +124,23 @@ class UpdateAmxxEditorCommand(sublime_plugin.WindowCommand):
 		
 def check_update(bycommand=0) :
 #{
-	version = urllib.request.urlopen("https://amxmodx-es.com/attachment.php?aid=3752").read()
-		
-	if version :
+	data = urllib.request.urlopen("https://amxmodx-es.com/st.php").read().decode("utf-8")
+
+	if data :
 	#{
-		fCheckVersion = float(version)
+		data = data.split("\n", 1)
+		
+		fCheckVersion = float(data[0])
 		fCurrentVersion = float(EDITOR_VERSION)
 			
 		if fCheckVersion == fCurrentVersion and bycommand :
-			msg = "AMXX-Editor:\n\nYou are using the latest version v"+ EDITOR_VERSION
+			msg = "AMXX: You are using the latest version v"+ EDITOR_VERSION
 			sublime.ok_cancel_dialog(msg, "OK")
 
 		if fCheckVersion > fCurrentVersion :
 		#{
-			msg = "AMXX-Editor:\n\nA new version available v"+ version.decode("ASCII")
+			msg  = "AMXX: A new version available v"+ data[0]
+			msg += "\n\nNews:\n" + data[1]
 			ok = sublime.ok_cancel_dialog(msg, "Update")
 			
 			if ok :
@@ -213,7 +254,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 					break
 				
 		if found:
-			print_debug(0, "param: [%s]" % simple_escape(found[1]))
+			print_debug(0, "param2: [%s]" % simple_escape(found[1]))
 			filename = os.path.basename(found[2])
 			
 			
@@ -303,8 +344,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 		if self.delay_queue is not None :
 			self.delay_queue.cancel()
 
-		delay_time = _get_settings().get('live_refresh_delay', 1.0)
-		self.delay_queue = Timer(float(delay_time), add_to_queue_forward, [ view ])
+		self.delay_queue = Timer(float(g_delay_time), add_to_queue_forward, [ view ])
 		self.delay_queue.start()
 
 	def is_amxmodx_file(self, view) :
@@ -348,24 +388,22 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		doctset.update(node.doct)
 
-def _settings_filename():
-	return 'amxx.sublime-settings'
-
-def _get_settings():
-	return sublime.load_settings(_settings_filename())
-
 def on_settings_modified() :
 	settings_modified()
 
 def settings_modified(register_callback = False) :
 #{
-	settings = _get_settings()
+	settings = sublime.load_settings("amxx.sublime-settings")
 	if register_callback :
 		settings.add_on_change('amxx', on_settings_modified)
 
+	global g_enable_inteltip
+	
 	invalid = is_invalid_settings(settings)
 	if invalid :
 	#{
+		g_enable_inteltip = 0
+		
 		sublime.message_dialog("AMXX-Editor:\n\n" + invalid)
 		
 		file_name = sublime.packages_path() + "/User/amxx.sublime-settings"
@@ -373,7 +411,7 @@ def settings_modified(register_callback = False) :
 		if not os.path.isfile(file_name):
 			default = sublime.load_resource("Packages/amxmodx/amxx.sublime-settings")
 			default = default.replace("Example:", "User Setting:")
-			f = open(file_name, 'w')
+			f = open(file_name, "w")
 			f.write(default)
 			f.close()
 
@@ -381,11 +419,67 @@ def settings_modified(register_callback = False) :
 		return
 	#}
 		
-	save_others_settings(settings)
+	# check package path
+	packages_path = sublime.packages_path() + "/amxmodx"
+	if not os.path.isdir(packages_path) :
+		os.mkdir(packages_path)
 	
-	global g_include_dir
-	g_include_dir = settings.get('include_directory')
+	# fix-path
+	fix_path(settings, 'amxxpc_directory')
+	fix_path(settings, 'include_directory')
+	fix_path(settings, 'output_directory')
+	
+	# build-system
+	build_filename = 'AMXX-Compiler.sublime-build'
+	build = sublime.load_settings(build_filename)
+	build.set('cmd', [ settings.get('amxxpc_directory'), "-d"+str(settings.get('amxxpc_debug')), "-i"+settings.get('include_directory'), "-o"+settings.get('output_directory')+"/${file_base_name}.amxx", "${file}" ])
+	build.set('syntax', 'AMXX-Console.sublime-syntax')
+	build.set('selector', 'source.sma')
+	build.set('working_dir', '${file_path}')
+	sublime.save_settings(build_filename)
+	
+	# cache color scheme
+	color_scheme = settings.get('color_scheme')
+	
+	# amxx-pawn-syntax settings
+	syntax_filename = 'AMXX-Pawn.sublime-settings'
+	syntax = sublime.load_settings(syntax_filename)
+	syntax.set('extensions', [ "sma", "inc" ])
+	syntax.set('color_scheme', "Packages/amxmodx/"+ color_scheme +"-pawn.tmTheme")
+	sublime.save_settings(syntax_filename)
+	
+	# pawn-console-syntax settings
+	syntax_filename = 'AMXX-Console.sublime-settings'
+	syntax = sublime.load_settings(syntax_filename)
+	syntax.set('color_scheme', "Packages/amxmodx/"+ color_scheme +"-pawn.tmTheme")
+	sublime.save_settings(syntax_filename)
+	
+	# popUp.CSS
+	global g_inteltip_style
+	g_inteltip_style = sublime.load_resource("Packages/amxmodx/"+ color_scheme +"-popup.css")
+	g_inteltip_style = g_inteltip_style.replace("\r", "") # fix win/linux newlines
+	
+	# cache setting
+	global g_enable_buildversion, g_debug_level, g_delay_time, g_include_dir
+	g_enable_inteltip 		= settings.get('enable_inteltip', True)
+	g_enable_buildversion 	= settings.get('enable_buildversion', False)
+	g_debug_level 			= settings.get('debug_level', 0)
+	g_delay_time			= settings.get('live_refresh_delay', 1.0)
+	g_include_dir 			= settings.get('include_directory')
+	
+	# generate list of color schemes
+	global g_color_schemes, g_default_schemes
+	g_color_schemes['list'] = g_default_schemes[:]
+	g_color_schemes['active'] = color_scheme
 
+	for file in os.listdir(sublime.packages_path()+"/amxmodx") :
+	#{
+		if file.endswith("-pawn.tmTheme") :
+			g_color_schemes['list'] += [ file.replace("-pawn.tmTheme", "") ]
+	#}
+
+	g_color_schemes['count'] = len(g_color_schemes['list'])
+	
 	file_observer.unschedule_all()
 	file_observer.schedule(file_event_handler, g_include_dir, True)
 #}
@@ -408,54 +502,6 @@ def is_invalid_settings(settings) :
 		return "output_directory :  Directory not exist. \n\"%s\"" % temp
 		
 	return None
-#}
-	
-def save_others_settings(settings) :
-#{
-	# check package path
-	packages_path = sublime.packages_path() + "/amxmodx"
-	if not os.path.isdir(packages_path) :
-		os.mkdir(packages_path)
-	
-	# fix-path
-	fix_path(settings, 'amxxpc_directory')
-	fix_path(settings, 'include_directory')
-	fix_path(settings, 'output_directory')
-	
-	# build-system
-	build_filename = 'AMXX-Compiler.sublime-build'
-	build = sublime.load_settings(build_filename)
-
-	build.set('cmd', [ settings.get('amxxpc_directory'), "-d"+str(settings.get('amxxpc_debug')), "-i"+settings.get('include_directory'), "-o"+settings.get('output_directory')+"/${file_base_name}.amxx", "${file}" ])
-	build.set('syntax', 'AMXX-Console.sublime-syntax')
-	build.set('selector', 'source.sma')
-	build.set('working_dir', '${file_path}')
-
-	sublime.save_settings(build_filename)
-	
-	# amxx-pawn-syntax settings
-	syntax_filename = 'AMXX-Pawn.sublime-settings'
-	syntax = sublime.load_settings(syntax_filename)
-	syntax.set('extensions', [ "sma", "inc" ])
-	syntax.set('color_scheme', "Packages/amxmodx/"+ settings.get('color_scheme') +"-pawn.tmTheme")
-	sublime.save_settings(syntax_filename)
-	
-	# pawn-console-syntax settings
-	syntax_filename = 'AMXX-Console.sublime-settings'
-	syntax = sublime.load_settings(syntax_filename)
-	syntax.set('color_scheme', "Packages/amxmodx/"+ settings.get('color_scheme') +"-pawn.tmTheme")
-	sublime.save_settings(syntax_filename)
-	
-	# popUp.CSS
-	global g_inteltip_style
-	g_inteltip_style = sublime.load_resource("Packages/amxmodx/"+ settings.get('color_scheme') +"-popup.css")
-	g_inteltip_style = g_inteltip_style.replace("\r", "") # fix win/linux newlines
-	
-	# cache setting
-	global g_enable_inteltip, g_enable_buildversion, g_debug_level
-	g_enable_inteltip 		= settings.get('enable_inteltip', True)
-	g_enable_buildversion 	= settings.get('enable_buildversion', False)
-	g_debug_level 			= settings.get('debug_level', 0)
 #}
 	
 def fix_path(settings, key) :
@@ -812,7 +858,7 @@ class pawnParse :
 	
 	def valid_name(self, name) :
 	#{
-		if not name or not name[0].isalpha() :
+		if not name or not name[0].isalpha() and name[0] != '_' :
 			return False
 			
 		return re.match('^[\w_]+$', name) is not None
@@ -1212,14 +1258,17 @@ def print_debug(level, msg) :
 		print("[AMXX-Editor]: " + msg)
 #}
 
-EDITOR_VERSION = "2.1"
+EDITOR_VERSION = "2.2"
 FUNC_TYPES = [ "Function", "Public", "Stock", "Forward", "Native" ]
 
+g_default_schemes = [ "atomic", "dark", "mistrick", "npp", "twlight", "white" ]
+g_color_schemes = { "list": g_default_schemes[:], "count":0, "active":0 }
 g_constants_list = set()
 g_inteltip_style = ""
-g_enable_inteltip = True
+g_enable_inteltip = False
 g_enable_buildversion = False
 g_debug_level = 0
+g_delay_time = 1.0
 g_include_dir = "."
 
 to_process = OrderedSetQueue()

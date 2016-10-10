@@ -1,4 +1,4 @@
-/* First, save the file !   -   Sublime AMXX Editor v2.1 */
+/* Sublime AMXX Editor v2.2 */
 
 #if defined _example_included
 	#endinput
