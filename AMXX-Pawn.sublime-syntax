@@ -95,11 +95,13 @@ contexts:
       pop: true
 
   directive_others:
-    - match: (if|elseif|else|endif|endinput|undef|endscript|error|file|line|tryinclude|emit|pragma|assert)\s*(.*)
-      captures:
-        1: keyword.other.preprocessor.define.pawn
-        2: entity.name.constant.preprocessor
-      pop: true
+    - match: (if|elseif|else|endif|endinput|undef|endscript|error|file|line|tryinclude|emit|pragma|assert)
+      scope: keyword.other.preprocessor.define.pawn
+      push:
+        - meta_scope: entity.name.constant.preprocessor
+        - include: pawn_coment
+        - match: \n
+          pop: true 
 
   directive_invalid:
     - match: '[^\n]*'
