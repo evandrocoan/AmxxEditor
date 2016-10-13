@@ -438,16 +438,6 @@ def settings_modified(register_callback = False) :
 	build.set('working_dir', '${file_path}')
 	sublime.save_settings(build_filename)
 	
-	# cache color scheme
-	color_scheme = settings.get('color_scheme')
-	
-	# amxx-pawn-syntax settings
-	syntax_filename = 'AMXX-Pawn.sublime-settings'
-	syntax = sublime.load_settings(syntax_filename)
-	syntax.set('extensions', [ "sma", "inc" ])
-	syntax.set('color_scheme', "Packages/amxmodx/"+ color_scheme +"-pawn.tmTheme")
-	sublime.save_settings(syntax_filename)
-	
 	# pawn-console-syntax settings
 	syntax_filename = 'AMXX-Console.sublime-settings'
 	syntax = sublime.load_settings(syntax_filename)
