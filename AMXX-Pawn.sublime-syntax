@@ -100,7 +100,7 @@ contexts:
       push:
         - meta_scope: entity.name.constant.preprocessor
         - include: pawn_coment
-        - match: \n
+        - match: \n|$
           pop: true 
 
   directive_invalid:
