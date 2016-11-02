@@ -1,60 +1,65 @@
 [
 	{
-		"caption": "AmxMod-X",
-		"id": "amxmodx",
-		"children":
-		[
+	    "id": "tools", "children":
+	    [
 			{
-				"command": "about_amxx_editor",
-				"caption": "About AMXX-Editor"
-			},
-			{
-				"command": "update_amxx_editor",
-				"caption": "Check for Updates"
-			},
-			{ "caption": "-" },
-			{
-				"command": "edit_settings", "args":
-				{
-					"base_file": "${packages}/amxmodx/amxx.sublime-settings",
-					"default": "{\n\t$0\n}\n"
-				},
-				"caption": "Edit Settings"
-			},
-			{
-				"caption": "Color Scheme",
+				"caption": "AmxMod-X",
+				"id": "amxmodx",
 				"children":
 				[
-					{ "command": "color_amxx_editor", "args": {"index": 0}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 1}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 2}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 3}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 4}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 5}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 6}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 7}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 8}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 9}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 10}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 11}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 12}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 13}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 14}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 15}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 16}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 17}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 18}, "checkbox": true },
-					{ "command": "color_amxx_editor", "args": {"index": 19}, "checkbox": true }
+					{
+						"command": "about_amxx_editor",
+						"caption": "About AMXX-Editor"
+					},
+					{
+						"command": "update_amxx_editor",
+						"caption": "Check for Updates"
+					},
+					{ "caption": "-" },
+					{
+						"command": "edit_settings", "args":
+						{
+							"base_file": "${packages}/amxmodx/amxx.sublime-settings",
+							"default": "{\n\t$0\n}\n"
+						},
+						"caption": "Edit Settings"
+					},
+					{
+						"caption": "Color Scheme",
+						"children":
+						[
+							{ "command": "color_amxx_editor", "args": {"index": 0}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 1}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 2}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 3}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 4}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 5}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 6}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 7}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 8}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 9}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 10}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 11}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 12}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 13}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 14}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 15}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 16}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 17}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 18}, "checkbox": true },
+							{ "command": "color_amxx_editor", "args": {"index": 19}, "checkbox": true }
+						]
+					},
+					{ "caption": "-" },
+					{
+						"command": "new_amxx_include",
+						"caption": "New Include"
+					},
+					{
+						"command": "new_amxx_plugin",
+						"caption": "New Plug-In"
+					}
 				]
-			},
-			{ "caption": "-" },
-			{
-				"command": "new_amxx_include",
-				"caption": "New Include"
-			},
-			{
-				"command": "new_amxx_plugin",
-				"caption": "New Plug-In"
 			}
 		]
 	}
