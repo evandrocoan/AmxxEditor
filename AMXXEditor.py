@@ -20,7 +20,9 @@ from watchdog.utils.bricks import OrderedSetQueue
 
 def plugin_loaded() :
 #{
-	settings_modified(True)
+	settings = sublime.load_settings("amxx.sublime-settings")
+
+	settings.add_on_change('amxx', on_settings_modified)
 	sublime.set_timeout_async(check_update, 2500)
 #}
 
@@ -38,21 +40,21 @@ class ColorAmxxEditorCommand(sublime_plugin.ApplicationCommand):
 	#{
 		if index >= g_color_schemes['count'] :
 			return
-			
+
 		g_color_schemes['active'] = index
-		
+
 		file_path = sublime.packages_path()+"/User/amxx.sublime-settings"
 		f = open(file_path, "r")
 		if not f :
 			return
-			
+
 		content = f.read()
 
 		rx = re.compile(r'("color_scheme"\s*:\s*")(.*)(".*)')
 		content = rx.sub(r'\g<1>'+ g_color_schemes['list'][index] +'\g<3>', content)
 
 		f.close()
-			
+
 		f = open(file_path, "w")
 		f.write(content)
 		f.close()
@@ -60,7 +62,7 @@ class ColorAmxxEditorCommand(sublime_plugin.ApplicationCommand):
 
 	def is_visible(self, index) :
 		return (index < g_color_schemes['count'])
-		
+
 	def is_checked(self, index) :
 		return (index < g_color_schemes['count'] and g_color_schemes['list'][index] == g_color_schemes['active'])
 
@@ -83,33 +85,33 @@ def new_file(type):
 
 	view.set_syntax_file("AMXX-Pawn.sublime-syntax")
 	view.set_name("untitled."+type)
-	
+
 	plugin_template = sublime.load_resource("Packages/amxmodx/default."+type)
 	plugin_template = plugin_template.replace("\r", "")
-	
+
 	view.run_command("insert_snippet", {"contents": plugin_template})
 #}
-		
+
 class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
 #{
 	def run(self):
 	#{
 		about = "Sublime AMXX-Editor v"+ EDITOR_VERSION +" by Destro\n\n\n"
-		
+
 		about += "CREDITs:\n"
 		about += "- Great:\n"
 		about += "   ppalex7     (SourcePawn Completions)\n\n"
-		
+
 		about += "- Contributors:\n"
 		about += "   sasske        (white color scheme)\n"
 		about += "   addons_zz (npp color scheme)\n"
 		about += "   KliPPy        (build version)\n"
 		about += "   Mistrick     (mistrick color scheme)\n"
-		
+
 		sublime.message_dialog(about)
 	#}
 #}
-		
+
 class UpdateAmxxEditorCommand(sublime_plugin.WindowCommand):
 #{
 	def run(self) :
@@ -121,7 +123,7 @@ class UpdateAmxxEditorCommand(sublime_plugin.WindowCommand):
 		check_update(True)
 	#}
 #}
-		
+
 def check_update(bycommand=0) :
 #{
 	data = urllib.request.urlopen("https://amxmodx-es.com/st.php").read().decode("utf-8")
@@ -129,10 +131,10 @@ def check_update(bycommand=0) :
 	if data :
 	#{
 		data = data.split("\n", 1)
-		
+
 		fCheckVersion = float(data[0])
 		fCurrentVersion = float(EDITOR_VERSION)
-			
+
 		if fCheckVersion == fCurrentVersion and bycommand :
 			msg = "AMXX: You are using the latest version v"+ EDITOR_VERSION
 			sublime.ok_cancel_dialog(msg, "OK")
@@ -142,13 +144,13 @@ def check_update(bycommand=0) :
 			msg  = "AMXX: A new version available v"+ data[0]
 			msg += "\n\nNews:\n" + data[1]
 			ok = sublime.ok_cancel_dialog(msg, "Update")
-			
+
 			if ok :
 				webbrowser.open_new_tab("https://amxmodx-es.com/showthread.php?tid=12316")
 		#}
 	#}
 #}
-		
+
 class AmxxBuildVerCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
 		region = self.view.find("^#define\s+(?:PLUGIN_)?VERSION\s+\".+\"", 0, sublime.IGNORECASE)
@@ -156,7 +158,7 @@ class AmxxBuildVerCommand(sublime_plugin.TextCommand):
 			region = self.view.find("new\s+const\s+(?:PLUGIN_)?VERSION\s*\[\s*\]\s*=\s*\".+\"", 0, sublime.IGNORECASE)
 			if region == None :
 				return
-		
+
 		line = self.view.substr(region)
 		result = re.match("(.*\"(?:v)?\d{1,2}\.\d{1,2}\.(?:\d{1,2}-)?)(\d+)(b(?:eta)?)?\"", line)
 		if not result :
@@ -164,13 +166,13 @@ class AmxxBuildVerCommand(sublime_plugin.TextCommand):
 
 		build = int(result.group(2))
 		build += 1
-		
+
 		beta = result.group(3)
 		if not beta :
 			beta = ""
-		
+
 		self.view.replace(edit, region, result.group(1) + str(build) + beta + '\"')
-				
+
 class AMXXEditor(sublime_plugin.EventListener):
 	def __init__(self) :
 		process_thread.start()
@@ -180,21 +182,21 @@ class AMXXEditor(sublime_plugin.EventListener):
 	def on_window_command(self, window, cmd, args) :
 		if cmd != "build" :
 			return
-			
+
 		view = window.active_view()
 		if not self.is_amxmodx_file(view) or not g_enable_buildversion :
 			return
-			
+
 		view.run_command("amxx_build_ver")
 
 	def on_selection_modified(self, view) :
 		if not self.is_amxmodx_file(view) or not g_enable_inteltip :
 			return
-			
+
 		region = view.sel()[0]
 		scope = view.scope_name(region.begin())
 		print_debug(1, "(inteltip) scope_name: [%s]" % scope)
-		
+
 		if not "support.function" in scope and not "include_path.pawn" in scope or region.size() > 1 :
 			view.hide_popup()
 			view.add_regions("inteltip", [ ])
@@ -204,7 +206,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 			self.inteltip_include(view, region)
 		else :
 			self.inteltip_function(view, region)
-		
+
 	def inteltip_include(self, view, region) :
 		location 	= view.word(region).end() + 1
 		line = view.substr(view.line(region))
@@ -220,23 +222,23 @@ class AMXXEditor(sublime_plugin.EventListener):
 			include += ".inc"
 		else :
 			link_web = None
-			
+
 		html  = '<style>'+ g_inteltip_style +'</style>'
 		html += '<div class="top">'
 		html += '<a class="file" href="'+link_local+'">'+include+'</a>'
 		if link_web :
 			html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
-			
+
 		html += '</div><div class="bottom">'
-		
+
 		html += '<span class="func_type">Location:</span><br>'
 		html += '<span class="func_name">'+file_name+'</span>'
 		html += '</div>'
-			
+
 		view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
-	
+
 	def inteltip_function(self, view, region) :
-		
+
 		word_region = view.word(region)
 		location 	= word_region.end() + 1
 		search_func = view.substr(word_region)
@@ -246,59 +248,59 @@ class AMXXEditor(sublime_plugin.EventListener):
 		node 		= nodes[view.file_name()]
 
 		self.generate_doctset_recur(node, doctset, visited)
-		
+
 		for func in doctset :
 			if search_func == func[0] :
 				found = func
 				if found[3] != 1 :
 					break
-				
+
 		if found:
 			print_debug(0, "param2: [%s]" % simple_escape(found[1]))
 			filename = os.path.basename(found[2])
-			
-			
+
+
 			if found[3] :
 				if found[4] :
 					link_local = found[2] + '#' + FUNC_TYPES[found[3]] + ' ' + found[4] + ':' + found[0]
 				else :
 					link_local = found[2] + '#' + FUNC_TYPES[found[3]] + ' ' + found[0]
-					
+
 				link_web = filename.rsplit('.', 1)[0] + '#' + found[0]
 			else :
-				
+
 				link_local = found[2] + '#' + '^' + found[0]
 				link_web = ''
-			
+
 			html  = '<style>'+ g_inteltip_style +'</style>'
 			html += '<div class="top">'							############################## TOP
-			
+
 			html += '<a class="file" href="'+link_local+'">'+os.path.basename(found[2])+'</a>'
 			if link_web:
 				html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
-				
+
 			html += '</div><div class="bottom">'		############################## BOTTOM
-			
+
 			html += '<span class="func_type">'+FUNC_TYPES[found[3]]+':</span> <span class="func_name">'+found[0]+'</span>'
 			html += '<br>'
 			html += '<span class="params">Params:</span> <span class="params_definition">('+ simple_escape(found[1]) +')</span>'
 			html += '<br>'
-			
+
 			if found[4] :
 				html += '<span class="return">Return:</span> <span class="return_type">'+found[4]+'</span>'
-			
+
 			html += '</div>'									############################## END
-			
+
 			view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
 			view.add_regions("inteltip", [ word_region ], "inteltip.pawn")
-			
+
 		else:
 			view.hide_popup()
 			view.add_regions("inteltip", [ ])
-			
+
 	def on_navigate(self, link) :
 		(file, search) = link.split('#')
-		
+
 		if "." in file :
 			view = sublime.active_window().open_file(file);
 			def do_position() :
@@ -306,15 +308,15 @@ class AMXXEditor(sublime_plugin.EventListener):
 					sublime.set_timeout(do_position, 100)
 				else :
 					r=view.find(search, 0, sublime.IGNORECASE)
-				
+
 					view.sel().clear()
 					view.sel().add(r)
-	
+
 					view.show(r)
 			do_position()
 		else :
 			webbrowser.open_new_tab("http://www.amxmodx.org/api/"+file+"/"+search)
-		
+
 	def on_activated(self, view) :
 		if not self.is_amxmodx_file(view):
 			return
@@ -353,10 +355,10 @@ class AMXXEditor(sublime_plugin.EventListener):
 	def on_query_completions(self, view, prefix, locations):
 		if not self.is_amxmodx_file(view):
 			return None
-			
+
 		if view.match_selector(locations[0], 'source.sma string') :
 			return ([], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
-		
+
 		return (self.generate_funcset(view.file_name()), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 
 	def generate_funcset(self, file_name) :
@@ -377,7 +379,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 			self.generate_funcset_recur(child, funcset, visited)
 
 		funcset.update(node.funcs)
-		
+
 	def generate_doctset_recur(self, node, doctset, visited) :
 		if node in visited :
 			return
@@ -388,26 +390,22 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		doctset.update(node.doct)
 
+
 def on_settings_modified() :
-	settings_modified()
-
-def settings_modified(register_callback = False) :
 #{
-	settings = sublime.load_settings("amxx.sublime-settings")
-	if register_callback :
-		settings.add_on_change('amxx', on_settings_modified)
-
 	global g_enable_inteltip
-	
-	invalid = is_invalid_settings(settings)
+
+	settings = sublime.load_settings("amxx.sublime-settings")
+	invalid  = is_invalid_settings(settings)
+
 	if invalid :
 	#{
 		g_enable_inteltip = 0
-		
+
 		sublime.message_dialog("AMXX-Editor:\n\n" + invalid)
-		
+
 		file_name = sublime.packages_path() + "/User/amxx.sublime-settings"
-		
+
 		if not os.path.isfile(file_name):
 			default = sublime.load_resource("Packages/amxmodx/amxx.sublime-settings")
 			default = default.replace("Example:", "User Setting:")
@@ -418,17 +416,17 @@ def settings_modified(register_callback = False) :
 		sublime.active_window().run_command("edit_settings", {"base_file": "${packages}/amxmodx/amxx.sublime-settings", "default": "{\n\t$0\n}\n"})
 		return
 	#}
-		
+
 	# check package path
 	packages_path = sublime.packages_path() + "/amxmodx"
 	if not os.path.isdir(packages_path) :
 		os.mkdir(packages_path)
-	
+
 	# fix-path
 	fix_path(settings, 'amxxpc_directory')
 	fix_path(settings, 'include_directory')
 	fix_path(settings, 'output_directory')
-	
+
 	# build-system
 	build_filename = 'AMXX-Compiler.sublime-build'
 	build = sublime.load_settings(build_filename)
@@ -437,15 +435,15 @@ def settings_modified(register_callback = False) :
 	build.set('selector', 'source.sma')
 	build.set('working_dir', '${file_path}')
 	sublime.save_settings(build_filename)
-	
+
 	# Get the set color scheme
 	color_scheme = settings.get('color_scheme')
-	
+
 	# popUp.CSS
 	global g_inteltip_style
 	g_inteltip_style = sublime.load_resource("Packages/amxmodx/"+ color_scheme +"-popup.css")
 	g_inteltip_style = g_inteltip_style.replace("\r", "") # fix win/linux newlines
-	
+
 	# cache setting
 	global g_enable_buildversion, g_debug_level, g_delay_time, g_include_dir
 	g_enable_inteltip 		= settings.get('enable_inteltip', True)
@@ -453,7 +451,7 @@ def settings_modified(register_callback = False) :
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')
-	
+
 	# generate list of color schemes
 	global g_color_schemes, g_default_schemes
 	g_color_schemes['list'] = g_default_schemes[:]
@@ -466,7 +464,7 @@ def settings_modified(register_callback = False) :
 	#}
 
 	g_color_schemes['count'] = len(g_color_schemes['list'])
-	
+
 	file_observer.unschedule_all()
 	file_observer.schedule(file_event_handler, g_include_dir, True)
 #}
@@ -475,36 +473,36 @@ def is_invalid_settings(settings) :
 #{
 	if settings.get('amxxpc_directory') is None or settings.get('amxxpc_debug') is None or settings.get('include_directory') is None or settings.get('output_directory') is None or settings.get('color_scheme') is None :
 		return "You are not set correctly settings for AMXX-Editor.\n\nNo has configurado correctamente el AMXX-Editor."
-		
+
 	temp = settings.get('amxxpc_directory')
 	if not os.path.isfile(temp) :
 		return "amxxpc_directory :  File not exist. \n\"%s\"" % temp
-		
+
 	temp = settings.get('include_directory')
 	if not os.path.isdir(temp) :
 		return "include_directory :  Directory not exist. \n\"%s\"" % temp
-		
+
 	temp = settings.get('output_directory')
 	if temp is "${file_path}" and not os.path.isdir(temp) :
 		return "output_directory :  Directory not exist. \n\"%s\"" % temp
-		
+
 	return None
 #}
-	
+
 def fix_path(settings, key) :
 #{
 	org_path = settings.get(key)
-	
+
 	if org_path is "${file_path}" :
 		return
-	
+
 	path = os.path.normpath(org_path)
 	if os.path.isdir(path):
 		path += '/'
-		
+
 	settings.set(key, path)
 #}
-	
+
 def sorted_nicely( l ):
 	""" Sort the given iterable in the way that humans expect."""
 	convert = lambda text: int(text) if text.isdigit() else text
@@ -695,7 +693,7 @@ class pawnParse :
 	def start(self, pFile, node) :
 	#{
 		print_debug(2, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
-		
+
 		self.file 				= pFile
 		self.file_name			= os.path.basename(node.file_name)
 		self.node 				= node
@@ -705,9 +703,9 @@ class pawnParse :
 		self.skip_next_dataline = False
 		self.enum_contents 		= ''
 		self.brace_level 		= 0
-		
+
 		self.restore_buffer 	= None
-		
+
 		self.node.funcs.clear()
 		self.node.doct.clear()
 
@@ -717,31 +715,31 @@ class pawnParse :
 		#{
 			if self.save_const_timer :
 				self.save_const_timer.cancel()
-			
+
 			self.save_const_timer = Timer(4.0, self.save_constants)
 			self.save_const_timer.start()
 		#}
-		
+
 		print_debug(2, "(analyzer) CODE PARSE End [%s]" % node.file_name)
 	#}
-	
+
 	def save_constants(self) :
 	#{
 		self.save_const_timer 	= None
 		self.constants_count 	= len(g_constants_list)
-		
+
 		constants = "___test"
 		for const in g_constants_list :
 			constants += "|" + const
-			
+
 		syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b(" + constants + ")\\b\n      scope: constant.vars.pawn"
-		
+
 		file_name = sublime.packages_path() + "/amxmodx/const.sublime-syntax"
-		
+
 		f = open(file_name, 'w')
 		f.write(syntax)
 		f.close()
-		
+
 		print_debug(2, "(analyzer) call save_constants()")
 	#}
 
@@ -752,24 +750,24 @@ class pawnParse :
 			self.restore_buffer = None
 		else :
 			line = self.file.readline()
-			
+
 		if len(line) > 0 :
 			return line
 		else :
 			return None
 	#}
-			
+
 	def read_string(self, buffer) :
 	#{
 		buffer = buffer.replace('\t', ' ').strip()
 		while '  ' in buffer :
 			buffer = buffer.replace('  ', ' ')
-			
+
 		buffer = buffer.lstrip()
 
 		result = ''
 		i = 0
-		
+
 		while i < len(buffer) :
 			if buffer[i] == '/' and i + 1 < len(buffer):
 				if buffer[i + 1] == '/' :
@@ -792,15 +790,15 @@ class pawnParse :
 		self.brace_level +=  result.count('{') - result.count('}')
 		return result
 	#}
-		
+
 	def skip_function_block(self, buffer) :
 	#{
 		num_brace = 0
 		inString = False
 		self.skip_brace_found = False
-		
+
 		buffer = buffer + ' '
-		
+
 		while buffer is not None and buffer.isspace() :
 			buffer = self.read_line()
 
@@ -809,11 +807,11 @@ class pawnParse :
 			i = 0
 			pos = 0
 			oldChar = ''
-			
+
 			for c in buffer :
 			#{
 				i += 1
-				
+
 				if (c == '"') :
 				#{
 					if inString and oldChar != '^' :
@@ -821,7 +819,7 @@ class pawnParse :
 					else :
 						inString = True
 				#}
-				
+
 				if (inString == False) :
 				#{
 					if (c == '{') :
@@ -831,10 +829,10 @@ class pawnParse :
 						num_brace -= 1
 						pos = i
 				#}
-					
+
 				oldChar = c
 			#}
-			
+
 			if num_brace == 0 :
 				self.restore_buffer = buffer[pos:]
 				return
@@ -842,15 +840,15 @@ class pawnParse :
 			buffer = self.read_line()
 		#}
 	#}
-	
+
 	def valid_name(self, name) :
 	#{
 		if not name or not name[0].isalpha() and name[0] != '_' :
 			return False
-			
+
 		return re.match('^[\w_]+$', name) is not None
 	#}
-	
+
 	def add_constant(self, name) :
 	#{
 		fixname = re.search('(\\w*)', name)
@@ -858,26 +856,26 @@ class pawnParse :
 			name = fixname.group(1)
 			g_constants_list.add(name)
 	#}
-	
+
 	def add_enum(self, buffer) :
 	#{
 		buffer = buffer.strip()
 		if buffer == '' :
 			return
-			
+
 		split = buffer.split('[')
 
 		self.add_autocomplete(buffer, 'enum', split[0])
 		self.add_constant(split[0])
-		
+
 		print_debug(2, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
 	#}
-	
+
 	def add_autocomplete(self, name, info, autocomplete) :
 	#{
 		self.node.funcs.add((name +'  \t'+  self.file_name +' - '+ info, autocomplete))
 	#}
-		
+
 	def start_parse(self) :
 	#{
 		while True :
@@ -886,14 +884,14 @@ class pawnParse :
 
 			if buffer is None :
 				break
-			
+
 			buffer = self.read_string(buffer)
 			if len(buffer) <= 0 :
 				continue
-				
+
 			#if "sma" in self.node.file_name :
 			#	print("read: skip:[%d] brace_level:[%d] buff:[%s]" % (self.skip_next_dataline, self.brace_level, buffer))
-				
+
 			if self.skip_next_dataline :
 				self.skip_next_dataline = False
 				continue
@@ -926,7 +924,7 @@ class pawnParse :
 				self.parse_enum(buffer)
 		#}
 	#}
-	
+
 	def parse_define(self, buffer) :
 	#{
 		define = re.search('#define[\\s]+([^\\s]+)[\\s]+(.+)', buffer)
@@ -937,41 +935,41 @@ class pawnParse :
 			value = define.group(2).strip()
 			self.add_autocomplete(name, 'define: '+value, name)
 			self.add_constant(name)
-			
+
 			print_debug(2, "(analyzer) parse_define add: [%s]" % name)
 		#}
 	#}
-	
+
 	def parse_const(self, buffer) :
 	#{
 		buffer = buffer[6:]
-		
+
 		split 	= buffer.split('=', 1)
 		if len(split) < 2 :
 			return
-			
+
 		name 	= split[0].strip()
 		value 	= split[1].strip()
-		
+
 		newline = value.find(';')
 		if (newline != -1) :
 		#{
 			self.restore_buffer = value[newline+1:].strip()
 			value = value[0:newline]
 		#}
-		
+
 		self.add_autocomplete(name, 'const: '+value, name)
 		self.add_constant(name)
 		print_debug(2, "(analyzer) parse_const add: [%s]" % name)
 	#}
-			
+
 	def parse_variable(self, buffer) :
 	#{
 		if buffer.startswith('new const ') :
 			buffer = buffer[10:]
 		else :
 			buffer = buffer[4:]
-		
+
 		varName = ""
 		oldChar = ''
 		i = 0
@@ -983,15 +981,15 @@ class pawnParse :
 		inBrackets = False
 		inBraces = False
 		inString = False
-		
+
 		while multiLines :
 		#{
 			multiLines = False
-			
+
 			for c in buffer :
 			#{
 				i += 1
-				
+
 				if (c == '"') :
 				#{
 					if (inString and oldChar != '^') :
@@ -999,7 +997,7 @@ class pawnParse :
 					else :
 						inString = True
 				#}
-				
+
 				if (inString == False) :
 				#{
 					if (c == '{') :
@@ -1010,7 +1008,7 @@ class pawnParse :
 						if (num_brace == 0) :
 							inBraces = False
 				#}
-					
+
 				if skipSpaces :
 				#{
 					if c.isspace() :
@@ -1019,18 +1017,18 @@ class pawnParse :
 						skipSpaces = False
 						parseName = True
 				#}
-					
+
 				if parseName :
 				#{
 					if (c == ':') :
 						varName = ''
 					elif (c == ' ' or c == '=' or c == ';' or c == ',') :
 						varName = varName.strip()
-						
+
 						if (varName != '') :
 							self.add_autocomplete(varName, 'var', varName)
 							print_debug(2, "(analyzer) parse_variable add: [%s]" % varName)
-							
+
 						varName = ''
 						parseName = False
 						inBrackets = False
@@ -1039,17 +1037,17 @@ class pawnParse :
 					elif (inBrackets == False) :
 						varName += c
 				#}
-				
+
 				if (inString == False and inBrackets == False and inBraces == False) :
 				#{
 					if not parseName and c == ';' :
 						self.restore_buffer = buffer[i:].strip()
 						return
-				
+
 					if (c == ',') :
 						skipSpaces = True
 				#}
-						
+
 				oldChar = c
 			#}
 
@@ -1064,13 +1062,13 @@ class pawnParse :
 			#{
 				multiLines = True
 				buffer = ' '
-				
+
 				while buffer is not None and buffer.isspace() :
 					buffer = self.read_line()
 			#}
 		#}
 	#}
-	
+
 	def parse_enum(self, buffer) :
 	#{
 		pos = buffer.find('}')
@@ -1099,7 +1097,7 @@ class pawnParse :
 				elif c == ',' :
 					self.add_enum(buffer)
 					buffer = ''
-					
+
 					ignore = False
 					continue
 
@@ -1111,14 +1109,14 @@ class pawnParse :
 			buffer = ''
 		#}
 	#}
-	
+
 	def parse_function(self, buffer, type) :
 	#{
 		multi_line = False
 		temp = ''
 		full_func_str = None
 		open_paren_found = False
-		
+
 		while buffer is not None :
 		#{
 
@@ -1126,10 +1124,10 @@ class pawnParse :
 			if not open_paren_found :
 			#{
 				parenpos = buffer.find('(')
-			
+
 				if parenpos == -1 :
 					return
-				
+
 				open_paren_found = True
 			#}
 			if open_paren_found :
@@ -1166,7 +1164,7 @@ class pawnParse :
 			#print("skip_brace: error:[%d] type:[%d] found:[%d] skip:[%d] func:[%s]" % (error, type, self.skip_brace_found, self.skip_next_dataline, full_func_str))
 		#}
 	#}
-	
+
 	def parse_function_params(self, func, type) :
 	#{
 		if type == 0 :
@@ -1174,12 +1172,12 @@ class pawnParse :
 		else :
 			split = func.split(' ', 1)
 			remaining = split[1]
-		
+
 		split = remaining.split('(', 1)
 		if len(split) < 2 :
 			print_debug(1, "(analyzer) parse_params return1: [%s]" % split)
 			return 1
-			
+
 		remaining = split[1]
 		returntype = ''
 		funcname_and_return = split[0].strip()
@@ -1189,14 +1187,14 @@ class pawnParse :
 			returntype = split_funcname_and_return[0].strip()
 		else :
 			funcname = split_funcname_and_return[0].strip()
-			
+
 		if funcname.startswith("operator") :
 			return 0
-			
+
 		if not self.valid_name(funcname) :
 			print_debug(1, "(analyzer) parse_params invalid name: [%s]" % funcname)
 			return 1
-	
+
 		remaining = remaining.strip()
 		if remaining == ')' :
 			params = []
@@ -1210,16 +1208,16 @@ class pawnParse :
 				autocomplete += ', '
 			autocomplete += '${%d:%s}' % (i, param.strip())
 			i += 1
-			
+
 		autocomplete += ')'
-		
+
 		self.add_autocomplete(funcname, FUNC_TYPES[type].lower(), autocomplete)
 		self.node.doct.add((funcname, func[func.find("(")+1:-1], self.node.file_name, type, returntype))
-		
+
 		print_debug(2, "(analyzer) parse_params add: [%s]" % func)
 		return 0
 	#}
-	
+
 #}
 
 def process_buffer(text, node) :
@@ -1238,7 +1236,7 @@ def simple_escape(html) :
 #{
     return html.replace('&', '&amp;')
 #}
-		
+
 def print_debug(level, msg) :
 #{
 	if g_debug_level >= level :
