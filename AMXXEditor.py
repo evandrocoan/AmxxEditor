@@ -20,7 +20,9 @@ from watchdog.utils.bricks import OrderedSetQueue
 
 def plugin_loaded() :
 #{
-	settings_modified(True)
+	settings = sublime.load_settings("amxx.sublime-settings")
+
+	settings.add_on_change('amxx', on_settings_modified)
 	sublime.set_timeout_async(check_update, 2500)
 #}
 
@@ -388,18 +390,14 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		doctset.update(node.doct)
 
+
 def on_settings_modified() :
-	settings_modified()
-
-def settings_modified(register_callback = False) :
 #{
-	settings = sublime.load_settings("amxx.sublime-settings")
-	if register_callback :
-		settings.add_on_change('amxx', on_settings_modified)
-
 	global g_enable_inteltip
 
-	invalid = is_invalid_settings(settings)
+	settings = sublime.load_settings("amxx.sublime-settings")
+	invalid  = is_invalid_settings(settings)
+
 	if invalid :
 	#{
 		g_enable_inteltip = 0
