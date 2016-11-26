@@ -71,5 +71,55 @@
             }
         ]
     },
+    {
+        "caption": "Preferences",
+        "mnemonic": "n",
+        "id": "preferences",
+        "children":
+        [
+            {
+                "caption": "Package Settings",
+                "mnemonic": "P",
+                "id": "package-settings",
+                "children":
+                [
+					{
+						"caption": "AmxMod-X",
+						"id": "amxmodx",
+						"children":
+						[
+							{
+								"command": "about_amxx_editor",
+								"caption": "About AMXX-Editor"
+							},
+							{
+								"command": "update_amxx_editor",
+								"caption": "Check for Updates"
+							},
+							{ "caption": "-" },
+							{
+								"command": "edit_settings", "args":
+								{
+									"base_file": "${packages}/amxmodx/amxx.sublime-settings",
+									"default": "{\n\t$0\n}\n"
+								},
+								"caption": "Edit Settings"
+							},
+							{ "caption": "-" },
+							{
+								"command": "new_amxx_include",
+								"caption": "New Include"
+							},
+							{
+								"command": "new_amxx_plugin",
+								"caption": "New Plug-In"
+                            }
+                        ]
+                    }
+                ]
+            },
+        ]
+    }
 ]
+
 
