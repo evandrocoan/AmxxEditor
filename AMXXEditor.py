@@ -19,25 +19,25 @@ import watchdog.utils
 from watchdog.utils.bricks import OrderedSetQueue
 
 def plugin_loaded() :
-#{
+
 	settings = sublime.load_settings("amxx.sublime-settings")
 
 	settings.add_on_change('amxx', on_settings_modified)
 	sublime.set_timeout_async(check_update, 2500)
-#}
+
 
 def unload_handler() :
-#{
+
 	file_observer.stop()
 	process_thread.stop()
 	to_process.put(("", ""))
 	sublime.load_settings("amxx.sublime-settings").clear_on_change("amxx")
-#}
+
 
 class ColorAmxxEditorCommand(sublime_plugin.ApplicationCommand):
-#{
+
 	def run(self, index) :
-	#{
+
 		if index >= g_color_schemes['count'] :
 			return
 
@@ -58,7 +58,7 @@ class ColorAmxxEditorCommand(sublime_plugin.ApplicationCommand):
 		f = open(file_path, "w")
 		f.write(content)
 		f.close()
-	#}
+
 
 	def is_visible(self, index) :
 		return (index < g_color_schemes['count'])
@@ -70,7 +70,7 @@ class ColorAmxxEditorCommand(sublime_plugin.ApplicationCommand):
 		if index < g_color_schemes['count'] :
 			return g_color_schemes['list'][index]
 		return ""
-#}
+
 
 class NewAmxxIncludeCommand(sublime_plugin.WindowCommand):
 	def run(self):
@@ -80,7 +80,7 @@ class NewAmxxPluginCommand(sublime_plugin.WindowCommand):
 		new_file("sma")
 
 def new_file(type):
-#{
+
 	view = sublime.active_window().new_file()
 
 	view.set_syntax_file("AMXX-Pawn.sublime-syntax")
@@ -90,12 +90,12 @@ def new_file(type):
 	plugin_template = plugin_template.replace("\r", "")
 
 	view.run_command("insert_snippet", {"contents": plugin_template})
-#}
+
 
 class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
-#{
+
 	def run(self):
-	#{
+
 		about = "Sublime AMXX-Editor v"+ EDITOR_VERSION +" by Destro\n\n\n"
 
 		about += "CREDITs:\n"
@@ -109,27 +109,27 @@ class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
 		about += "   Mistrick     (mistrick color scheme)\n"
 
 		sublime.message_dialog(about)
-	#}
-#}
+
+
 
 class UpdateAmxxEditorCommand(sublime_plugin.WindowCommand):
-#{
+
 	def run(self) :
-	#{
+
 		sublime.set_timeout_async(self.check_update_async, 100)
-	#}
+
 	def check_update_async(self) :
-	#{
+
 		check_update(True)
-	#}
-#}
+
+
 
 def check_update(bycommand=0) :
-#{
+
 	data = urllib.request.urlopen("https://amxmodx-es.com/st.php").read().decode("utf-8")
 
 	if data :
-	#{
+
 		data = data.split("\n", 1)
 
 		fCheckVersion = float(data[0])
@@ -140,16 +140,16 @@ def check_update(bycommand=0) :
 			sublime.ok_cancel_dialog(msg, "OK")
 
 		if fCheckVersion > fCurrentVersion :
-		#{
+
 			msg  = "AMXX: A new version available v"+ data[0]
 			msg += "\n\nNews:\n" + data[1]
 			ok = sublime.ok_cancel_dialog(msg, "Update")
 
 			if ok :
 				webbrowser.open_new_tab("https://amxmodx-es.com/showthread.php?tid=12316")
-		#}
-	#}
-#}
+
+
+
 
 class AmxxBuildVerCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
@@ -392,14 +392,14 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 
 def on_settings_modified() :
-#{
+
 	global g_enable_inteltip
 
 	settings = sublime.load_settings("amxx.sublime-settings")
 	invalid  = is_invalid_settings(settings)
 
 	if invalid :
-	#{
+
 		g_enable_inteltip = 0
 
 		sublime.message_dialog("AMXX-Editor:\n\n" + invalid)
@@ -415,7 +415,7 @@ def on_settings_modified() :
 
 		sublime.active_window().run_command("edit_settings", {"base_file": "${packages}/amxmodx/amxx.sublime-settings", "default": "{\n\t$0\n}\n"})
 		return
-	#}
+
 
 	# check package path
 	packages_path = sublime.packages_path() + "/amxmodx"
@@ -458,19 +458,19 @@ def on_settings_modified() :
 	g_color_schemes['active'] = color_scheme
 
 	for file in os.listdir(sublime.packages_path()+"/amxmodx") :
-	#{
+
 		if file.endswith("-pawn.tmTheme") :
 			g_color_schemes['list'] += [ file.replace("-pawn.tmTheme", "") ]
-	#}
+
 
 	g_color_schemes['count'] = len(g_color_schemes['list'])
 
 	file_observer.unschedule_all()
 	file_observer.schedule(file_event_handler, g_include_dir, True)
-#}
+
 
 def is_invalid_settings(settings) :
-#{
+
 	if settings.get('amxxpc_directory') is None or settings.get('amxxpc_debug') is None or settings.get('include_directory') is None or settings.get('output_directory') is None or settings.get('color_scheme') is None :
 		return "You are not set correctly settings for AMXX-Editor.\n\nNo has configurado correctamente el AMXX-Editor."
 
@@ -487,10 +487,10 @@ def is_invalid_settings(settings) :
 		return "output_directory :  Directory not exist. \n\"%s\"" % temp
 
 	return None
-#}
+
 
 def fix_path(settings, key) :
-#{
+
 	org_path = settings.get(key)
 
 	if org_path is "${file_path}" :
@@ -501,7 +501,7 @@ def fix_path(settings, key) :
 		path += '/'
 
 	settings.set(key, path)
-#}
+
 
 def sorted_nicely( l ):
 	""" Sort the given iterable in the way that humans expect."""
@@ -637,7 +637,7 @@ def get_or_add_node( file_name) :
 
 # ============= NEW CODE ------------------------------------------------------------------------------------------------------------
 class Node :
-#{
+
 	def __init__(self, file_name) :
 		self.file_name = file_name
 		self.children = set()
@@ -661,16 +661,16 @@ class Node :
 			self.remove_child(node)
 		self.funcs.clear()
 		self.doct.clear()
-#}
+
 
 class TextReader:
-#{
+
 	def __init__(self, text):
 		self.text = text.splitlines()
 		self.position = -1
 
 	def readline(self) :
-	#{
+
 		self.position += 1
 
 		if self.position < len(self.text) :
@@ -681,17 +681,17 @@ class TextReader:
 				return retval
 		else :
 			return ''
-	#}
-#}
+
+
 
 class pawnParse :
-#{
+
 	def __init__(self) :
 		self.save_const_timer = None
 		self.constants_count = 0
 
 	def start(self, pFile, node) :
-	#{
+
 		print_debug(2, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
 
 		self.file 				= pFile
@@ -712,19 +712,19 @@ class pawnParse :
 		self.start_parse()
 
 		if self.constants_count != len(g_constants_list) :
-		#{
+
 			if self.save_const_timer :
 				self.save_const_timer.cancel()
 
 			self.save_const_timer = Timer(4.0, self.save_constants)
 			self.save_const_timer.start()
-		#}
+
 
 		print_debug(2, "(analyzer) CODE PARSE End [%s]" % node.file_name)
-	#}
+
 
 	def save_constants(self) :
-	#{
+
 		self.save_const_timer 	= None
 		self.constants_count 	= len(g_constants_list)
 
@@ -741,10 +741,10 @@ class pawnParse :
 		f.close()
 
 		print_debug(2, "(analyzer) call save_constants()")
-	#}
+
 
 	def read_line(self) :
-	#{
+
 		if self.restore_buffer :
 			line = self.restore_buffer
 			self.restore_buffer = None
@@ -755,10 +755,10 @@ class pawnParse :
 			return line
 		else :
 			return None
-	#}
+
 
 	def read_string(self, buffer) :
-	#{
+
 		buffer = buffer.replace('\t', ' ').strip()
 		while '  ' in buffer :
 			buffer = buffer.replace('  ', ' ')
@@ -789,10 +789,10 @@ class pawnParse :
 
 		self.brace_level +=  result.count('{') - result.count('}')
 		return result
-	#}
+
 
 	def skip_function_block(self, buffer) :
-	#{
+
 		num_brace = 0
 		inString = False
 		self.skip_brace_found = False
@@ -803,62 +803,62 @@ class pawnParse :
 			buffer = self.read_line()
 
 		while buffer is not None :
-		#{
+
 			i = 0
 			pos = 0
 			oldChar = ''
 
 			for c in buffer :
-			#{
+
 				i += 1
 
 				if (c == '"') :
-				#{
+
 					if inString and oldChar != '^' :
 						inString = False
 					else :
 						inString = True
-				#}
+
 
 				if (inString == False) :
-				#{
+
 					if (c == '{') :
 						num_brace += 1
 						self.skip_brace_found = True
 					elif (c == '}') :
 						num_brace -= 1
 						pos = i
-				#}
+
 
 				oldChar = c
-			#}
+
 
 			if num_brace == 0 :
 				self.restore_buffer = buffer[pos:]
 				return
 
 			buffer = self.read_line()
-		#}
-	#}
+
+
 
 	def valid_name(self, name) :
-	#{
+
 		if not name or not name[0].isalpha() and name[0] != '_' :
 			return False
 
 		return re.match('^[\w_]+$', name) is not None
-	#}
+
 
 	def add_constant(self, name) :
-	#{
+
 		fixname = re.search('(\\w*)', name)
 		if fixname :
 			name = fixname.group(1)
 			g_constants_list.add(name)
-	#}
+
 
 	def add_enum(self, buffer) :
-	#{
+
 		buffer = buffer.strip()
 		if buffer == '' :
 			return
@@ -869,17 +869,17 @@ class pawnParse :
 		self.add_constant(split[0])
 
 		print_debug(2, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
-	#}
+
 
 	def add_autocomplete(self, name, info, autocomplete) :
-	#{
+
 		self.node.funcs.add((name +'  \t'+  self.file_name +' - '+ info, autocomplete))
-	#}
+
 
 	def start_parse(self) :
-	#{
+
 		while True :
-		#{
+
 			buffer = self.read_line()
 
 			if buffer is None :
@@ -922,14 +922,14 @@ class pawnParse :
 
 			if self.found_enum :
 				self.parse_enum(buffer)
-		#}
-	#}
+
+
 
 	def parse_define(self, buffer) :
-	#{
+
 		define = re.search('#define[\\s]+([^\\s]+)[\\s]+(.+)', buffer)
 		if define :
-		#{
+
 			buffer = ''
 			name = define.group(1)
 			value = define.group(2).strip()
@@ -937,11 +937,11 @@ class pawnParse :
 			self.add_constant(name)
 
 			print_debug(2, "(analyzer) parse_define add: [%s]" % name)
-		#}
-	#}
+
+
 
 	def parse_const(self, buffer) :
-	#{
+
 		buffer = buffer[6:]
 
 		split 	= buffer.split('=', 1)
@@ -953,18 +953,18 @@ class pawnParse :
 
 		newline = value.find(';')
 		if (newline != -1) :
-		#{
+
 			self.restore_buffer = value[newline+1:].strip()
 			value = value[0:newline]
-		#}
+
 
 		self.add_autocomplete(name, 'const: '+value, name)
 		self.add_constant(name)
 		print_debug(2, "(analyzer) parse_const add: [%s]" % name)
-	#}
+
 
 	def parse_variable(self, buffer) :
-	#{
+
 		if buffer.startswith('new const ') :
 			buffer = buffer[10:]
 		else :
@@ -983,23 +983,23 @@ class pawnParse :
 		inString = False
 
 		while multiLines :
-		#{
+
 			multiLines = False
 
 			for c in buffer :
-			#{
+
 				i += 1
 
 				if (c == '"') :
-				#{
+
 					if (inString and oldChar != '^') :
 						inString = False
 					else :
 						inString = True
-				#}
+
 
 				if (inString == False) :
-				#{
+
 					if (c == '{') :
 						num_brace += 1
 						inBraces = True
@@ -1007,19 +1007,19 @@ class pawnParse :
 						num_brace -= 1
 						if (num_brace == 0) :
 							inBraces = False
-				#}
+
 
 				if skipSpaces :
-				#{
+
 					if c.isspace() :
 						continue
 					else :
 						skipSpaces = False
 						parseName = True
-				#}
+
 
 				if parseName :
-				#{
+
 					if (c == ':') :
 						varName = ''
 					elif (c == ' ' or c == '=' or c == ';' or c == ',') :
@@ -1036,41 +1036,41 @@ class pawnParse :
 						inBrackets = True
 					elif (inBrackets == False) :
 						varName += c
-				#}
+
 
 				if (inString == False and inBrackets == False and inBraces == False) :
-				#{
+
 					if not parseName and c == ';' :
 						self.restore_buffer = buffer[i:].strip()
 						return
 
 					if (c == ',') :
 						skipSpaces = True
-				#}
+
 
 				oldChar = c
-			#}
+
 
 			if (c != ',') :
-			#{
+
 				varName = varName.strip()
 				if varName != '' :
 					self.add_autocomplete(varName, 'var', varName)
 					print_debug(2, "(analyzer) parse_variable add: [%s]" % varName)
-			#}
+
 			else :
-			#{
+
 				multiLines = True
 				buffer = ' '
 
 				while buffer is not None and buffer.isspace() :
 					buffer = self.read_line()
-			#}
-		#}
-	#}
+
+
+
 
 	def parse_enum(self, buffer) :
-	#{
+
 		pos = buffer.find('}')
 		if pos != -1 :
 			buffer = buffer[0:pos]
@@ -1081,12 +1081,12 @@ class pawnParse :
 
 		ignore = False
 		if not self.found_enum :
-		#{
+
 			pos = self.enum_contents.find('{')
 			self.enum_contents = self.enum_contents[pos + 1:]
 
 			for c in self.enum_contents :
-			#{
+
 				if c == '=' or c == '#' :
 					ignore = True
 				elif c == '\n':
@@ -1103,35 +1103,35 @@ class pawnParse :
 
 				if not ignore :
 					buffer += c
-			#}
+
 
 			self.add_enum(buffer)
 			buffer = ''
-		#}
-	#}
+
+
 
 	def parse_function(self, buffer, type) :
-	#{
+
 		multi_line = False
 		temp = ''
 		full_func_str = None
 		open_paren_found = False
 
 		while buffer is not None :
-		#{
+
 
 			buffer = buffer.strip()
 			if not open_paren_found :
-			#{
+
 				parenpos = buffer.find('(')
 
 				if parenpos == -1 :
 					return
 
 				open_paren_found = True
-			#}
+
 			if open_paren_found :
-			#{
+
 				pos = buffer.find(')')
 				if pos != -1 :
 					full_func_str = buffer[0:pos + 1]
@@ -1144,17 +1144,17 @@ class pawnParse :
 
 				multi_line = True
 				temp = '%s%s' % (temp, buffer)
-			#}
+
 
 			buffer = self.read_line()
 			if buffer is None :
 				return
 
 			buffer = self.read_string(buffer)
-		#}
+
 
 		if full_func_str is not None :
-		#{
+
 			error = self.parse_function_params(full_func_str, type)
 			if not error and type <= 2 :
 				self.skip_function_block(buffer)
@@ -1162,11 +1162,11 @@ class pawnParse :
 					self.skip_next_dataline = True
 
 			#print("skip_brace: error:[%d] type:[%d] found:[%d] skip:[%d] func:[%s]" % (error, type, self.skip_brace_found, self.skip_next_dataline, full_func_str))
-		#}
-	#}
+
+
 
 	def parse_function_params(self, func, type) :
-	#{
+
 		if type == 0 :
 			remaining = func
 		else :
@@ -1216,32 +1216,32 @@ class pawnParse :
 
 		print_debug(2, "(analyzer) parse_params add: [%s]" % func)
 		return 0
-	#}
 
-#}
+
+
 
 def process_buffer(text, node) :
-#{
+
 	text_reader = TextReader(text)
 	pawnparse.start(text_reader, node)
-#}
+
 
 def process_include_file(node) :
-#{
+
 	with open(node.file_name) as file :
 		pawnparse.start(file, node)
-#}
+
 
 def simple_escape(html) :
-#{
+
     return html.replace('&', '&amp;')
-#}
+
 
 def print_debug(level, msg) :
-#{
+
 	if g_debug_level >= level :
 		print("[AMXX-Editor]: " + msg)
-#}
+
 
 EDITOR_VERSION = "2.2"
 FUNC_TYPES = [ "Function", "Public", "Stock", "Forward", "Native" ]
