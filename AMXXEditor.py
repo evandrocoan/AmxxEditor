@@ -18,9 +18,31 @@ import watchdog.observers
 import watchdog.utils
 from watchdog.utils.bricks import OrderedSetQueue
 
-
 import datetime
 startTime = None
+
+
+EDITOR_VERSION = "3.0"
+FUNC_TYPES     = [ "Function", "Public", "Stock", "Forward", "Native" ]
+
+g_default_schemes     = [ "atomic", "dark", "mistrick", "npp", "twlight", "white" ]
+g_color_schemes       = { "list": g_default_schemes[:], "count":0, "active":0 }
+g_constants_list      = set()
+g_inteltip_style      = ""
+g_enable_inteltip     = False
+g_enable_buildversion = False
+g_debug_level         = 10
+g_delay_time          = 1.0
+g_include_dir         = "."
+
+to_process         = OrderedSetQueue()
+nodes              = dict()
+file_observer      = watchdog.observers.Observer()
+process_thread     = ProcessQueueThread()
+file_event_handler = IncludeFileEventHandler()
+includes_re        = re.compile( '^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE )
+local_re           = re.compile( '\\.(sma|inc)$' )
+pawnparse          = pawnParse()
 
 
 def main():
@@ -33,28 +55,6 @@ def main():
 
     print_debug( 1, startTime.isoformat() )
     print_debug( 1, "Entering on the main(0) function." )
-
-    EDITOR_VERSION = "2.2"
-    FUNC_TYPES     = [ "Function", "Public", "Stock", "Forward", "Native" ]
-
-    g_default_schemes     = [ "atomic", "dark", "mistrick", "npp", "twlight", "white" ]
-    g_color_schemes       = { "list": g_default_schemes[:], "count":0, "active":0 }
-    g_constants_list      = set()
-    g_inteltip_style      = ""
-    g_enable_inteltip     = False
-    g_enable_buildversion = False
-    g_debug_level         = 10
-    g_delay_time          = 1.0
-    g_include_dir         = "."
-
-    to_process         = OrderedSetQueue()
-    nodes              = dict()
-    file_observer      = watchdog.observers.Observer()
-    process_thread     = ProcessQueueThread()
-    file_event_handler = IncludeFileEventHandler()
-    includes_re        = re.compile( '^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE )
-    local_re           = re.compile( '\\.(sma|inc)$' )
-    pawnparse          = pawnParse()
 
 
 
@@ -467,33 +467,7 @@ class AMXXEditor( sublime_plugin.EventListener ):
 def on_settings_modified():
 
     global g_enable_inteltip
-
     settings = sublime.load_settings( "amxx.sublime-settings" )
-    invalid  = is_invalid_settings( settings )
-
-    if invalid:
-
-        g_enable_inteltip = 0
-
-        sublime.message_dialog( "AMXX-Editor:\n\n" + invalid )
-
-        file_name = sublime.packages_path() + "/User/amxx.sublime-settings"
-
-        if not os.path.isfile( file_name ):
-
-            default = sublime.load_resource( "Packages/amxmodx/amxx.sublime-settings" )
-            default = default.replace( "Example:", "User Setting:" )
-
-            f = open( file_name, "w" )
-
-            f.write( default )
-            f.close()
-
-        sublime.active_window().run_command( "edit_settings", \
-                {"base_file": "${packages}/amxmodx/amxx.sublime-settings", "default": "{\n\t$0\n}\n"} )
-
-        return
-
 
     # check package path
     packages_path = sublime.packages_path() + "/amxmodx"
@@ -562,36 +536,6 @@ def on_settings_modified():
     file_observer.unschedule_all()
     file_observer.schedule( file_event_handler, g_include_dir, True )
 
-
-def is_invalid_settings( settings ):
-
-    if settings.get( 'amxxpc_directory' ) is None \
-            or settings.get( 'amxxpc_debug' ) is None \
-            or settings.get( 'include_directory' ) is None \
-            or settings.get( 'output_directory' ) is None \
-            or settings.get( 'color_scheme' ) is None:
-
-        return "You are not set correctly settings for AMXX-Editor.\n\nNo has configurado correctamente el AMXX-Editor."
-
-    temp = settings.get( 'amxxpc_directory' )
-
-    if not os.path.isfile( temp ):
-
-        return "amxxpc_directory :  File not exist. \n\"%s\"" % temp
-
-    temp = settings.get( 'include_directory' )
-
-    if not os.path.isdir( temp ):
-
-        return "include_directory :  Directory not exist. \n\"%s\"" % temp
-
-    temp = settings.get( 'output_directory' )
-
-    if temp is "${file_path}" and not os.path.isdir( temp ):
-
-        return "output_directory :  Directory not exist. \n\"%s\"" % temp
-
-    return None
 
 
 def fix_path( settings, key ):
@@ -928,14 +872,17 @@ class pawnParse:
         self.constants_count    = len( g_constants_list )
 
         constants = "___test"
+
         for const in g_constants_list:
+
             constants += "|" + const
 
-        syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b( " + constants + " )\\b\n      scope: constant.vars.pawn"
+        syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b( " + \
+                constants + " )\\b\n      scope: constant.vars.pawn"
 
         file_name = sublime.packages_path() + "/amxmodx/const.sublime-syntax"
+        f         = open( file_name, 'w' )
 
-        f = open( file_name, 'w' )
         f.write( syntax )
         f.close()
 
@@ -1120,13 +1067,17 @@ class pawnParse:
 
             #if "sma" in self.node.file_name:
             #   print( "read: skip:[%d] brace_level:[%d] buff:[%s]" % ( self.skip_next_dataline, self.brace_level, buffer ) )
-
             if self.skip_next_dataline:
 
                 self.skip_next_dataline = False
                 continue
 
-            if buffer.startswith( '#pragma deprecated' ):
+            # To start the file parsing
+            if buffer.startswith( '#include ' ):
+
+                buffer = self.parse_include( buffer )
+
+            elif buffer.startswith( '#pragma deprecated' ):
 
                 buffer = self.read_line()
 
@@ -1175,6 +1126,17 @@ class pawnParse:
 
                 self.parse_enum( buffer )
 
+
+    def parse_include( self, buffer ):
+
+        include_line = re.search( '#include[\\s]+[<"](.*)[">]', buffer )
+
+        if include_line:
+
+            buffer            = ''
+            include_file_name = include_line.group( 1 )
+
+            print_debug( 2, "( analyzer ) parse_include add: [%s]" % include_file_name )
 
 
     def parse_define( self, buffer ):
