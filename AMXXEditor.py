@@ -20,14 +20,14 @@ from watchdog.utils.bricks import OrderedSetQueue
 
 
 
-def plugin_loaded() :
+def plugin_loaded():
 
     settings = sublime.load_settings("amxx.sublime-settings")
     settings.add_on_change('amxx', on_settings_modified)
 
 
 
-def unload_handler() :
+def unload_handler():
 
     file_observer.stop()
     process_thread.stop()
@@ -38,16 +38,16 @@ def unload_handler() :
 
 class ColorAmxxEditorCommand(sublime_plugin.ApplicationCommand):
 
-    def run(self, index) :
+    def run(self, index):
 
-        if index >= g_color_schemes['count'] :
+        if index >= g_color_schemes['count']:
             return
 
         g_color_schemes['active'] = index
 
         file_path = sublime.packages_path()+"/User/amxx.sublime-settings"
         f = open(file_path, "r")
-        if not f :
+        if not f:
             return
 
         content = f.read()
@@ -62,19 +62,19 @@ class ColorAmxxEditorCommand(sublime_plugin.ApplicationCommand):
         f.close()
 
 
-    def is_visible(self, index) :
+    def is_visible(self, index):
 
         return (index < g_color_schemes['count'])
 
 
-    def is_checked(self, index) :
+    def is_checked(self, index):
 
         return (index < g_color_schemes['count'] and g_color_schemes['list'][index] == g_color_schemes['active'])
 
 
-    def description(self, index) :
+    def description(self, index):
 
-        if index < g_color_schemes['count'] :
+        if index < g_color_schemes['count']:
 
             return g_color_schemes['list'][index]
 
@@ -138,18 +138,18 @@ class AmxxBuildVerCommand(sublime_plugin.TextCommand):
 
         region = self.view.find("^#define\s+(?:PLUGIN_)?VERSION\s+\".+\"", 0, sublime.IGNORECASE)
 
-        if region == None :
+        if region == None:
 
             region = self.view.find("new\s+const\s+(?:PLUGIN_)?VERSION\s*\[\s*\]\s*=\s*\".+\"", 0, sublime.IGNORECASE)
 
-            if region == None :
+            if region == None:
 
                 return
 
         line   = self.view.substr(region)
         result = re.match("(.*\"(?:v)?\d{1,2}\.\d{1,2}\.(?:\d{1,2}-)?)(\d+)(b(?:eta)?)?\"", line)
 
-        if not result :
+        if not result:
 
             return
 
@@ -158,7 +158,7 @@ class AmxxBuildVerCommand(sublime_plugin.TextCommand):
 
         beta = result.group(3)
 
-        if not beta :
+        if not beta:
 
             beta = ""
 
@@ -168,30 +168,30 @@ class AmxxBuildVerCommand(sublime_plugin.TextCommand):
 
 class AMXXEditor(sublime_plugin.EventListener):
 
-    def __init__(self) :
+    def __init__(self):
 
         process_thread.start()
         self.delay_queue = None
         file_observer.start()
 
-    def on_window_command(self, window, cmd, args) :
+    def on_window_command(self, window, cmd, args):
 
-        if cmd != "build" :
+        if cmd != "build":
 
             return
 
         view = window.active_view()
 
-        if not self.is_amxmodx_file(view) or not g_enable_buildversion :
+        if not self.is_amxmodx_file(view) or not g_enable_buildversion:
 
             return
 
         view.run_command("amxx_build_ver")
 
 
-    def on_selection_modified(self, view) :
+    def on_selection_modified(self, view):
 
-        if not self.is_amxmodx_file(view) or not g_enable_inteltip :
+        if not self.is_amxmodx_file(view) or not g_enable_inteltip:
 
             return
 
@@ -200,7 +200,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 
         print_debug(1, "(inteltip) scope_name: [%s]" % scope)
 
-        if not "support.function" in scope and not "include_path.pawn" in scope or region.size() > 1 :
+        if not "support.function" in scope and not "include_path.pawn" in scope or region.size() > 1:
 
             view.hide_popup()
             view.add_regions("inteltip", [ ])
@@ -216,7 +216,7 @@ class AMXXEditor(sublime_plugin.EventListener):
             self.inteltip_function(view, region)
 
 
-    def inteltip_include(self, view, region) :
+    def inteltip_include(self, view, region):
 
         location = view.word(region).end() + 1
         line     = view.substr(view.line(region))
@@ -224,7 +224,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 
         (file_name, exists) = get_file_name(view.file_name(), include)
 
-        if not exists :
+        if not exists:
 
             return
 
@@ -244,7 +244,7 @@ class AMXXEditor(sublime_plugin.EventListener):
         html += '<div class="top">'
         html += '<a class="file" href="'+link_local+'">'+include+'</a>'
 
-        if link_web :
+        if link_web:
 
             html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
 
@@ -256,7 +256,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 
         view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
 
-    def inteltip_function(self, view, region) :
+    def inteltip_function(self, view, region):
 
         word_region = view.word(region)
         location    = word_region.end() + 1
@@ -268,13 +268,13 @@ class AMXXEditor(sublime_plugin.EventListener):
 
         self.generate_doctset_recur(node, doctset, visited)
 
-        for func in doctset :
+        for func in doctset:
 
-            if search_func == func[0] :
+            if search_func == func[0]:
 
                 found = func
 
-                if found[3] != 1 :
+                if found[3] != 1:
 
                     break
 
@@ -284,20 +284,20 @@ class AMXXEditor(sublime_plugin.EventListener):
 
             filename = os.path.basename(found[2])
 
-            if found[3] :
+            if found[3]:
 
-                if found[4] :
+                if found[4]:
 
                     link_local = found[2] + '#' + FUNC_TYPES[found[3]] + ' ' + found[4] + ':' + found[0]
 
-                else :
+                else:
 
                     link_local = found[2] + '#' + FUNC_TYPES[found[3]] + ' ' + found[0]
 
 
                 link_web = filename.rsplit('.', 1)[0] + '#' + found[0]
 
-            else :
+            else:
 
                 link_local = found[2] + '#' + '^' + found[0]
                 link_web = ''
@@ -318,7 +318,7 @@ class AMXXEditor(sublime_plugin.EventListener):
             html += '<span class="params">Params:</span> <span class="params_definition">('+ simple_escape(found[1]) +')</span>'
             html += '<br>'
 
-            if found[4] :
+            if found[4]:
 
                 html += '<span class="return">Return:</span> <span class="return_type">'+found[4]+'</span>'
 
@@ -333,21 +333,21 @@ class AMXXEditor(sublime_plugin.EventListener):
             view.add_regions("inteltip", [ ])
 
 
-    def on_navigate(self, link) :
+    def on_navigate(self, link):
 
         (file, search) = link.split('#')
 
-        if "." in file :
+        if "." in file:
 
             view = sublime.active_window().open_file(file);
 
-            def do_position() :
+            def do_position():
 
                 if view.is_loading():
 
                     sublime.set_timeout(do_position, 100)
 
-                else :
+                else:
 
                     r = view.find(search, 0, sublime.IGNORECASE)
 
@@ -359,43 +359,43 @@ class AMXXEditor(sublime_plugin.EventListener):
 
             do_position()
 
-        else :
+        else:
 
             webbrowser.open_new_tab("http://www.amxmodx.org/api/"+file+"/"+search)
 
 
-    def on_activated(self, view) :
+    def on_activated(self, view):
 
         if not self.is_amxmodx_file(view):
 
             return
 
-        if not view.file_name() :
+        if not view.file_name():
 
             return
 
-        if not view.file_name() in nodes :
+        if not view.file_name() in nodes:
 
             add_to_queue(view)
 
 
-    def on_modified(self, view) :
+    def on_modified(self, view):
 
         self.add_to_queue_delayed(view)
 
 
-    def on_post_save(self, view) :
+    def on_post_save(self, view):
 
         self.add_to_queue_now(view)
 
 
-    def on_load(self, view) :
+    def on_load(self, view):
 
         self.add_to_queue_now(view)
 
 
 
-    def add_to_queue_now(self, view) :
+    def add_to_queue_now(self, view):
 
         if not self.is_amxmodx_file(view):
 
@@ -403,13 +403,13 @@ class AMXXEditor(sublime_plugin.EventListener):
 
         add_to_queue(view)
 
-    def add_to_queue_delayed(self, view) :
+    def add_to_queue_delayed(self, view):
 
         if not self.is_amxmodx_file(view):
 
             return
 
-        if self.delay_queue is not None :
+        if self.delay_queue is not None:
 
             self.delay_queue.cancel()
 
@@ -417,7 +417,7 @@ class AMXXEditor(sublime_plugin.EventListener):
         self.delay_queue.start()
 
 
-    def is_amxmodx_file(self, view) :
+    def is_amxmodx_file(self, view):
 
         return view.file_name() is not None and view.match_selector(0, 'source.sma')
 
@@ -427,14 +427,14 @@ class AMXXEditor(sublime_plugin.EventListener):
 
             return None
 
-        if view.match_selector(locations[0], 'source.sma string') :
+        if view.match_selector(locations[0], 'source.sma string'):
 
             return ([], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 
         return (self.generate_funcset(view.file_name()), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 
 
-    def generate_funcset(self, file_name) :
+    def generate_funcset(self, file_name):
 
         funcset = set()
         visited = set()
@@ -445,43 +445,43 @@ class AMXXEditor(sublime_plugin.EventListener):
         return sorted_nicely(funcset)
 
 
-    def generate_funcset_recur(self, node, funcset, visited) :
+    def generate_funcset_recur(self, node, funcset, visited):
 
-        if node in visited :
+        if node in visited:
             return
 
         visited.add(node)
 
-        for child in node.children :
+        for child in node.children:
 
             self.generate_funcset_recur(child, funcset, visited)
 
         funcset.update(node.funcs)
 
 
-    def generate_doctset_recur(self, node, doctset, visited) :
+    def generate_doctset_recur(self, node, doctset, visited):
 
-        if node in visited :
+        if node in visited:
 
             return
 
         visited.add(node)
 
-        for child in node.children :
+        for child in node.children:
 
             self.generate_doctset_recur(child, doctset, visited)
 
         doctset.update(node.doct)
 
 
-def on_settings_modified() :
+def on_settings_modified():
 
     global g_enable_inteltip
 
     settings = sublime.load_settings("amxx.sublime-settings")
     invalid  = is_invalid_settings(settings)
 
-    if invalid :
+    if invalid:
 
         g_enable_inteltip = 0
 
@@ -508,7 +508,7 @@ def on_settings_modified() :
     # check package path
     packages_path = sublime.packages_path() + "/amxmodx"
 
-    if not os.path.isdir(packages_path) :
+    if not os.path.isdir(packages_path):
 
         os.mkdir(packages_path)
 
@@ -560,9 +560,9 @@ def on_settings_modified() :
     g_color_schemes['list'] = g_default_schemes[:]
     g_color_schemes['active'] = color_scheme
 
-    for file in os.listdir(sublime.packages_path()+"/amxmodx") :
+    for file in os.listdir(sublime.packages_path()+"/amxmodx"):
 
-        if file.endswith("-pawn.tmTheme") :
+        if file.endswith("-pawn.tmTheme"):
 
             g_color_schemes['list'] += [ file.replace("-pawn.tmTheme", "") ]
 
@@ -573,42 +573,42 @@ def on_settings_modified() :
     file_observer.schedule(file_event_handler, g_include_dir, True)
 
 
-def is_invalid_settings(settings) :
+def is_invalid_settings(settings):
 
     if settings.get('amxxpc_directory') is None \
             or settings.get('amxxpc_debug') is None \
             or settings.get('include_directory') is None \
             or settings.get('output_directory') is None \
-            or settings.get('color_scheme') is None :
+            or settings.get('color_scheme') is None:
 
         return "You are not set correctly settings for AMXX-Editor.\n\nNo has configurado correctamente el AMXX-Editor."
 
     temp = settings.get('amxxpc_directory')
 
-    if not os.path.isfile(temp) :
+    if not os.path.isfile(temp):
 
         return "amxxpc_directory :  File not exist. \n\"%s\"" % temp
 
     temp = settings.get('include_directory')
 
-    if not os.path.isdir(temp) :
+    if not os.path.isdir(temp):
 
         return "include_directory :  Directory not exist. \n\"%s\"" % temp
 
     temp = settings.get('output_directory')
 
-    if temp is "${file_path}" and not os.path.isdir(temp) :
+    if temp is "${file_path}" and not os.path.isdir(temp):
 
         return "output_directory :  Directory not exist. \n\"%s\"" % temp
 
     return None
 
 
-def fix_path(settings, key) :
+def fix_path(settings, key):
 
     org_path = settings.get(key)
 
-    if org_path is "${file_path}" :
+    if org_path is "${file_path}":
 
         return
 
@@ -632,13 +632,13 @@ def sorted_nicely( l ):
 
 
 
-def add_to_queue_forward(view) :
+def add_to_queue_forward(view):
 
     sublime.set_timeout(lambda: add_to_queue(view), 0)
 
 
 
-def add_to_queue(view) :
+def add_to_queue(view):
     """
         The view can only be accessed from the main thread, so run the regex
         now and process the results later
@@ -648,52 +648,52 @@ def add_to_queue(view) :
 
 
 
-def add_include_to_queue(file_name) :
+def add_include_to_queue(file_name):
 
     to_process.put((file_name, None))
 
 
 
-class IncludeFileEventHandler(watchdog.events.FileSystemEventHandler) :
+class IncludeFileEventHandler(watchdog.events.FileSystemEventHandler):
 
-    def __init__(self) :
+    def __init__(self):
 
         watchdog.events.FileSystemEventHandler.__init__(self)
 
 
-    def on_created(self, event) :
+    def on_created(self, event):
 
         sublime.set_timeout(lambda: on_modified_main_thread(event.src_path), 0)
 
 
-    def on_modified(self, event) :
+    def on_modified(self, event):
 
         sublime.set_timeout(lambda: on_modified_main_thread(event.src_path), 0)
 
 
-    def on_deleted(self, event) :
+    def on_deleted(self, event):
 
         sublime.set_timeout(lambda: on_deleted_main_thread(event.src_path), 0)
 
 
 
-def on_modified_main_thread(file_path) :
+def on_modified_main_thread(file_path):
 
-    if not is_active(file_path) :
+    if not is_active(file_path):
 
         add_include_to_queue(file_path)
 
 
 
-def on_deleted_main_thread(file_path) :
+def on_deleted_main_thread(file_path):
 
-    if is_active(file_path) :
+    if is_active(file_path):
 
         return
 
     node = nodes.get(file_path)
 
-    if node is None :
+    if node is None:
 
         return
 
@@ -701,29 +701,29 @@ def on_deleted_main_thread(file_path) :
 
 
 
-def is_active(file_name) :
+def is_active(file_name):
 
     return sublime.active_window().active_view().file_name() == file_name
 
 
 
-class ProcessQueueThread(watchdog.utils.DaemonThread) :
+class ProcessQueueThread(watchdog.utils.DaemonThread):
 
-    def run(self) :
+    def run(self):
 
-        while self.should_keep_running() :
+        while self.should_keep_running():
 
             (file_name, view_buffer) = to_process.get()
 
-            if view_buffer is None :
+            if view_buffer is None:
 
                 self.process_existing_include(file_name)
 
-            else :
+            else:
 
                 self.process(file_name, view_buffer)
 
-    def process(self, view_file_name, view_buffer) :
+    def process(self, view_file_name, view_buffer):
 
         (current_node, node_added) = get_or_add_node(view_file_name)
 
@@ -734,24 +734,24 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
             self.load_from_file(view_file_name, include, current_node, current_node, base_includes)
 
-        for removed_node in current_node.children.difference(base_includes) :
+        for removed_node in current_node.children.difference(base_includes):
 
             current_node.remove_child(removed_node)
 
         process_buffer(view_buffer, current_node)
 
 
-    def process_existing_include(self, file_name) :
+    def process_existing_include(self, file_name):
 
         current_node = nodes.get(file_name)
 
-        if current_node is None :
+        if current_node is None:
 
             return
 
         base_includes = set()
 
-        with open(file_name, 'r') as f :
+        with open(file_name, 'r') as f:
 
             print_debug(0, "(analyzer) Processing Include File %s" % file_name)
             includes = include_re.findall(f.read())
@@ -760,18 +760,18 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
             self.load_from_file(view_file_name, include, current_node, current_node, base_includes)
 
-        for removed_node in current_node.children.difference(base_includes) :
+        for removed_node in current_node.children.difference(base_includes):
 
             current_node.remove_child(removed_node)
 
         process_include_file(current_node)
 
 
-    def load_from_file(self, view_file_name, base_file_name, parent_node, base_node, base_includes) :
+    def load_from_file(self, view_file_name, base_file_name, parent_node, base_node, base_includes):
 
         (file_name, exists) = get_file_name(view_file_name, base_file_name)
 
-        if not exists :
+        if not exists:
 
             print_debug(0, "(analyzer) Include File Not Found: %s" % base_file_name)
 
@@ -779,7 +779,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
         parent_node.add_child(node)
 
-        if parent_node == base_node :
+        if parent_node == base_node:
 
             base_includes.add(node)
 
@@ -787,12 +787,12 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
             return
 
-        with open(file_name, 'r') as f :
+        with open(file_name, 'r') as f:
 
             print_debug(0, "(analyzer) Processing Include File %s" % file_name)
             includes = includes_re.findall(f.read())
 
-        for include in includes :
+        for include in includes:
 
             self.load_from_file(view_file_name, include, node, base_node, base_includes)
 
@@ -800,7 +800,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
 
 
-def get_file_name(view_file_name, base_file_name) :
+def get_file_name(view_file_name, base_file_name):
 
     if local_re.search(base_file_name) == None:
 
@@ -814,11 +814,11 @@ def get_file_name(view_file_name, base_file_name) :
 
 
 
-def get_or_add_node( file_name) :
+def get_or_add_node( file_name):
 
     node = nodes.get(file_name)
 
-    if node is None :
+    if node is None:
 
         node = Node(file_name)
         nodes[file_name] = node
@@ -829,9 +829,9 @@ def get_or_add_node( file_name) :
 
 
 # ============= NEW CODE ------------------------------------------------------------------------------------------------------------
-class Node :
+class Node:
 
-    def __init__(self, file_name) :
+    def __init__(self, file_name):
 
         self.file_name = file_name
         self.children = set()
@@ -839,23 +839,23 @@ class Node :
         self.funcs = set()
         self.doct = set()
 
-    def add_child(self, node) :
+    def add_child(self, node):
 
         self.children.add(node)
         node.parents.add(self)
 
-    def remove_child(self, node) :
+    def remove_child(self, node):
 
         self.children.remove(node)
         node.parents.remove(self)
 
-        if len(node.parents) <= 0 :
+        if len(node.parents) <= 0:
 
             nodes.pop(node.file_name)
 
-    def remove_all_children_and_funcs(self) :
+    def remove_all_children_and_funcs(self):
 
-        for child in self.children :
+        for child in self.children:
 
             self.remove_child(node)
 
@@ -870,36 +870,36 @@ class TextReader:
         self.text = text.splitlines()
         self.position = -1
 
-    def readline(self) :
+    def readline(self):
 
         self.position += 1
 
-        if self.position < len(self.text) :
+        if self.position < len(self.text):
 
             retval = self.text[self.position]
 
-            if retval == '' :
+            if retval == '':
 
                 return '\n'
 
-            else :
+            else:
 
                 return retval
 
-        else :
+        else:
 
             return ''
 
 
 
-class pawnParse :
+class pawnParse:
 
-    def __init__(self) :
+    def __init__(self):
 
         self.save_const_timer = None
         self.constants_count = 0
 
-    def start(self, pFile, node) :
+    def start(self, pFile, node):
 
         print_debug(2, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
 
@@ -920,9 +920,9 @@ class pawnParse :
 
         self.start_parse()
 
-        if self.constants_count != len(g_constants_list) :
+        if self.constants_count != len(g_constants_list):
 
-            if self.save_const_timer :
+            if self.save_const_timer:
                 self.save_const_timer.cancel()
 
             self.save_const_timer = Timer(4.0, self.save_constants)
@@ -932,13 +932,13 @@ class pawnParse :
         print_debug(2, "(analyzer) CODE PARSE End [%s]" % node.file_name)
 
 
-    def save_constants(self) :
+    def save_constants(self):
 
         self.save_const_timer   = None
         self.constants_count    = len(g_constants_list)
 
         constants = "___test"
-        for const in g_constants_list :
+        for const in g_constants_list:
             constants += "|" + const
 
         syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b(" + constants + ")\\b\n      scope: constant.vars.pawn"
@@ -952,32 +952,32 @@ class pawnParse :
         print_debug(2, "(analyzer) call save_constants()")
 
 
-    def read_line(self) :
+    def read_line(self):
 
-        if self.restore_buffer :
+        if self.restore_buffer:
 
             line = self.restore_buffer
             self.restore_buffer = None
 
-        else :
+        else:
 
             line = self.file.readline()
 
-        if len(line) > 0 :
+        if len(line) > 0:
 
             return line
 
-        else :
+        else:
 
             return None
 
 
 
-    def read_string(self, buffer) :
+    def read_string(self, buffer):
 
         buffer = buffer.replace('\t', ' ').strip()
 
-        while '  ' in buffer :
+        while '  ' in buffer:
 
             buffer = buffer.replace('  ', ' ')
 
@@ -986,27 +986,27 @@ class pawnParse :
         result = ''
         i = 0
 
-        while i < len(buffer) :
+        while i < len(buffer):
 
             if buffer[i] == '/' and i + 1 < len(buffer):
 
-                if buffer[i + 1] == '/' :
+                if buffer[i + 1] == '/':
 
                     self.brace_level +=  result.count('{') - result.count('}')
                     return result
 
-                elif buffer[i + 1] == '*' :
+                elif buffer[i + 1] == '*':
 
                     self.found_comment = True
                     i += 1
 
-                elif not self.found_comment :
+                elif not self.found_comment:
 
                     result += '/'
 
-            elif self.found_comment :
+            elif self.found_comment:
 
-                if buffer[i] == '*' and i + 1 < len(buffer) and buffer[i + 1] == '/' :
+                if buffer[i] == '*' and i + 1 < len(buffer) and buffer[i + 1] == '/':
 
                     self.found_comment = False
                     i += 1
@@ -1021,7 +1021,7 @@ class pawnParse :
         return result
 
 
-    def skip_function_block(self, buffer) :
+    def skip_function_block(self, buffer):
 
         num_brace = 0
         inString = False
@@ -1029,41 +1029,41 @@ class pawnParse :
 
         buffer = buffer + ' '
 
-        while buffer is not None and buffer.isspace() :
+        while buffer is not None and buffer.isspace():
 
             buffer = self.read_line()
 
-        while buffer is not None :
+        while buffer is not None:
 
             i = 0
             pos = 0
             oldChar = ''
 
-            for c in buffer :
+            for c in buffer:
 
                 i += 1
 
-                if (c == '"') :
+                if (c == '"'):
 
-                    if inString and oldChar != '^' :
+                    if inString and oldChar != '^':
                         inString = False
-                    else :
+                    else:
                         inString = True
 
 
-                if (inString == False) :
+                if (inString == False):
 
-                    if (c == '{') :
+                    if (c == '{'):
                         num_brace += 1
                         self.skip_brace_found = True
-                    elif (c == '}') :
+                    elif (c == '}'):
                         num_brace -= 1
                         pos = i
 
 
                 oldChar = c
 
-            if num_brace == 0 :
+            if num_brace == 0:
 
                 self.restore_buffer = buffer[pos:]
                 return
@@ -1072,30 +1072,30 @@ class pawnParse :
 
 
 
-    def valid_name(self, name) :
+    def valid_name(self, name):
 
-        if not name or not name[0].isalpha() and name[0] != '_' :
+        if not name or not name[0].isalpha() and name[0] != '_':
 
             return False
 
         return re.match('^[\w_]+$', name) is not None
 
 
-    def add_constant(self, name) :
+    def add_constant(self, name):
 
         fixname = re.search('(\\w*)', name)
 
-        if fixname :
+        if fixname:
 
             name = fixname.group(1)
             g_constants_list.add(name)
 
 
-    def add_enum(self, buffer) :
+    def add_enum(self, buffer):
 
         buffer = buffer.strip()
 
-        if buffer == '' :
+        if buffer == '':
 
             return
 
@@ -1107,91 +1107,91 @@ class pawnParse :
         print_debug(2, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
 
 
-    def add_autocomplete(self, name, info, autocomplete) :
+    def add_autocomplete(self, name, info, autocomplete):
 
         self.node.funcs.add((name +'  \t'+  self.file_name +' - '+ info, autocomplete))
 
 
-    def start_parse(self) :
+    def start_parse(self):
 
-        while True :
+        while True:
 
             buffer = self.read_line()
 
-            if buffer is None :
+            if buffer is None:
 
                 break
 
             buffer = self.read_string(buffer)
 
-            if len(buffer) <= 0 :
+            if len(buffer) <= 0:
 
                 continue
 
-            #if "sma" in self.node.file_name :
+            #if "sma" in self.node.file_name:
             #   print("read: skip:[%d] brace_level:[%d] buff:[%s]" % (self.skip_next_dataline, self.brace_level, buffer))
 
-            if self.skip_next_dataline :
+            if self.skip_next_dataline:
 
                 self.skip_next_dataline = False
                 continue
 
-            if buffer.startswith('#pragma deprecated') :
+            if buffer.startswith('#pragma deprecated'):
 
                 buffer = self.read_line()
 
-                if buffer is not None and buffer.startswith('stock ') :
+                if buffer is not None and buffer.startswith('stock '):
 
                     self.skip_function_block(buffer)
 
-            elif buffer.startswith('#define ') :
+            elif buffer.startswith('#define '):
 
                 buffer = self.parse_define(buffer)
 
-            elif buffer.startswith('const ') :
+            elif buffer.startswith('const '):
 
                 buffer = self.parse_const(buffer)
 
-            elif buffer.startswith('enum ') :
+            elif buffer.startswith('enum '):
 
                 self.found_enum    = True
                 self.enum_contents = ''
 
-            elif buffer.startswith('new ') :
+            elif buffer.startswith('new '):
 
                 self.parse_variable(buffer)
 
-            elif buffer.startswith('public ') :
+            elif buffer.startswith('public '):
 
                 self.parse_function(buffer, 1)
 
-            elif buffer.startswith('stock ') :
+            elif buffer.startswith('stock '):
 
                 self.parse_function(buffer, 2)
 
-            elif buffer.startswith('forward ') :
+            elif buffer.startswith('forward '):
 
                 self.parse_function(buffer, 3)
 
-            elif buffer.startswith('native ') :
+            elif buffer.startswith('native '):
 
                 self.parse_function(buffer, 4)
 
-            elif not self.found_enum and not buffer[0] == '#' :
+            elif not self.found_enum and not buffer[0] == '#':
 
                 self.parse_function(buffer, 0)
 
-            if self.found_enum :
+            if self.found_enum:
 
                 self.parse_enum(buffer)
 
 
 
-    def parse_define(self, buffer) :
+    def parse_define(self, buffer):
 
         define = re.search('#define[\\s]+([^\\s]+)[\\s]+(.+)', buffer)
 
-        if define :
+        if define:
 
             buffer = ''
             name   = define.group(1)
@@ -1203,12 +1203,12 @@ class pawnParse :
             print_debug(2, "(analyzer) parse_define add: [%s]" % name)
 
 
-    def parse_const(self, buffer) :
+    def parse_const(self, buffer):
 
         buffer = buffer[6:]
         split  = buffer.split('=', 1)
 
-        if len(split) < 2 :
+        if len(split) < 2:
 
             return
 
@@ -1217,7 +1217,7 @@ class pawnParse :
 
         newline = value.find(';')
 
-        if (newline != -1) :
+        if (newline != -1):
 
             self.restore_buffer = value[newline+1:].strip()
             value = value[0:newline]
@@ -1228,13 +1228,13 @@ class pawnParse :
         print_debug(2, "(analyzer) parse_const add: [%s]" % name)
 
 
-    def parse_variable(self, buffer) :
+    def parse_variable(self, buffer):
 
-        if buffer.startswith('new const ') :
+        if buffer.startswith('new const '):
 
             buffer = buffer[10:]
 
-        else :
+        else:
 
             buffer = buffer[4:]
 
@@ -1252,64 +1252,64 @@ class pawnParse :
         inBraces   = False
         inString   = False
 
-        while multiLines :
+        while multiLines:
 
             multiLines = False
 
-            for c in buffer :
+            for c in buffer:
 
                 i += 1
 
-                if (c == '"') :
+                if (c == '"'):
 
-                    if (inString and oldChar != '^') :
+                    if (inString and oldChar != '^'):
 
                         inString = False
 
-                    else :
+                    else:
 
                         inString = True
 
 
-                if (inString == False) :
+                if (inString == False):
 
-                    if (c == '{') :
+                    if (c == '{'):
 
                         num_brace += 1
                         inBraces  = True
 
-                    elif (c == '}') :
+                    elif (c == '}'):
 
                         num_brace -= 1
 
-                        if (num_brace == 0) :
+                        if (num_brace == 0):
 
                             inBraces = False
 
 
-                if skipSpaces :
+                if skipSpaces:
 
-                    if c.isspace() :
+                    if c.isspace():
 
                         continue
 
-                    else :
+                    else:
 
                         skipSpaces = False
                         parseName = True
 
 
-                if parseName :
+                if parseName:
 
-                    if (c == ':') :
+                    if (c == ':'):
 
                         varName = ''
 
-                    elif (c == ' ' or c == '=' or c == ';' or c == ',') :
+                    elif (c == ' ' or c == '=' or c == ';' or c == ','):
 
                         varName = varName.strip()
 
-                        if (varName != '') :
+                        if (varName != ''):
 
                             self.add_autocomplete(varName, 'var', varName)
                             print_debug(2, "(analyzer) parse_variable add: [%s]" % varName)
@@ -1318,52 +1318,52 @@ class pawnParse :
                         parseName  = False
                         inBrackets = False
 
-                    elif (c == '[') :
+                    elif (c == '['):
 
                         inBrackets = True
 
-                    elif (inBrackets == False) :
+                    elif (inBrackets == False):
 
                         varName += c
 
-                if (inString == False and inBrackets == False and inBraces == False) :
+                if (inString == False and inBrackets == False and inBraces == False):
 
-                    if not parseName and c == ';' :
+                    if not parseName and c == ';':
 
                         self.restore_buffer = buffer[i:].strip()
                         return
 
-                    if (c == ',') :
+                    if (c == ','):
 
                         skipSpaces = True
 
                 oldChar = c
 
-            if (c != ',') :
+            if (c != ','):
 
                 varName = varName.strip()
 
-                if varName != '' :
+                if varName != '':
 
                     self.add_autocomplete(varName, 'var', varName)
                     print_debug(2, "(analyzer) parse_variable add: [%s]" % varName)
 
-            else :
+            else:
 
                 multiLines = True
                 buffer = ' '
 
-                while buffer is not None and buffer.isspace() :
+                while buffer is not None and buffer.isspace():
 
                     buffer = self.read_line()
 
 
 
-    def parse_enum(self, buffer) :
+    def parse_enum(self, buffer):
 
         pos = buffer.find('}')
 
-        if pos != -1 :
+        if pos != -1:
 
             buffer          = buffer[0:pos]
             self.found_enum = False
@@ -1373,14 +1373,14 @@ class pawnParse :
 
         ignore = False
 
-        if not self.found_enum :
+        if not self.found_enum:
 
             pos                = self.enum_contents.find('{')
             self.enum_contents = self.enum_contents[pos + 1:]
 
-            for c in self.enum_contents :
+            for c in self.enum_contents:
 
-                if c == '=' or c == '#' :
+                if c == '=' or c == '#':
 
                     ignore = True
 
@@ -1388,12 +1388,12 @@ class pawnParse :
 
                     ignore = False
 
-                elif c == ':' :
+                elif c == ':':
 
                     buffer = ''
                     continue
 
-                elif c == ',' :
+                elif c == ',':
 
                     self.add_enum(buffer)
                     buffer = ''
@@ -1401,7 +1401,7 @@ class pawnParse :
                     ignore = False
                     continue
 
-                if not ignore :
+                if not ignore:
 
                     buffer += c
 
@@ -1410,38 +1410,38 @@ class pawnParse :
 
 
 
-    def parse_function(self, buffer, type) :
+    def parse_function(self, buffer, type):
 
         multi_line       = False
         temp             = ''
         full_func_str    = None
         open_paren_found = False
 
-        while buffer is not None :
+        while buffer is not None:
 
 
             buffer = buffer.strip()
 
-            if not open_paren_found :
+            if not open_paren_found:
 
                 parenpos = buffer.find('(')
 
-                if parenpos == -1 :
+                if parenpos == -1:
 
                     return
 
                 open_paren_found = True
 
-            if open_paren_found :
+            if open_paren_found:
 
                 pos = buffer.find(')')
 
-                if pos != -1 :
+                if pos != -1:
 
                     full_func_str = buffer[0:pos + 1]
                     buffer        = buffer[pos+1:]
 
-                    if (multi_line) :
+                    if (multi_line):
 
                         full_func_str = '%s%s' % (temp, full_func_str)
 
@@ -1452,21 +1452,21 @@ class pawnParse :
 
             buffer = self.read_line()
 
-            if buffer is None :
+            if buffer is None:
 
                 return
 
             buffer = self.read_string(buffer)
 
-        if full_func_str is not None :
+        if full_func_str is not None:
 
             error = self.parse_function_params(full_func_str, type)
 
-            if not error and type <= 2 :
+            if not error and type <= 2:
 
                 self.skip_function_block(buffer)
 
-                if not self.skip_brace_found :
+                if not self.skip_brace_found:
 
                     self.skip_next_dataline = True
 
@@ -1474,20 +1474,20 @@ class pawnParse :
 
 
 
-    def parse_function_params(self, func, type) :
+    def parse_function_params(self, func, type):
 
-        if type == 0 :
+        if type == 0:
 
             remaining = func
 
-        else :
+        else:
 
             split = func.split(' ', 1)
             remaining = split[1]
 
         split = remaining.split('(', 1)
 
-        if len(split) < 2 :
+        if len(split) < 2:
 
             print_debug(1, "(analyzer) parse_params return1: [%s]" % split)
             return 1
@@ -1498,31 +1498,31 @@ class pawnParse :
         funcname_and_return       = split[0].strip()
         split_funcname_and_return = funcname_and_return.split(':')
 
-        if len(split_funcname_and_return) > 1 :
+        if len(split_funcname_and_return) > 1:
 
             funcname   = split_funcname_and_return[1].strip()
             returntype = split_funcname_and_return[0].strip()
 
-        else :
+        else:
 
             funcname = split_funcname_and_return[0].strip()
 
-        if funcname.startswith("operator") :
+        if funcname.startswith("operator"):
 
             return 0
 
-        if not self.valid_name(funcname) :
+        if not self.valid_name(funcname):
 
             print_debug(1, "(analyzer) parse_params invalid name: [%s]" % funcname)
             return 1
 
         remaining = remaining.strip()
 
-        if remaining == ')' :
+        if remaining == ')':
 
             params = []
 
-        else :
+        else:
 
             params = remaining.strip()[:-1].split(',')
 
@@ -1530,9 +1530,9 @@ class pawnParse :
 
         i = 1
 
-        for param in params :
+        for param in params:
 
-            if i > 1 :
+            if i > 1:
 
                 autocomplete += ', '
 
@@ -1549,30 +1549,30 @@ class pawnParse :
 
 
 
-def process_buffer(text, node) :
+def process_buffer(text, node):
 
     text_reader = TextReader(text)
     pawnparse.start(text_reader, node)
 
 
 
-def process_include_file(node) :
+def process_include_file(node):
 
-    with open(node.file_name) as file :
+    with open(node.file_name) as file:
 
         pawnparse.start(file, node)
 
 
 
-def simple_escape(html) :
+def simple_escape(html):
 
     return html.replace('&', '&amp;')
 
 
 
-def print_debug(level, msg) :
+def print_debug(level, msg):
 
-    if g_debug_level >= level :
+    if g_debug_level >= level:
 
         print("[AMXX-Editor]: " + msg)
 
