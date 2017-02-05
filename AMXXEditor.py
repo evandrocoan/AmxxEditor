@@ -28,9 +28,11 @@ def main():
     global EDITOR_VERSION
     global FUNC_TYPES
 
+    global startTime
+    global print_debug_lastTime
+
     global g_constants_list
     global g_debug_level
-    global startTime
     global g_delay_time
     global g_include_dir
 
@@ -42,9 +44,13 @@ def main():
     global includes_re
     global local_re
     global pawnparse
+    global amxxPawnSyntax
 
-    g_debug_level = 10
-    startTime     = datetime.datetime.now()
+    amxxPawnSyntax = 'source.AmxxPawn'
+    g_debug_level  = 10
+
+    startTime            = datetime.datetime.now()
+    print_debug_lastTime = startTime.microsecond
 
     print_debug( 1, "" )
     print_debug( 1, "" )
@@ -87,6 +93,7 @@ def unload_handler():
 
     file_observer.stop()
     process_thread.stop()
+
     to_process.put( ( "", "" ) )
     sublime.load_settings( "amxx.sublime-settings" ).clear_on_change( "amxx" )
 
@@ -199,9 +206,10 @@ class AMXXEditor( sublime_plugin.EventListener ):
             webbrowser.open_new_tab( "http://www.amxmodx.org/api/"+file+"/"+search )
 
 
-    def on_activated( self, view ):
+    # Sublime Text event listeners/forwards
+    def on_activated_async( self, view ):
 
-        print_debug( 1, "Entering on the AMXXEditor::on_activated(2) function." )
+        print_debug( 1, "Entering on the AMXXEditor::on_activated_async(2) function." )
 
         if not self.is_amxmodx_file( view ):
 
@@ -216,21 +224,21 @@ class AMXXEditor( sublime_plugin.EventListener ):
             add_to_queue( view )
 
 
-    def on_modified( self, view ):
+    def on_modified_async( self, view ):
 
-        print_debug( 1, "Entering on the AMXXEditor::on_modified(2) function." )
-        self.add_to_queue_delayed( view )
+        print_debug( 1, "Entering on the AMXXEditor::on_modified_async(2) function." )
+        # self.add_to_queue_delayed( view )
 
 
-    def on_post_save( self, view ):
+    def on_post_save_async( self, view ):
 
-        print_debug( 1, "Entering on the AMXXEditor::on_post_save(2) function." )
+        print_debug( 1, "Entering on the AMXXEditor::on_post_save_async(2) function." )
         self.add_to_queue_now( view )
 
 
-    def on_load( self, view ):
+    def on_load_async( self, view ):
 
-        print_debug( 1, "Entering on the AMXXEditor::on_load(2) function." )
+        print_debug( 1, "Entering on the AMXXEditor::on_load_async(2) function." )
         self.add_to_queue_now( view )
 
 
@@ -263,17 +271,27 @@ class AMXXEditor( sublime_plugin.EventListener ):
     def is_amxmodx_file( self, view ):
 
         print_debug( 1, "Entering on the AMXXEditor::is_amxmodx_file(2) function." )
-        return view.file_name() is not None and view.match_selector( 0, 'source.sma' )
+
+        if view.file_name() is not None:
+
+            if view.match_selector( 0, amxxPawnSyntax ):
+
+                print_debug( 1, "    ( AMXXEditor::is_amxmodx_file ) Returning True." )
+                return True
+
+        print_debug( 1, "    ( AMXXEditor::is_amxmodx_file ) Returning False." )
+        return False
 
     def on_query_completions( self, view, prefix, locations ):
 
         print_debug( 1, "Entering on the AMXXEditor::on_query_completions(4) function." )
+        print_debug( 1, "( AMXXEditor::on_query_completions ) view.file_name(): %s " % view.file_name() )
 
         if not self.is_amxmodx_file( view ):
 
             return None
 
-        if view.match_selector( locations[0], 'source.sma string' ):
+        if view.match_selector( locations[0], amxxPawnSyntax + ' string' ):
 
             return ( [], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS )
 
@@ -388,6 +406,9 @@ def add_to_queue( view ):
     """
 
     print_debug( 1, "Entering on the add_to_queue(1) function." )
+    print_debug( 1, "( add_to_queue ) view.size(): %d" % view.size() )
+    print_debug( 1, "( add_to_queue ) view.file_name(): %s" % view.file_name() )
+
     to_process.put( ( view.file_name(), view.substr( sublime.Region( 0, view.size() ) ) ) )
 
 
@@ -482,6 +503,8 @@ class ProcessQueueThread( watchdog.utils.DaemonThread ):
     def process( self, view_file_name, view_buffer ):
 
         print_debug( 1, "Entering on the ProcessQueueThread::process(3) function." )
+        print_debug( 1, "( ProcessQueueThread::process ) %s" % view_file_name )
+
         ( current_node, node_added ) = get_or_add_node( view_file_name )
 
         base_includes = set()
@@ -511,7 +534,7 @@ class ProcessQueueThread( watchdog.utils.DaemonThread ):
 
         with open( file_name, 'r' ) as f:
 
-            print_debug( 0, "( analyzer ) Processing Include File %s" % file_name )
+            print_debug( 0, "( ProcessQueueThread::process_existing_include ) Processing Include File %s" % file_name )
             includes = include_re.findall( f.read() )
 
         for include in includes:
@@ -532,7 +555,7 @@ class ProcessQueueThread( watchdog.utils.DaemonThread ):
 
         if not exists:
 
-            print_debug( 0, "( analyzer ) Include File Not Found: %s" % base_file_name )
+            print_debug( 0, "( ProcessQueueThread::load_from_file ) Include File Not Found: %s" % base_file_name )
 
         ( node, node_added ) = get_or_add_node( file_name )
 
@@ -548,7 +571,7 @@ class ProcessQueueThread( watchdog.utils.DaemonThread ):
 
         with open( file_name, 'r' ) as f:
 
-            print_debug( 0, "( analyzer ) Processing Include File %s" % file_name )
+            print_debug( 0, "( ProcessQueueThread::load_from_file ) Processing Include File %s" % file_name )
             includes = includes_re.findall( f.read() )
 
         for include in includes:
@@ -676,6 +699,9 @@ class PawnParse:
 
     def start( self, pFile, node ):
 
+        print_debug( 1, "" )
+        print_debug( 1, "" )
+        print_debug( 1, "" )
         print_debug( 1, "Entering on the PawnParse::start(3) function." )
         print_debug( 2, "( PawnParse::start ) CODE PARSE Start [%s]" % node.file_name )
 
@@ -688,7 +714,6 @@ class PawnParse:
         self.skip_next_dataline = False
         self.enum_contents      = ''
         self.brace_level        = 0
-
         self.restore_buffer     = None
 
         self.node.funcs.clear()
@@ -699,12 +724,16 @@ class PawnParse:
         if self.constants_count != len( g_constants_list ):
 
             if self.save_const_timer:
+
                 self.save_const_timer.cancel()
 
             self.save_const_timer = Timer( 4.0, self.save_constants )
             self.save_const_timer.start()
 
-        print_debug( 2, "( PawnParse::start ) CODE PARSE End [%s]" % node.file_name )
+        print_debug( 2, "    ( PawnParse::start ) Returning [%s]" % node.file_name )
+        print_debug( 1, "" )
+        print_debug( 1, "" )
+        print_debug( 1, "" )
 
 
     def save_constants( self ):
@@ -720,8 +749,8 @@ class PawnParse:
 
             constants += "|" + const
 
-        syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b( " + \
-                constants + " )\\b\n      scope: constant.vars.pawn"
+        syntax = "%YAML 1.2\n---\nscope: " + amxxPawnSyntax + " \ncontexts:\n  main:\n    - match: \\b( " + \
+                constants + " )\\b\n      scope: constant.vars.AmxxPawn"
 
         file_name = sublime.packages_path() + "/amxmodx/const.sublime-syntax"
         f         = open( file_name, 'w' )
@@ -729,7 +758,7 @@ class PawnParse:
         f.write( syntax )
         f.close()
 
-        print_debug( 2, "( analyzer ) call save_constants()" )
+        print_debug( 2, "( PawnParse::save_constants ) call save_constants()" )
 
 
     def read_line( self ):
@@ -892,7 +921,7 @@ class PawnParse:
         self.add_autocomplete( buffer, 'enum', split[0] )
         self.add_constant( split[0] )
 
-        print_debug( 2, "( analyzer ) parse_enum add: [%s] -> [%s]" % ( buffer, split[0] ) )
+        print_debug( 2, "( PawnParse::add_enum ) parse_enum add: [%s] -> [%s]" % ( buffer, split[0] ) )
 
 
     def add_autocomplete( self, name, info, autocomplete ):
@@ -991,7 +1020,7 @@ class PawnParse:
             buffer            = ''
             include_file_name = include_line.group( 1 )
 
-            print_debug( 2, "( analyzer ) parse_include add: [%s]" % include_file_name )
+            print_debug( 2, "( PawnParse::parse_include ) parse_include add: [%s]" % include_file_name )
 
 
     def parse_define( self, buffer ):
@@ -1008,7 +1037,7 @@ class PawnParse:
             self.add_autocomplete( name, 'define: '+value, name )
             self.add_constant( name )
 
-            print_debug( 2, "( analyzer ) parse_define add: [%s]" % name )
+            print_debug( 2, "( PawnParse::parse_define ) parse_define add: [%s]" % name )
 
 
     def parse_const( self, buffer ):
@@ -1035,7 +1064,7 @@ class PawnParse:
 
         self.add_autocomplete( name, 'const: '+value, name )
         self.add_constant( name )
-        print_debug( 2, "( analyzer ) parse_const add: [%s]" % name )
+        print_debug( 2, "( PawnParse::parse_const ) parse_const add: [%s]" % name )
 
 
     def parse_variable( self, buffer ):
@@ -1124,7 +1153,7 @@ class PawnParse:
                         if ( varName != '' ):
 
                             self.add_autocomplete( varName, 'var', varName )
-                            print_debug( 2, "( analyzer ) parse_variable add: [%s]" % varName )
+                            print_debug( 2, "( PawnParse::parse_variable ) add: [%s]" % varName )
 
                         varName    = ''
                         parseName  = False
@@ -1158,7 +1187,7 @@ class PawnParse:
                 if varName != '':
 
                     self.add_autocomplete( varName, 'var', varName )
-                    print_debug( 2, "( analyzer ) parse_variable add: [%s]" % varName )
+                    print_debug( 2, "( PawnParse::parse_variable ) add: [%s]" % varName )
 
             else:
 
@@ -1306,7 +1335,7 @@ class PawnParse:
 
         if len( split ) < 2:
 
-            print_debug( 1, "( analyzer ) parse_params return1: [%s]" % split )
+            print_debug( 1, "( PawnParse::parse_function_params ) parse_params return1: [%s]" % split )
             return 1
 
         remaining  = split[1]
@@ -1330,7 +1359,7 @@ class PawnParse:
 
         if not self.valid_name( funcname ):
 
-            print_debug( 1, "( analyzer ) parse_params invalid name: [%s]" % funcname )
+            print_debug( 1, "( PawnParse::parse_function_params ) parse_params invalid name: [%s]" % funcname )
             return 1
 
         remaining = remaining.strip()
@@ -1361,7 +1390,7 @@ class PawnParse:
         self.add_autocomplete( funcname, FUNC_TYPES[type].lower(), autocomplete )
         self.node.doct.add( ( funcname, func[func.find( "(" )+1:-1], self.node.file_name, type, returntype ) )
 
-        print_debug( 2, "( analyzer ) parse_params add: [%s]" % func )
+        print_debug( 2, "( PawnParse::parse_function_params ) parse_params add: [%s]" % func )
         return 0
 
 
@@ -1394,11 +1423,21 @@ def simple_escape( html ):
 
 def print_debug( level, msg ):
 
+    global print_debug_lastTime
+    currentTime = datetime.datetime.now().microsecond
+
     # You can access global variables without the global keyword.
     if g_debug_level >= level:
 
-        print( "[AMXX-Editor]: " + msg )
+        print( "[AMXX-Editor] " \
+                + str( datetime.datetime.now().hour ) + ":" \
+                + str( datetime.datetime.now().minute ) + ":" \
+                + str( datetime.datetime.now().second ) + ":" \
+                + str( currentTime ) \
+                + "%7s " % str( currentTime - print_debug_lastTime ) \
+                + msg )
 
+        print_debug_lastTime = currentTime
 
 
 # When the Python interpreter reads a source file, it executes all of the code found in it.
