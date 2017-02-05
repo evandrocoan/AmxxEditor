@@ -19,35 +19,32 @@ import watchdog.utils
 from watchdog.utils.bricks import OrderedSetQueue
 
 import datetime
-startTime = None
 
-
-EDITOR_VERSION = "3.0"
-FUNC_TYPES     = [ "Function", "Public", "Stock", "Forward", "Native" ]
-
-g_default_schemes     = [ "atomic", "dark", "mistrick", "npp", "twlight", "white" ]
-g_color_schemes       = { "list": g_default_schemes[:], "count":0, "active":0 }
-g_constants_list      = set()
-g_inteltip_style      = ""
-g_enable_inteltip     = False
-g_enable_buildversion = False
-g_debug_level         = 10
-g_delay_time          = 1.0
-g_include_dir         = "."
-
-to_process         = OrderedSetQueue()
-nodes              = dict()
-file_observer      = watchdog.observers.Observer()
-process_thread     = ProcessQueueThread()
-file_event_handler = IncludeFileEventHandler()
-includes_re        = re.compile( '^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE )
-local_re           = re.compile( '\\.(sma|inc)$' )
-pawnparse          = pawnParse()
 
 
 def main():
 
-    startTime = datetime.datetime.now()
+    # The keyword `global` is only useful to change or create `global` variables in a local context.
+    global EDITOR_VERSION
+    global FUNC_TYPES
+
+    global g_constants_list
+    global g_debug_level
+    global startTime
+    global g_delay_time
+    global g_include_dir
+
+    global to_process
+    global nodes
+    global file_observer
+    global process_thread
+    global file_event_handler
+    global includes_re
+    global local_re
+    global pawnparse
+
+    g_debug_level = 10
+    startTime     = datetime.datetime.now()
 
     print_debug( 1, "" )
     print_debug( 1, "" )
@@ -56,16 +53,37 @@ def main():
     print_debug( 1, startTime.isoformat() )
     print_debug( 1, "Entering on the main(0) function." )
 
+    EDITOR_VERSION = "3.0"
+    FUNC_TYPES     = [ "Function", "Public", "Stock", "Forward", "Native" ]
+
+    g_constants_list = set()
+    g_delay_time     = 1.0
+    g_include_dir    = "."
+
+    to_process         = OrderedSetQueue()
+    nodes              = dict()
+    file_observer      = watchdog.observers.Observer()
+    process_thread     = ProcessQueueThread()
+    file_event_handler = IncludeFileEventHandler()
+    includes_re        = re.compile( '^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE )
+    local_re           = re.compile( '\\.(sma|inc)$' )
+    pawnparse          = PawnParse()
+
 
 
 def plugin_loaded():
 
+    print_debug( 1, "Entering on the plugin_loaded(0) function." )
     settings = sublime.load_settings( "amxx.sublime-settings" )
+
+    on_settings_modified()
     settings.add_on_change( 'amxx', on_settings_modified )
 
 
 
 def unload_handler():
+
+    print_debug( 1, "Entering on the unload_handler(0) function." )
 
     file_observer.stop()
     process_thread.stop()
@@ -73,30 +91,12 @@ def unload_handler():
     sublime.load_settings( "amxx.sublime-settings" ).clear_on_change( "amxx" )
 
 
-    def is_visible( self, index ):
-
-        return ( index < g_color_schemes['count'] )
-
-
-    def is_checked( self, index ):
-
-        return ( index < g_color_schemes['count'] and g_color_schemes['list'][index] == g_color_schemes['active'] )
-
-
-    def description( self, index ):
-
-        if index < g_color_schemes['count']:
-
-            return g_color_schemes['list'][index]
-
-        return ""
-
-
 
 class NewAmxxIncludeCommand( sublime_plugin.WindowCommand ):
 
     def run( self ):
 
+        print_debug( 1, "Entering on the NewAmxxIncludeCommand::run(1) function." )
         new_file( "inc" )
 
 
@@ -105,12 +105,14 @@ class NewAmxxPluginCommand( sublime_plugin.WindowCommand ):
 
     def run( self ):
 
+        print_debug( 1, "Entering on the NewAmxxPluginCommand::run(1) function." )
         new_file( "sma" )
 
 
 
 def new_file( type ):
 
+    print_debug( 1, "Entering on the new_file(1) function." )
     view = sublime.active_window().new_file()
 
     view.set_syntax_file( "AMXX-Pawn.sublime-syntax" )
@@ -127,8 +129,9 @@ class AboutAmxxEditorCommand( sublime_plugin.WindowCommand ):
 
     def run( self ):
 
-        about = "Sublime AMXX-Editor v"+ EDITOR_VERSION +" by Destro\n\n\n"
+        print_debug( 1, "Entering on the AboutAmxxEditorCommand::run(1) function." )
 
+        about  = "Sublime AMXX-Editor v"+ EDITOR_VERSION +" by Destro\n\n\n"
         about += "CREDITs:\n"
         about += "- Great:\n"
         about += "   ppalex7     ( SourcePawn Completions )\n\n"
@@ -164,167 +167,9 @@ class AMXXEditor( sublime_plugin.EventListener ):
         self.delay_queue = None
 
 
-    def on_window_command( self, window, cmd, args ):
-
-        if cmd != "build":
-
-            return
-
-        view = window.active_view()
-
-        if not self.is_amxmodx_file( view ) or not g_enable_buildversion:
-
-            return
-
-        view.run_command( "amxx_build_ver" )
-
-
-    def on_selection_modified( self, view ):
-
-        if not self.is_amxmodx_file( view ) or not g_enable_inteltip:
-
-            return
-
-        region = view.sel()[0]
-        scope  = view.scope_name( region.begin() )
-
-        print_debug( 1, "( inteltip ) scope_name: [%s]" % scope )
-
-        if not "support.function" in scope and not "include_path.pawn" in scope or region.size() > 1:
-
-            view.hide_popup()
-            view.add_regions( "inteltip", [ ] )
-
-            return
-
-        if "include_path.pawn" in scope:
-
-            self.inteltip_include( view, region )
-
-        else:
-
-            self.inteltip_function( view, region )
-
-
-    def inteltip_include( self, view, region ):
-
-        location = view.word( region ).end() + 1
-        line     = view.substr( view.line( region ) )
-        include  = includes_re.match( line ).group( 1 )
-
-        ( file_name, exists ) = get_file_name( view.file_name(), include )
-
-        if not exists:
-
-            return
-
-        link_local = file_name + '#'
-
-        if not '.' in include:
-
-            link_web = include + '#'
-
-            include += ".inc"
-
-        else:
-
-            link_web = None
-
-        html  = '<style>'+ g_inteltip_style +'</style>'
-        html += '<div class="top">'
-        html += '<a class="file" href="'+link_local+'">'+include+'</a>'
-
-        if link_web:
-
-            html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
-
-        html += '</div><div class="bottom">'
-
-        html += '<span class="func_type">Location:</span><br>'
-        html += '<span class="func_name">'+file_name+'</span>'
-        html += '</div>'
-
-        view.show_popup( html, 0, location, max_width=700, on_navigate=self.on_navigate )
-
-    def inteltip_function( self, view, region ):
-
-        word_region = view.word( region )
-        location    = word_region.end() + 1
-        search_func = view.substr( word_region )
-        doctset     = set()
-        visited     = set()
-        found       = None
-        node        = nodes[view.file_name()]
-
-        self.generate_doctset_recur( node, doctset, visited )
-
-        for func in doctset:
-
-            if search_func == func[0]:
-
-                found = func
-
-                if found[3] != 1:
-
-                    break
-
-        if found:
-
-            print_debug( 0, "param2: [%s]" % simple_escape( found[1] ) )
-
-            filename = os.path.basename( found[2] )
-
-            if found[3]:
-
-                if found[4]:
-
-                    link_local = found[2] + '#' + FUNC_TYPES[found[3]] + ' ' + found[4] + ':' + found[0]
-
-                else:
-
-                    link_local = found[2] + '#' + FUNC_TYPES[found[3]] + ' ' + found[0]
-
-
-                link_web = filename.rsplit( '.', 1 )[0] + '#' + found[0]
-
-            else:
-
-                link_local = found[2] + '#' + '^' + found[0]
-                link_web = ''
-
-            html  = '<style>'+ g_inteltip_style +'</style>'
-            html += '<div class="top">'                         ############################## TOP
-
-            html += '<a class="file" href="'+link_local+'">'+os.path.basename( found[2] )+'</a>'
-
-            if link_web:
-
-                html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
-
-            html += '</div><div class="bottom">'        ############################## BOTTOM
-
-            html += '<span class="func_type">'+FUNC_TYPES[found[3]]+':</span> <span class="func_name">'+found[0]+'</span>'
-            html += '<br>'
-            html += '<span class="params">Params:</span> <span class="params_definition">( '+ simple_escape( found[1] ) +' )</span>'
-            html += '<br>'
-
-            if found[4]:
-
-                html += '<span class="return">Return:</span> <span class="return_type">'+found[4]+'</span>'
-
-            html += '</div>'                                    ############################## END
-
-            view.show_popup( html, 0, location, max_width=700, on_navigate=self.on_navigate )
-            view.add_regions( "inteltip", [ word_region ], "inteltip.pawn" )
-
-        else:
-
-            view.hide_popup()
-            view.add_regions( "inteltip", [ ] )
-
-
     def on_navigate( self, link ):
 
+        print_debug( 1, "Entering on the AMXXEditor::on_navigate(2) function." )
         ( file, search ) = link.split( '#' )
 
         if "." in file:
@@ -356,6 +201,8 @@ class AMXXEditor( sublime_plugin.EventListener ):
 
     def on_activated( self, view ):
 
+        print_debug( 1, "Entering on the AMXXEditor::on_activated(2) function." )
+
         if not self.is_amxmodx_file( view ):
 
             return
@@ -371,21 +218,25 @@ class AMXXEditor( sublime_plugin.EventListener ):
 
     def on_modified( self, view ):
 
+        print_debug( 1, "Entering on the AMXXEditor::on_modified(2) function." )
         self.add_to_queue_delayed( view )
 
 
     def on_post_save( self, view ):
 
+        print_debug( 1, "Entering on the AMXXEditor::on_post_save(2) function." )
         self.add_to_queue_now( view )
 
 
     def on_load( self, view ):
 
+        print_debug( 1, "Entering on the AMXXEditor::on_load(2) function." )
         self.add_to_queue_now( view )
 
 
-
     def add_to_queue_now( self, view ):
+
+        print_debug( 1, "Entering on the AMXXEditor::add_to_queue_now(2) function." )
 
         if not self.is_amxmodx_file( view ):
 
@@ -394,6 +245,8 @@ class AMXXEditor( sublime_plugin.EventListener ):
         add_to_queue( view )
 
     def add_to_queue_delayed( self, view ):
+
+        print_debug( 1, "Entering on the AMXXEditor::add_to_queue_delayed(2) function." )
 
         if not self.is_amxmodx_file( view ):
 
@@ -409,9 +262,12 @@ class AMXXEditor( sublime_plugin.EventListener ):
 
     def is_amxmodx_file( self, view ):
 
+        print_debug( 1, "Entering on the AMXXEditor::is_amxmodx_file(2) function." )
         return view.file_name() is not None and view.match_selector( 0, 'source.sma' )
 
     def on_query_completions( self, view, prefix, locations ):
+
+        print_debug( 1, "Entering on the AMXXEditor::on_query_completions(4) function." )
 
         if not self.is_amxmodx_file( view ):
 
@@ -426,6 +282,8 @@ class AMXXEditor( sublime_plugin.EventListener ):
 
     def generate_funcset( self, file_name ):
 
+        print_debug( 1, "Entering on the AMXXEditor::generate_funcset(2) function." )
+
         funcset = set()
         visited = set()
 
@@ -436,6 +294,8 @@ class AMXXEditor( sublime_plugin.EventListener ):
 
 
     def generate_funcset_recur( self, node, funcset, visited ):
+
+        print_debug( 1, "Entering on the AMXXEditor::generate_funcset_recur(2) function." )
 
         if node in visited:
             return
@@ -451,6 +311,8 @@ class AMXXEditor( sublime_plugin.EventListener ):
 
     def generate_doctset_recur( self, node, doctset, visited ):
 
+        print_debug( 1, "Entering on the AMXXEditor::generate_doctset_recur(2) function." )
+
         if node in visited:
 
             return
@@ -464,9 +326,12 @@ class AMXXEditor( sublime_plugin.EventListener ):
         doctset.update( node.doct )
 
 
+
 def on_settings_modified():
 
-    global g_enable_inteltip
+    print_debug( 1, "Entering on the on_settings_modified(0) function." )
+
+    global g_delay_time
     settings = sublime.load_settings( "amxx.sublime-settings" )
 
     # check package path
@@ -476,88 +341,31 @@ def on_settings_modified():
 
         os.mkdir( packages_path )
 
-    # fix-path
-    fix_path( settings, 'amxxpc_directory' )
-    fix_path( settings, 'include_directory' )
-    fix_path( settings, 'output_directory' )
-
-    # build-system
-    build_filename = 'AMXX-Compiler.sublime-build'
-    build = sublime.load_settings( build_filename )
-
-    build.set( 'cmd',
-        [
-            settings.get( 'amxxpc_directory' ), \
-            "-d" + str( settings.get( 'amxxpc_debug' ) ), "-i" + \
-            settings.get( 'include_directory' ), "-o" + \
-            settings.get( 'output_directory' ) + \
-            "/${file_base_name}.amxx", "${file}"
-        ] )
-
-    build.set( 'syntax', 'AMXX-Console.sublime-syntax' )
-    build.set( 'selector', 'source.sma' )
-    build.set( 'working_dir', '${file_path}' )
-
-    sublime.save_settings( build_filename )
-
-    # Get the set color scheme
-    color_scheme = settings.get( 'color_scheme' )
-
-    # popUp.CSS
-    global g_inteltip_style
-
-    g_inteltip_style = sublime.load_resource( "Packages/amxmodx/"+ color_scheme +"-popup.css" )
-    g_inteltip_style = g_inteltip_style.replace( "\r", "" ) # fix win/linux newlines
-
     # cache setting
-    global g_enable_buildversion, g_debug_level, g_delay_time, g_include_dir
-
-    g_enable_inteltip     = settings.get( 'enable_inteltip', True )
-    g_enable_buildversion = settings.get( 'enable_buildversion', False )
-    g_debug_level         = settings.get( 'debug_level', 0 )
-    g_delay_time          = settings.get( 'live_refresh_delay', 1.0 )
-    g_include_dir         = settings.get( 'include_directory' )
-
-    # generate list of color schemes
-    global g_color_schemes, g_default_schemes
-
-    g_color_schemes['list'] = g_default_schemes[:]
-    g_color_schemes['active'] = color_scheme
-
-    for file in os.listdir( sublime.packages_path()+"/amxmodx" ):
-
-        if file.endswith( "-pawn.tmTheme" ):
-
-            g_color_schemes['list'] += [ file.replace( "-pawn.tmTheme", "" ) ]
-
-
-    g_color_schemes['count'] = len( g_color_schemes['list'] )
+    get_the_include_directory()
+    g_delay_time = settings.get( 'live_refresh_delay', 1.0 )
 
     file_observer.unschedule_all()
     file_observer.schedule( file_event_handler, g_include_dir, True )
 
 
 
-def fix_path( settings, key ):
+def get_the_include_directory():
 
-    org_path = settings.get( key )
+    print_debug( 1, "Entering on the get_the_include_directory(0) function." )
 
-    if org_path is "${file_path}":
+    global g_include_dir
+    g_include_dir = 'F:/SteamCMD/steamapps/common/Half-Life/czero/addons/amxmodx/scripting/include'
 
-        return
-
-    path = os.path.normpath( org_path )
-
-    if os.path.isdir( path ):
-
-        path += '/'
-
-    settings.set( key, path )
+    g_include_dir = os.path.normpath( g_include_dir )
+    print_debug( 1, "    ( get_the_include_directory ) g_include_dir: %s" % g_include_dir )
 
 
 
 def sorted_nicely( l ):
     """ Sort the given iterable in the way that humans expect."""
+
+    print_debug( 1, "Entering on the sorted_nicely(1) function." )
 
     convert      = lambda text: int( text ) if text.isdigit() else text
     alphanum_key = lambda key: [ convert( c ) for c in re.split( '( [0-9]+ )', key[0] ) ]
@@ -568,6 +376,7 @@ def sorted_nicely( l ):
 
 def add_to_queue_forward( view ):
 
+    print_debug( 1, "Entering on the add_to_queue_forward(1) function." )
     sublime.set_timeout( lambda: add_to_queue( view ), 0 )
 
 
@@ -578,12 +387,14 @@ def add_to_queue( view ):
         now and process the results later
     """
 
+    print_debug( 1, "Entering on the add_to_queue(1) function." )
     to_process.put( ( view.file_name(), view.substr( sublime.Region( 0, view.size() ) ) ) )
 
 
 
 def add_include_to_queue( file_name ):
 
+    print_debug( 1, "Entering on the add_include_to_queue(1) function." )
     to_process.put( ( file_name, None ) )
 
 
@@ -592,26 +403,32 @@ class IncludeFileEventHandler( watchdog.events.FileSystemEventHandler ):
 
     def __init__( self ):
 
+        print_debug( 1, "Entering on the IncludeFileEventHandler::__init__(2) function." )
         watchdog.events.FileSystemEventHandler.__init__( self )
 
 
     def on_created( self, event ):
 
+        print_debug( 1, "Entering on the IncludeFileEventHandler::on_created(2) function." )
         sublime.set_timeout( lambda: on_modified_main_thread( event.src_path ), 0 )
 
 
     def on_modified( self, event ):
 
+        print_debug( 1, "Entering on the IncludeFileEventHandler::on_modified(2) function." )
         sublime.set_timeout( lambda: on_modified_main_thread( event.src_path ), 0 )
 
 
     def on_deleted( self, event ):
 
+        print_debug( 1, "Entering on the IncludeFileEventHandler::on_deleted(2) function." )
         sublime.set_timeout( lambda: on_deleted_main_thread( event.src_path ), 0 )
 
 
 
 def on_modified_main_thread( file_path ):
+
+    print_debug( 1, "Entering on the on_modified_main_thread(1) function." )
 
     if not is_active( file_path ):
 
@@ -620,6 +437,8 @@ def on_modified_main_thread( file_path ):
 
 
 def on_deleted_main_thread( file_path ):
+
+    print_debug( 1, "Entering on the on_deleted_main_thread(1) function." )
 
     if is_active( file_path ):
 
@@ -637,6 +456,7 @@ def on_deleted_main_thread( file_path ):
 
 def is_active( file_name ):
 
+    print_debug( 1, "Entering on the is_active(1) function." )
     return sublime.active_window().active_view().file_name() == file_name
 
 
@@ -644,6 +464,8 @@ def is_active( file_name ):
 class ProcessQueueThread( watchdog.utils.DaemonThread ):
 
     def run( self ):
+
+        print_debug( 1, "Entering on the ProcessQueueThread::run(1) function." )
 
         while self.should_keep_running():
 
@@ -659,6 +481,7 @@ class ProcessQueueThread( watchdog.utils.DaemonThread ):
 
     def process( self, view_file_name, view_buffer ):
 
+        print_debug( 1, "Entering on the ProcessQueueThread::process(3) function." )
         ( current_node, node_added ) = get_or_add_node( view_file_name )
 
         base_includes = set()
@@ -677,6 +500,7 @@ class ProcessQueueThread( watchdog.utils.DaemonThread ):
 
     def process_existing_include( self, file_name ):
 
+        print_debug( 1, "Entering on the ProcessQueueThread::process_existing_include(2) function." )
         current_node = nodes.get( file_name )
 
         if current_node is None:
@@ -703,6 +527,7 @@ class ProcessQueueThread( watchdog.utils.DaemonThread ):
 
     def load_from_file( self, view_file_name, base_file_name, parent_node, base_node, base_includes ):
 
+        print_debug( 1, "Entering on the ProcessQueueThread::load_from_file(6) function." )
         ( file_name, exists ) = get_file_name( view_file_name, base_file_name )
 
         if not exists:
@@ -736,6 +561,8 @@ class ProcessQueueThread( watchdog.utils.DaemonThread ):
 
 def get_file_name( view_file_name, base_file_name ):
 
+    print_debug( 1, "Entering on the get_file_name(2) function." )
+
     if local_re.search( base_file_name ) == None:
 
         file_name = os.path.join( g_include_dir, base_file_name + '.inc' )
@@ -750,6 +577,7 @@ def get_file_name( view_file_name, base_file_name ):
 
 def get_or_add_node( file_name ):
 
+    print_debug( 1, "Entering on the get_or_add_node(1) function." )
     node = nodes.get( file_name )
 
     if node is None:
@@ -767,6 +595,8 @@ class Node:
 
     def __init__( self, file_name ):
 
+        print_debug( 1, "Entering on the Node::__init__(2) function." )
+
         self.file_name = file_name
         self.children = set()
         self.parents = set()
@@ -775,10 +605,14 @@ class Node:
 
     def add_child( self, node ):
 
+        print_debug( 1, "Entering on the Node::add_child(2) function." )
+
         self.children.add( node )
         node.parents.add( self )
 
     def remove_child( self, node ):
+
+        print_debug( 1, "Entering on the Node::remove_child(2) function." )
 
         self.children.remove( node )
         node.parents.remove( self )
@@ -788,6 +622,8 @@ class Node:
             nodes.pop( node.file_name )
 
     def remove_all_children_and_funcs( self ):
+
+        print_debug( 1, "Entering on the Node::remove_all_children_and_funcs(1) function." )
 
         for child in self.children:
 
@@ -801,11 +637,14 @@ class TextReader:
 
     def __init__( self, text ):
 
+        print_debug( 1, "Entering on the TextReader::__init__(2) function." )
+
         self.text = text.splitlines()
         self.position = -1
 
     def readline( self ):
 
+        print_debug( 1, "Entering on the TextReader::readline(1) function." )
         self.position += 1
 
         if self.position < len( self.text ):
@@ -826,16 +665,19 @@ class TextReader:
 
 
 
-class pawnParse:
+class PawnParse:
 
     def __init__( self ):
+
+        print_debug( 1, "Entering on the PawnParse::__init__(1) function." )
 
         self.save_const_timer = None
         self.constants_count = 0
 
     def start( self, pFile, node ):
 
-        print_debug( 2, "( analyzer ) CODE PARSE Start [%s]" % node.file_name )
+        print_debug( 1, "Entering on the PawnParse::start(3) function." )
+        print_debug( 2, "( PawnParse::start ) CODE PARSE Start [%s]" % node.file_name )
 
         self.file               = pFile
         self.file_name          = os.path.basename( node.file_name )
@@ -862,11 +704,12 @@ class pawnParse:
             self.save_const_timer = Timer( 4.0, self.save_constants )
             self.save_const_timer.start()
 
-
-        print_debug( 2, "( analyzer ) CODE PARSE End [%s]" % node.file_name )
+        print_debug( 2, "( PawnParse::start ) CODE PARSE End [%s]" % node.file_name )
 
 
     def save_constants( self ):
+
+        print_debug( 1, "Entering on the PawnParse::save_constants(1) function." )
 
         self.save_const_timer   = None
         self.constants_count    = len( g_constants_list )
@@ -891,6 +734,8 @@ class pawnParse:
 
     def read_line( self ):
 
+        print_debug( 1, "Entering on the PawnParse::read_line(1) function." )
+
         if self.restore_buffer:
 
             line = self.restore_buffer
@@ -912,6 +757,7 @@ class pawnParse:
 
     def read_string( self, buffer ):
 
+        print_debug( 1, "Entering on the PawnParse::read_string(2) function." )
         buffer = buffer.replace( '\t', ' ' ).strip()
 
         while '  ' in buffer:
@@ -959,6 +805,8 @@ class pawnParse:
 
 
     def skip_function_block( self, buffer ):
+
+        print_debug( 1, "Entering on the PawnParse::skip_function_block(2) function." )
 
         num_brace = 0
         inString = False
@@ -1008,8 +856,9 @@ class pawnParse:
             buffer = self.read_line()
 
 
-
     def valid_name( self, name ):
+
+        print_debug( 1, "Entering on the PawnParse::valid_name(2) function." )
 
         if not name or not name[0].isalpha() and name[0] != '_':
 
@@ -1020,6 +869,7 @@ class pawnParse:
 
     def add_constant( self, name ):
 
+        print_debug( 1, "Entering on the PawnParse::add_constant(2) function." )
         fixname = re.search( '( \\w* )', name )
 
         if fixname:
@@ -1030,6 +880,7 @@ class pawnParse:
 
     def add_enum( self, buffer ):
 
+        print_debug( 1, "Entering on the PawnParse::add_enum(2) function." )
         buffer = buffer.strip()
 
         if buffer == '':
@@ -1046,10 +897,13 @@ class pawnParse:
 
     def add_autocomplete( self, name, info, autocomplete ):
 
+        print_debug( 1, "Entering on the PawnParse::add_autocomplete(2) function." )
         self.node.funcs.add( ( name +'  \t'+  self.file_name +' - '+ info, autocomplete ) )
 
 
     def start_parse( self ):
+
+        print_debug( 1, "Entering on the PawnParse::start_parse(1) function." )
 
         while True:
 
@@ -1129,6 +983,7 @@ class pawnParse:
 
     def parse_include( self, buffer ):
 
+        print_debug( 1, "Entering on the PawnParse::parse_include(2) function." )
         include_line = re.search( '#include[\\s]+[<"](.*)[">]', buffer )
 
         if include_line:
@@ -1141,6 +996,7 @@ class pawnParse:
 
     def parse_define( self, buffer ):
 
+        print_debug( 1, "Entering on the PawnParse::parse_define(2) function." )
         define = re.search( '#define[\\s]+( [^\\s]+ )[\\s]+( .+ )', buffer )
 
         if define:
@@ -1156,6 +1012,8 @@ class pawnParse:
 
 
     def parse_const( self, buffer ):
+
+        print_debug( 1, "Entering on the PawnParse::parse_const(2) function." )
 
         buffer = buffer[6:]
         split  = buffer.split( '=', 1 )
@@ -1181,6 +1039,8 @@ class pawnParse:
 
 
     def parse_variable( self, buffer ):
+
+        print_debug( 1, "Entering on the PawnParse::parse_variable(2) function." )
 
         if buffer.startswith( 'new const ' ):
 
@@ -1313,6 +1173,7 @@ class pawnParse:
 
     def parse_enum( self, buffer ):
 
+        print_debug( 1, "Entering on the PawnParse::parse_enum(2) function." )
         pos = buffer.find( '}' )
 
         if pos != -1:
@@ -1363,6 +1224,8 @@ class pawnParse:
 
 
     def parse_function( self, buffer, type ):
+
+        print_debug( 1, "Entering on the PawnParse::parse_function(3) function." )
 
         multi_line       = False
         temp             = ''
@@ -1427,6 +1290,8 @@ class pawnParse:
 
 
     def parse_function_params( self, func, type ):
+
+        print_debug( 1, "Entering on the PawnParse::parse_function_params(3) function." )
 
         if type == 0:
 
@@ -1503,12 +1368,16 @@ class pawnParse:
 
 def process_buffer( text, node ):
 
+    print_debug( 1, "Entering on the process_buffer(2) function." )
+
     text_reader = TextReader( text )
     pawnparse.start( text_reader, node )
 
 
 
 def process_include_file( node ):
+
+    print_debug( 1, "Entering on the process_include_file(1) function." )
 
     with open( node.file_name ) as file:
 
@@ -1518,12 +1387,14 @@ def process_include_file( node ):
 
 def simple_escape( html ):
 
+    print_debug( 1, "Entering on the simple_escape(1) function." )
     return html.replace( '&', '&amp;' )
 
 
 
 def print_debug( level, msg ):
 
+    # You can access global variables without the global keyword.
     if g_debug_level >= level:
 
         print( "[AMXX-Editor]: " + msg )
@@ -1542,6 +1413,8 @@ def print_debug( level, msg ):
 #
 #     main();
 main()
+
+
 
 
 
