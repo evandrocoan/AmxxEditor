@@ -19,6 +19,44 @@ import watchdog.utils
 from watchdog.utils.bricks import OrderedSetQueue
 
 
+import datetime
+startTime = None
+
+
+def main():
+
+    startTime = datetime.datetime.now()
+
+    print_debug( 1, "" )
+    print_debug( 1, "" )
+    # print_debug( 1, startTime.strftime("%Y-%m-%d %H:%M:%S") )
+
+    print_debug( 1, startTime.isoformat() )
+    print_debug( 1, "Entering on the main(0) function." )
+
+    EDITOR_VERSION = "2.2"
+    FUNC_TYPES     = [ "Function", "Public", "Stock", "Forward", "Native" ]
+
+    g_default_schemes     = [ "atomic", "dark", "mistrick", "npp", "twlight", "white" ]
+    g_color_schemes       = { "list": g_default_schemes[:], "count":0, "active":0 }
+    g_constants_list      = set()
+    g_inteltip_style      = ""
+    g_enable_inteltip     = False
+    g_enable_buildversion = False
+    g_debug_level         = 10
+    g_delay_time          = 1.0
+    g_include_dir         = "."
+
+    to_process         = OrderedSetQueue()
+    nodes              = dict()
+    file_observer      = watchdog.observers.Observer()
+    process_thread     = ProcessQueueThread()
+    file_event_handler = IncludeFileEventHandler()
+    includes_re        = re.compile( '^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE )
+    local_re           = re.compile( '\\.(sma|inc)$' )
+    pawnparse          = pawnParse()
+
+
 
 def plugin_loaded():
 
@@ -76,9 +114,9 @@ def new_file( type ):
     view = sublime.active_window().new_file()
 
     view.set_syntax_file( "AMXX-Pawn.sublime-syntax" )
-    view.set_name( "untitled."+type )
+    view.set_name( "untitled." + type )
 
-    plugin_template = sublime.load_resource( "Packages/amxmodx/default."+type )
+    plugin_template = sublime.load_resource( "Packages/amxmodx/default." + type )
     plugin_template = plugin_template.replace( "\r", "" )
 
     view.run_command( "insert_snippet", {"contents": plugin_template} )
@@ -97,8 +135,8 @@ class AboutAmxxEditorCommand( sublime_plugin.WindowCommand ):
 
         about += "- Contributors:\n"
         about += "   sasske        ( white color scheme )\n"
-        about += "   addons_zz ( npp color scheme )\n"
-        about += "   KliPPy        ( build version )\n"
+        about += "   addons_zz      ( npp color scheme )\n"
+        about += "   KliPPy           ( build version )\n"
         about += "   Mistrick     ( mistrick color scheme )\n"
 
         sublime.message_dialog( about )
@@ -109,9 +147,22 @@ class AMXXEditor( sublime_plugin.EventListener ):
 
     def __init__( self ):
 
-        process_thread.start()
+        print_debug( 1, "Entering on the AMXXEditor::__init__(1) function." )
+
+        try:
+
+            print_debug( 1, "Starting the Thread process_thread..." )
+            process_thread.start()
+
+            print_debug( 1, "Starting the Thread file_observer..." )
+            file_observer.start()
+
+        except Exception:
+
+            pass
+
         self.delay_queue = None
-        file_observer.start()
+
 
     def on_window_command( self, window, cmd, args ):
 
@@ -1517,27 +1568,18 @@ def print_debug( level, msg ):
 
 
 
-EDITOR_VERSION = "2.2"
-FUNC_TYPES     = [ "Function", "Public", "Stock", "Forward", "Native" ]
-
-g_default_schemes     = [ "atomic", "dark", "mistrick", "npp", "twlight", "white" ]
-g_color_schemes       = { "list": g_default_schemes[:], "count":0, "active":0 }
-g_constants_list      = set()
-g_inteltip_style      = ""
-g_enable_inteltip     = False
-g_enable_buildversion = False
-g_debug_level         = 0
-g_delay_time          = 1.0
-g_include_dir         = "."
-
-to_process         = OrderedSetQueue()
-nodes              = dict()
-file_observer      = watchdog.observers.Observer()
-process_thread     = ProcessQueueThread()
-file_event_handler = IncludeFileEventHandler()
-includes_re        = re.compile( '^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE )
-local_re           = re.compile( '\\.(sma|inc)$' )
-pawnparse          = pawnParse()
+# When the Python interpreter reads a source file, it executes all of the code found in it.
+#
+# Before executing the code, it will define a few special variables.  For example, if the python
+#
+# interpreter is running that module (the source file) as the main program, it sets the special
+# `__name__` variable to have a value `"__main__"`.  If this file is being imported from another
+# module, `__name__` will be set to the module's name.
+#
+# if __name__ == "__main__":
+#
+#     main();
+main()
 
 
 
