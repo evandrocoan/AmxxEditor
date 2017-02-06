@@ -676,6 +676,10 @@ class pawnParse :
 		self.save_const_timer 	= None
 		self.constants_count 	= len(g_constants_list)
 
+		# If you have a project within 10000 files, each time this is updated, will for sublime to
+		# process again all the files.
+		return
+
 		constants = "___test"
 		for const in g_constants_list :
 			constants += "|" + const
