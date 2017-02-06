@@ -35,44 +35,6 @@ def unload_handler() :
 	sublime.load_settings("amxx.sublime-settings").clear_on_change("amxx")
 #}
 
-class ColorAmxxEditorCommand(sublime_plugin.ApplicationCommand):
-#{
-	def run(self, index) :
-	#{
-		if index >= g_color_schemes['count'] :
-			return
-
-		g_color_schemes['active'] = index
-
-		file_path = sublime.packages_path()+"/User/amxx.sublime-settings"
-		f = open(file_path, "r")
-		if not f :
-			return
-
-		content = f.read()
-
-		rx = re.compile(r'("color_scheme"\s*:\s*")(.*)(".*)')
-		content = rx.sub(r'\g<1>'+ g_color_schemes['list'][index] +'\g<3>', content)
-
-		f.close()
-
-		f = open(file_path, "w")
-		f.write(content)
-		f.close()
-	#}
-
-	def is_visible(self, index) :
-		return (index < g_color_schemes['count'])
-
-	def is_checked(self, index) :
-		return (index < g_color_schemes['count'] and g_color_schemes['list'][index] == g_color_schemes['active'])
-
-	def description(self, index) :
-		if index < g_color_schemes['count'] :
-			return g_color_schemes['list'][index]
-		return ""
-#}
-
 class NewAmxxIncludeCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		new_file("inc")
