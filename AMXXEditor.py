@@ -687,7 +687,8 @@ class pawnParse :
 		for const in g_constants_list :
 			constants += "|" + const
 
-		syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b(" + constants + ")\\b\n      scope: constant.vars.pawn"
+		syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b(" \
+				+ constants + ")\\b\n      scope: constant.vars.pawn\n\n"
 
 		file_name = sublime.packages_path() + "/amxmodx/const.sublime-syntax"
 
