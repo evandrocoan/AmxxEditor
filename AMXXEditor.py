@@ -386,15 +386,18 @@ def on_settings_modified(is_loading=False):
 	g_inteltip_style = g_inteltip_style.replace("\r", "") # fix win/linux newlines
 
 	# cache setting
-	global g_enable_buildversion, g_debug_level, g_delay_time, g_include_dir
+	global g_enable_buildversion, g_debug_level, g_delay_time, g_include_dir, g_add_paremeters
+
 	g_enable_inteltip 		= settings.get('enable_inteltip', True)
 	g_enable_buildversion 	= settings.get('enable_buildversion', False)
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')
+	g_add_paremeters		= settings.get('add_function_parameters')
 
 	print_debug( 1, "( on_settings_modified ) g_debug_level: %d" % g_debug_level )
 	print_debug( 1, "( on_settings_modified ) g_include_dir: " + g_include_dir )
+	print_debug( 1, "( on_settings_modified ) g_add_paremeters: " + str( g_add_paremeters ) )
 
 	# generate list of color schemes
 	global g_color_schemes, g_default_schemes
@@ -1153,15 +1156,21 @@ class pawnParse :
 		else :
 			params = remaining.strip()[:-1].split(',')
 
-		autocomplete = funcname + '('
-		i = 1
-		for param in params :
-			if i > 1 :
-				autocomplete += ', '
-			autocomplete += '${%d:%s}' % (i, param.strip())
-			i += 1
+		if g_add_paremeters:
 
-		autocomplete += ')'
+			autocomplete = funcname + '('
+			i = 1
+			for param in params :
+				if i > 1 :
+					autocomplete += ', '
+				autocomplete += '${%d:%s}' % (i, param.strip())
+				i += 1
+
+			autocomplete += ')'
+
+		else:
+
+			autocomplete = funcname
 
 		self.add_autocomplete(funcname, FUNC_TYPES[type].lower(), autocomplete)
 		self.node.doct.add((funcname, func[func.find("(")+1:-1], self.node.file_name, type, returntype))
@@ -1207,6 +1216,7 @@ g_enable_buildversion = False
 g_debug_level = 0
 g_delay_time = 1.0
 g_include_dir = "."
+g_add_paremeters = False
 
 to_process = OrderedSetQueue()
 nodes = dict()
