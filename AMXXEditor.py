@@ -401,7 +401,7 @@ def on_settings_modified(is_loading=False):
 	g_color_schemes['list'] = g_default_schemes[:]
 	g_color_schemes['active'] = color_scheme
 
-	for file in os.listdir(sublime.packages_path()+"/") :
+	for file in os.listdir(sublime.packages_path()+"/amxmodx/") :
 	#{
 		if file.endswith("-pawn.tmTheme") :
 			g_color_schemes['list'] += [ file.replace("-pawn.tmTheme", "") ]
