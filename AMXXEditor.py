@@ -508,7 +508,16 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 		for removed_node in current_node.children.difference(base_includes) :
 			current_node.remove_child(removed_node)
 
-		process_buffer(view_buffer, current_node)
+		print_debug( 1, sublime.packages_path() + "/All Autocomplete/ is dir? " \
+		        + str( os.path.isdir( sublime.packages_path() + "/All Autocomplete" ) ) \
+		        + "\n"
+		        + sublime.installed_packages_path() + "/All Autocomplete.sublime-package is file? " \
+		        + str( os.path.isfile( sublime.installed_packages_path() + "/All Autocomplete.sublime-package" ) ) )
+
+		if not ( os.path.isdir( sublime.packages_path() + "/All Autocomplete" ) \
+				or os.path.isfile( sublime.installed_packages_path() + "/All Autocomplete.sublime-package" ) ) :
+
+			process_buffer(view_buffer, current_node)
 
 	def process_existing_include(self, file_name) :
 		current_node = nodes.get(file_name)
