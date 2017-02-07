@@ -6,6 +6,7 @@ import string
 import sys
 import sublime, sublime_plugin
 import webbrowser
+import datetime
 import time
 import urllib.request
 from collections import defaultdict
@@ -512,10 +513,10 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 			current_node.remove_child(removed_node)
 
 		print_debug( 1, sublime.packages_path() + "/All Autocomplete/ is dir? " \
-		        + str( os.path.isdir( sublime.packages_path() + "/All Autocomplete" ) ) \
-		        + "\n"
-		        + sublime.installed_packages_path() + "/All Autocomplete.sublime-package is file? " \
-		        + str( os.path.isfile( sublime.installed_packages_path() + "/All Autocomplete.sublime-package" ) ) )
+				+ str( os.path.isdir( sublime.packages_path() + "/All Autocomplete" ) ) \
+				+ "\n"
+				+ sublime.installed_packages_path() + "/All Autocomplete.sublime-package is file? " \
+				+ str( os.path.isfile( sublime.installed_packages_path() + "/All Autocomplete.sublime-package" ) ) )
 
 		if not ( os.path.isdir( sublime.packages_path() + "/All Autocomplete" ) \
 				or os.path.isfile( sublime.installed_packages_path() + "/All Autocomplete.sublime-package" ) ) :
@@ -1196,13 +1197,26 @@ def process_include_file(node) :
 
 def simple_escape(html) :
 #{
-    return html.replace('&', '&amp;')
+	return html.replace('&', '&amp;')
 #}
 
 def print_debug(level, msg) :
 #{
-	if g_debug_level >= level :
-		print("[AMXX-Editor]: " + msg)
+	global print_debug_lastTime
+	currentTime = datetime.datetime.now().microsecond
+
+	# You can access global variables without the global keyword.
+	if g_debug_level >= level:
+
+		print( "[AMXX-Editor] " \
+				+ str( datetime.datetime.now().hour ) + ":" \
+				+ str( datetime.datetime.now().minute ) + ":" \
+				+ str( datetime.datetime.now().second ) + ":" \
+				+ str( currentTime ) \
+				+ "%7s " % str( currentTime - print_debug_lastTime ) \
+				+ msg )
+
+		print_debug_lastTime = currentTime
 #}
 
 EDITOR_VERSION = "2.2"
@@ -1218,6 +1232,8 @@ g_debug_level = 0
 g_delay_time = 1.0
 g_include_dir = "."
 g_add_paremeters = False
+startTime = datetime.datetime.now()
+print_debug_lastTime = startTime.microsecond
 
 to_process = OrderedSetQueue()
 nodes = dict()
