@@ -1,0 +1,40 @@
+
+[
+    {
+        "command": "new_amxx_include",
+        "caption": "Amxx Pawn: New Include"
+    },
+    {
+        "command": "new_amxx_plugin",
+        "caption": "Amxx Pawn: New Plug-In"
+    },
+    { "caption": "-" },
+    {
+        "command": "open_file",
+        "args": {"file": "${packages}/Amxx Pawn/AmxxPawn.sublime-build"},
+        "caption": "Amxx Pawn: Configure Sublime Text Builder"
+    },
+    {
+        "command": "open_file",
+        "args": {"file": "${packages}/Amxx Pawn/AmxxPawn.sh"},
+        "caption": "Amxx Pawn: Configure Linux/Cygwin Compiler"
+    },
+    {
+        "command": "open_file",
+        "args": {"file": "${packages}/Amxx Pawn/AmxxPawn.bat"},
+        "caption": "Amxx Pawn: Configure Windows/Bat Compiler"
+    },
+    { "caption": "-" },
+    {
+        "command": "open_file",
+        "args": { "file": "${packages}/User/AMXX-Console.sublime-settings" },
+        "caption": "Amxx Pawn: Edit AMXX-Console Settings"
+    },
+    {
+        "command": "open_file",
+        "args": { "file": "${packages}/User/amxx.sublime-settings" },
+        "caption": "Amxx Pawn: Edit AMXX-Autocompletion Settings"
+    },
+]
+
+
