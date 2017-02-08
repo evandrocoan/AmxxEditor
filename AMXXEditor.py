@@ -388,10 +388,36 @@ class AMXXEditor(sublime_plugin.EventListener):
 		doctset.update(node.doct)
 
 
+def is_package_enabled( userSettings, package_name ):
+
+	print_debug( 1, "is_package_enabled = " + sublime.packages_path()
+	        + "/All Autocomplete/ is dir? " \
+			+ str( os.path.isdir( sublime.packages_path() + "/" + package_name ) ) )
+
+	print_debug( 1, "is_package_enabled = " + sublime.installed_packages_path()
+	        + "/All Autocomplete.sublime-package is file? " \
+			+ str( os.path.isfile( sublime.installed_packages_path() + "/" + package_name + ".sublime-package" ) ) )
+
+	ignoredPackages = userSettings.get('ignored_packages')
+
+	if ignoredPackages is not None:
+
+		return ( os.path.isdir( sublime.packages_path() + "/" + package_name ) \
+				or os.path.isfile( sublime.installed_packages_path() + "/" + package_name + ".sublime-package" ) ) \
+				and not package_name in ignoredPackages
+
+	return os.path.isdir( sublime.packages_path() + "/" + package_name ) \
+			or os.path.isfile( sublime.installed_packages_path() + "/" + package_name + ".sublime-package" )
+
 def on_settings_modified(is_loading=False):
 #{
 	print_debug( 1, "on_settings_modified" )
+
 	global g_enable_inteltip
+	global g_isAllAutoCompleteInstalled
+
+	userSettings 				 = sublime.load_settings("Preferences.sublime-settings")
+	g_isAllAutoCompleteInstalled = is_package_enabled( userSettings, "All Autocomplete" )
 
 	settings = sublime.load_settings("amxx.sublime-settings")
 	invalid  = is_invalid_settings(settings)
@@ -564,18 +590,8 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 		for removed_node in current_node.children.difference(base_includes) :
 			current_node.remove_child(removed_node)
 
-		print_debug( 1, "ProcessQueueThread::process = " + sublime.packages_path()
-		        + "/All Autocomplete/ is dir? " \
-				+ str( os.path.isdir( sublime.packages_path() + "/All Autocomplete" ) ) )
-
-		print_debug( 1, "ProcessQueueThread::process = " + sublime.installed_packages_path()
-		        + "/All Autocomplete.sublime-package is file? " \
-				+ str( os.path.isfile( sublime.installed_packages_path() + "/All Autocomplete.sublime-package" ) ) )
-
-		if not ( os.path.isdir( sublime.packages_path() + "/All Autocomplete" ) \
-				or os.path.isfile( sublime.installed_packages_path() + "/All Autocomplete.sublime-package" ) ) :
-
-			# To process the current file functions for autocomplete
+		# To process the current file functions for autocomplete
+		if not g_isAllAutoCompleteInstalled :
 			process_buffer(view_buffer, current_node)
 
 	def process_existing_include(self, file_name) :
@@ -586,7 +602,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 		base_includes = set()
 
 		with open(file_name, 'r') as f :
-			print_debug(0, "(analyzer) Processing Include File %s" % file_name)
+			print_debug(1, "(analyzer) Processing Include File %s" % file_name)
 			includes = include_re.findall(f.read())
 
 		for include in includes:
@@ -615,7 +631,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 			return
 
 		with open(file_name, 'r') as f :
-			print_debug(0, "(analyzer) Processing Include File %s" % file_name)
+			print_debug(1, "(analyzer) Processing Include File %s" % file_name)
 			includes = includes_re.findall(f.read())
 
 		for include in includes :
@@ -1303,6 +1319,7 @@ g_include_dir = "."
 g_add_paremeters = False
 startTime = datetime.datetime.now()
 print_debug_lastTime = startTime.microsecond
+g_isAllAutoCompleteInstalled = False
 
 to_process = OrderedSetQueue()
 nodes = dict()
