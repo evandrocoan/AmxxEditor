@@ -9,8 +9,11 @@
     // ( true / false ) Enable IntelTip PopUp
     "enable_inteltip":      true,
 
-    // ( 0 ~ 3 ) Enable editor debug messages
-    "debug_level":          0,
+    // Enable editor debug messages, see the file `amxmodx/AMXXEditor.py` for all debugging levels.
+    //
+    // 0 - Disabled debugging.
+    // 1 - Errors messages.
+    "debug_level": 1,
 
     // ( white / dark ) Set color scheme
     "color_scheme": "dark",
