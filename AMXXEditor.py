@@ -340,7 +340,10 @@ class AMXXEditor(sublime_plugin.EventListener):
 			return None
 
 		if view.match_selector(locations[0], 'source.sma string') :
-			return ([], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+			if g_word_autocomplete:
+				return ([], sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+			else:
+				return ([], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 
 		if view.file_name() is None:
 
@@ -355,20 +358,29 @@ class AMXXEditor(sublime_plugin.EventListener):
 				# The queue is not processed yet, so there is nothing to show
 				return None
 
-			return ( self.generate_funcset( file_name ), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS )
+			if g_word_autocomplete:
+				return ( self.generate_funcset( file_name ), sublime.INHIBIT_EXPLICIT_COMPLETIONS )
+			else:
+				return ( self.generate_funcset( file_name ), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS )
 
 		else:
 
-			return ( self.generate_funcset ( view.file_name() ), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS )
+			if g_word_autocomplete:
+				return ( self.generate_funcset ( view.file_name() ), sublime.INHIBIT_EXPLICIT_COMPLETIONS )
+			else:
+				return ( self.generate_funcset ( view.file_name() ), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS )
 
 	def generate_funcset(self, file_name) :
 		funcset = set()
 		visited = set()
 
-		node = nodes[file_name]
+		if file_name in nodes:
+			node = nodes[file_name]
 
-		self.generate_funcset_recur(node, funcset, visited)
-		return sorted_nicely(funcset)
+			self.generate_funcset_recur(node, funcset, visited)
+			return sorted_nicely(funcset)
+
+		return None
 
 	def generate_funcset_recur(self, node, funcset, visited) :
 		if node in visited :
@@ -491,7 +503,7 @@ def sorted_nicely( l ):
 	return sorted(l, key = alphanum_key)
 
 def add_to_queue_forward(view) :
-	sublime.set_timeout(lambda: add_to_queue(view), 0)
+	sublime.set_timeout_async(lambda: add_to_queue(view), 5000)
 
 def add_to_queue(view) :
 	"""
@@ -557,6 +569,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 		(current_node, node_added) = get_or_add_node(view_file_name)
 
 		base_includes = set()
+		pawnParse.clearUniqueCompletionBuffer();
 
 		# Here we parse the text file to know which modules it is including.
 		includes = includes_re.findall(view_buffer)
@@ -709,16 +722,22 @@ class TextReader:
 	#}
 #}
 
-class pawnParse :
+class PawnParse :
 #{
 	def __init__(self) :
+		self.node = None
 		self.isTheCurrentFile = False
 		self.save_const_timer = None
 		self.constants_count = 0
 
+	def clearUniqueCompletionBuffer(self) :
+		if self.node is not None:
+			self.node.words.clear()
+
 	def start(self, pFile, node,buffer=None) :
 	#{
 		print_debug(8, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
+		self.isTheCurrentFile = False
 
 		if buffer is not None:
 			self.isTheCurrentFile = True
@@ -847,6 +866,8 @@ class pawnParse :
 	#{
 		num_brace = 0
 		inString = False
+		inChar = False
+
 		self.skip_brace_found = False
 
 		buffer = buffer + ' '
@@ -858,23 +879,44 @@ class pawnParse :
 		#{
 			i = 0
 			pos = 0
-			oldChar = ''
+			lastChar = ''
 
-			# print_debug( 4, buffer )
+			# print_debug( 1, "skip_function_block: " + buffer )
 
 			for c in buffer :
 			#{
 				i += 1
 
-				if (c == '"') :
-				#{
-					if inString and oldChar != '^' :
+				if not inString and not inChar and lastChar == '*' and c == '/' :
+					self.found_comment = False
+
+				if not inString and not inChar and self.found_comment:
+					lastChar = c
+					continue
+
+				if not inString and not inChar and lastChar == '/' and c == '*' :
+					self.found_comment = True
+					lastChar = c
+					continue
+
+				if not inString and not inChar and c == '/' and lastChar == '/' :
+					break
+
+				if c == '"' :
+
+					if inString and lastChar != '^' :
 						inString = False
 					else :
 						inString = True
-				#}
 
-				if (inString == False) :
+				if not inString and c == '\'' :
+
+					if inChar and lastChar != '^' :
+						inChar = False
+					else :
+						inChar = True
+
+				if not inString and not inChar :
 				#{
 					if (c == '{') :
 						num_brace += 1
@@ -884,7 +926,7 @@ class pawnParse :
 						pos = i
 				#}
 
-				oldChar = c
+				lastChar = c
 			#}
 
 			if num_brace == 0 :
@@ -1057,7 +1099,7 @@ class pawnParse :
 			buffer = buffer[4:]
 
 		varName = ""
-		oldChar = ''
+		lastChar = ''
 		i = 0
 		pos = 0
 		num_brace = 0
@@ -1078,7 +1120,7 @@ class pawnParse :
 
 				if (c == '"') :
 				#{
-					if (inString and oldChar != '^') :
+					if (inString and lastChar != '^') :
 						inString = False
 					else :
 						inString = True
@@ -1134,7 +1176,7 @@ class pawnParse :
 						skipSpaces = True
 				#}
 
-				oldChar = c
+				lastChar = c
 			#}
 
 			if (c != ',') :
@@ -1315,13 +1357,13 @@ class pawnParse :
 def process_buffer(text, node) :
 #{
 	text_reader = TextReader(text)
-	pawnparse.start(text_reader, node, text)
+	pawnParse.start(text_reader, node, text)
 #}
 
 def process_include_file(node) :
 #{
 	with open(node.file_name) as file :
-		pawnparse.start(file, node)
+		pawnParse.start(file, node)
 #}
 
 def simple_escape(html) :
@@ -1370,7 +1412,7 @@ process_thread = ProcessQueueThread()
 file_event_handler = IncludeFileEventHandler()
 includes_re = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
 local_re = re.compile('\\.(sma|inc)$')
-pawnparse = pawnParse()
+pawnParse = PawnParse()
 
 # Debugging
 startTime = datetime.datetime.now()
