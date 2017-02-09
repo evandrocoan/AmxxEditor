@@ -32,7 +32,8 @@ def unload_handler() :
 #{
 	file_observer.stop()
 	process_thread.stop()
-	to_process.put(("", ""))
+
+	processingSetQueue.put(("", ""))
 	sublime.load_settings("amxx.sublime-settings").clear_on_change("amxx")
 #}
 
@@ -353,7 +354,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 			if not file_name in nodes :
 
 				print_debug(4, "( on_query_completions ) Adding buffer id " + file_name + " in nodes")
-				add_to_queue(view)
+				add_to_queue_forward(view)
 
 				# The queue is not processed yet, so there is nothing to show
 				return None
@@ -516,12 +517,20 @@ def add_to_queue(view) :
 	view_file_name = view.file_name()
 
 	if view_file_name is None :
-		to_process.put( ( str( view.buffer_id() ), view.substr( sublime.Region( 0, view.size() ) ) ) )
+		name = str( view.buffer_id() )
+
+		if name not in processingSetQueue_set:
+			processingSetQueue_set.add( name )
+			processingSetQueue.put( ( name, view.substr( sublime.Region( 0, view.size() ) ) ) )
 	else :
-		to_process.put( ( view_file_name, view.substr( sublime.Region( 0, view.size() ) ) ) )
+		if view_file_name not in processingSetQueue_set:
+			processingSetQueue_set.add( view_file_name )
+			processingSetQueue.put( ( view_file_name, view.substr( sublime.Region( 0, view.size() ) ) ) )
 
 def add_include_to_queue(file_name) :
-	to_process.put((file_name, None))
+	if file_name not in processingSetQueue_set:
+		processingSetQueue_set.add( file_name )
+		processingSetQueue.put((file_name, None))
 
 class IncludeFileEventHandler(watchdog.events.FileSystemEventHandler) :
 	def __init__(self) :
@@ -556,7 +565,12 @@ def is_active(file_name) :
 class ProcessQueueThread(watchdog.utils.DaemonThread) :
 	def run(self) :
 		while self.should_keep_running() :
-			(file_name, view_buffer) = to_process.get()
+			(file_name, view_buffer) = processingSetQueue.get()
+
+			try:
+				processingSetQueue_set.remove( file_name )
+			except:
+				pass
 
 			# When the `view_buffer` is None, it means we are processing a file on the disk, instead
 			# of a file on an Sublime Text View (its text buffer).
@@ -1405,7 +1419,8 @@ g_add_paremeters = False
 g_word_autocomplete = False
 g_use_all_autocomplete = False
 
-to_process = OrderedSetQueue()
+processingSetQueue = OrderedSetQueue()
+processingSetQueue_set = set()
 nodes = dict()
 file_observer = watchdog.observers.Observer()
 process_thread = ProcessQueueThread()
