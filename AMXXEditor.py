@@ -663,6 +663,12 @@ class Node :
 		self.words = set()
 		self.doct = set()
 
+		try:
+			float(file_name)
+			self.isFromBufferOnly = True
+		except ValueError:
+			self.isFromBufferOnly = False
+
 	def add_child(self, node) :
 		self.children.add(node)
 		node.parents.add(self)
@@ -729,10 +735,10 @@ class pawnParse :
 		self.node.words.clear()
 		self.node.doct.clear()
 
+		self.start_parse()
+
 		if buffer is not None:
 			self.parse_words(buffer)
-
-		self.start_parse()
 
 		if self.constants_count != len(g_constants_list) :
 		#{
@@ -747,7 +753,10 @@ class pawnParse :
 	#}
 
 	def parse_words(self, buffer) :
-
+		"""
+			This must to be called only after all the symbols are processed by the other lists as
+			the function symbols and const variables.
+		"""
 		if len(buffer) > 1:
 			# print_debug( 1, "Length: %d, Contents: %s" % ( len(buffer), buffer ) )
 
@@ -909,27 +918,42 @@ class pawnParse :
 
 		split = buffer.split('[')
 
-		self.add_autocomplete(buffer, 'enum', split[0])
+		self.add_general_autocomplete(buffer, 'enum', split[0])
 		self.add_constant(split[0])
-		self.node.words.add( buffer )
-		self.node.words.add( split[0] )
 
 		print_debug(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
 	#}
 
-	def add_autocomplete(self, name, info, autocomplete) :
+	def add_general_autocomplete(self, name, info, autocomplete) :
 	#{
-		if name not in self.node.words:
-			self.node.funcs.add((name +'  \t'+  self.file_name +' - '+ info, autocomplete))
-			self.node.words.add( name )
+		self.node.words.add( name )
+
+		if self.node.isFromBufferOnly:
+			self.node.funcs.add( (name + '  \t' + info, autocomplete) )
+		else:
+			self.node.funcs.add( (name + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
+
+	#}
+
+	def add_function_autocomplete(self, name, info, autocomplete, param_count) :
+	#{
+		self.node.words.add( name )
+
+		if self.node.isFromBufferOnly:
+			self.node.funcs.add( (name + "(" + str( param_count ) + ")" + '  \t' + info, autocomplete) )
+		else:
+			self.node.funcs.add( (name + "(" + str( param_count ) + ")" + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
 	#}
 
 	def add_word_autocomplete(self, name) :
-	#{
+		"""
+			Used to add a word to the auto completion of the current buffer. Therefore, it does not
+			need the file name as the auto completion for words from other files/sources.
+		"""
 		if name not in self.node.words:
-			self.node.funcs.add((name, name))
 			self.node.words.add( name )
-	#}
+			self.node.funcs.add( (name, name) )
+
 
 	def start_parse(self) :
 	#{
@@ -990,7 +1014,7 @@ class pawnParse :
 			buffer = ''
 			name = define.group(1)
 			value = define.group(2).strip()
-			self.add_autocomplete(name, 'define: ' + value, name)
+			self.add_general_autocomplete(name, 'define: ' + value, name)
 			self.add_constant(name)
 
 			print_debug(8, "(analyzer) parse_define add: [%s]" % name)
@@ -1015,7 +1039,7 @@ class pawnParse :
 			value = value[0:newline]
 		#}
 
-		self.add_autocomplete(name, 'const: ' + value, name)
+		self.add_general_autocomplete(name, 'const: ' + value, name)
 		self.add_constant(name)
 		print_debug(8, "(analyzer) parse_const add: [%s]" % name)
 	#}
@@ -1274,7 +1298,7 @@ class pawnParse :
 
 			autocomplete = funcname + "()"
 
-		self.add_autocomplete(funcname, FUNC_TYPES[type].lower(), autocomplete)
+		self.add_function_autocomplete(funcname, FUNC_TYPES[type].lower(), autocomplete, len( params ))
 		self.node.doct.add((funcname, func[func.find("(")+1:-1], self.node.file_name, type, returntype))
 
 		print_debug(8, "(analyzer) parse_params add: [%s]" % func)
