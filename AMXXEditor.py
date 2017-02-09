@@ -342,7 +342,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		if view.match_selector(locations[0], 'source.sma string') :
 			if g_word_autocomplete:
-				return ([], sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+				return None
 			else:
 				return ([], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 
@@ -360,14 +360,14 @@ class AMXXEditor(sublime_plugin.EventListener):
 				return None
 
 			if g_word_autocomplete:
-				return ( self.generate_funcset( file_name ), sublime.INHIBIT_EXPLICIT_COMPLETIONS )
+				return self.generate_funcset( file_name )
 			else:
 				return ( self.generate_funcset( file_name ), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS )
 
 		else:
 
 			if g_word_autocomplete:
-				return ( self.generate_funcset ( view.file_name() ), sublime.INHIBIT_EXPLICIT_COMPLETIONS )
+				return self.generate_funcset ( view.file_name()
 			else:
 				return ( self.generate_funcset ( view.file_name() ), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS )
 
@@ -1371,7 +1371,10 @@ class PawnParse :
 def process_buffer(text, node) :
 #{
 	text_reader = TextReader(text)
-	pawnParse.start(text_reader, node, text)
+	if g_word_autocomplete:
+		pawnParse.start(text_reader, node, text)
+	else:
+		pawnParse.start(text_reader, node)
 #}
 
 def process_include_file(node) :
