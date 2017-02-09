@@ -7,7 +7,10 @@
     "add_function_parameters": true,
 
     // ( true / false ) Enable IntelTip PopUp
-    "enable_inteltip":      true,
+    "enable_inteltip": false,
+
+    // ( true / false ) Enable word autocompleting from the current file.
+    "word_autocomplete": true,
 
     // Enable editor debug messages, see the file `amxmodx/AMXXEditor.py` for all debugging levels.
     //

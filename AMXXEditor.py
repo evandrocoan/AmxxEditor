@@ -394,6 +394,7 @@ def on_settings_modified(is_loading=False):
 #{
 	print_debug(4, "on_settings_modified" )
 	global g_enable_inteltip
+	global g_word_autocomplete
 
 	settings = sublime.load_settings("amxx.sublime-settings")
 	invalid  = is_invalid_settings(settings)
@@ -428,10 +429,11 @@ def on_settings_modified(is_loading=False):
 
 	g_enable_inteltip 		= settings.get('enable_inteltip', True)
 	g_enable_buildversion 	= settings.get('enable_buildversion', False)
+	g_word_autocomplete 	= settings.get('word_autocomplete', False)
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')
-	g_add_paremeters		= settings.get('add_function_parameters')
+	g_add_paremeters		= settings.get('add_function_parameters', False)
 
 	print_debug(4, "( on_settings_modified ) g_debug_level: %d" % g_debug_level)
 	print_debug(4, "( on_settings_modified ) g_include_dir: " + g_include_dir)
@@ -655,6 +657,7 @@ class Node :
 		self.children = set()
 		self.parents = set()
 		self.funcs = set()
+		self.words = set()
 		self.doct = set()
 
 	def add_child(self, node) :
@@ -672,6 +675,7 @@ class Node :
 		for child in self.children :
 			self.remove_child(node)
 		self.funcs.clear()
+		self.words.clear()
 		self.doct.clear()
 #}
 
@@ -702,7 +706,7 @@ class pawnParse :
 		self.save_const_timer = None
 		self.constants_count = 0
 
-	def start(self, pFile, node) :
+	def start(self, pFile, node, isCurrentFile=False) :
 	#{
 		print_debug(8, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
 
@@ -716,9 +720,13 @@ class pawnParse :
 		self.enum_contents 		= ''
 		self.brace_level 		= 0
 
+		self.isCurrentFile      = isCurrentFile
 		self.restore_buffer 	= None
 
+		print_debug( 4, "( pawnParse::start ) isCurrentFile: " + str( self.isCurrentFile ) )
+
 		self.node.funcs.clear()
+		self.node.words.clear()
 		self.node.doct.clear()
 
 		self.start_parse()
@@ -782,13 +790,20 @@ class pawnParse :
 
 		buffer = buffer.lstrip()
 
+		comment = ''
 		result = ''
 		i = 0
 
-		while i < len(buffer) :
+		# print_debug( 1, str( buffer ) )
+		buffer_length = len(buffer)
+
+		while i < buffer_length :
 			if buffer[i] == '/' and i + 1 < len(buffer):
 				if buffer[i + 1] == '/' :
 					self.brace_level +=  result.count('{') - result.count('}')
+					if g_word_autocomplete and self.isCurrentFile:
+						comment = buffer[i:buffer_length]
+						self.parse_words(comment)
 					return result
 				elif buffer[i + 1] == '*' :
 					self.found_comment = True
@@ -799,14 +814,52 @@ class pawnParse :
 				if buffer[i] == '*' and i + 1 < len(buffer) and buffer[i + 1] == '/' :
 					self.found_comment = False
 					i += 1
+				elif g_word_autocomplete and self.isCurrentFile:
+					comment += buffer[i]
 			elif not (i > 0 and buffer[i] == ' ' and buffer[i - 1] == ' '):
 				result += buffer[i]
 
 			i += 1
 
+		if g_word_autocomplete:
+			self.parse_words(comment)
+
 		self.brace_level +=  result.count('{') - result.count('}')
 		return result
 	#}
+
+	def read_comment(self, buffer) :
+	#{
+		buffer = buffer.replace('\t', ' ').strip()
+		while '  ' in buffer :
+			buffer = buffer.replace('  ', ' ')
+
+		buffer = buffer.lstrip()
+		comment = ''
+		i = 0
+
+		# print_debug( 1, str( buffer ) )
+		buffer_length = len(buffer)
+
+		while i < buffer_length :
+			if buffer[i] == '/' and i + 1 < len(buffer):
+				if buffer[i + 1] == '/' :
+					if self.isCurrentFile:
+						comment = buffer[i:buffer_length]
+					break
+				elif buffer[i + 1] == '*' :
+					self.found_comment = True
+					i += 1
+			elif self.found_comment :
+				if buffer[i] == '*' and i + 1 < len(buffer) and buffer[i + 1] == '/' :
+					self.found_comment = False
+					i += 1
+				elif self.isCurrentFile:
+					comment += buffer[i]
+
+			i += 1
+
+		self.parse_words(comment)
 
 	def skip_function_block(self, buffer) :
 	#{
@@ -824,6 +877,9 @@ class pawnParse :
 			i = 0
 			pos = 0
 			oldChar = ''
+
+			if g_word_autocomplete:
+				self.read_comment(buffer)
 
 			for c in buffer :
 			#{
@@ -858,7 +914,7 @@ class pawnParse :
 		#}
 	#}
 
-	def valid_name(self, name) :
+	def is_valid_name(self, name) :
 	#{
 		if not name or not name[0].isalpha() and name[0] != '_' :
 			return False
@@ -872,6 +928,7 @@ class pawnParse :
 		if fixname :
 			name = fixname.group(1)
 			g_constants_list.add(name)
+			self.node.words.add( name )
 	#}
 
 	def add_enum(self, buffer) :
@@ -884,13 +941,24 @@ class pawnParse :
 
 		self.add_autocomplete(buffer, 'enum', split[0])
 		self.add_constant(split[0])
+		self.node.words.add( buffer )
+		self.node.words.add( split[0] )
 
 		print_debug(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
 	#}
 
 	def add_autocomplete(self, name, info, autocomplete) :
 	#{
-		self.node.funcs.add((name +'  \t'+  self.file_name +' - '+ info, autocomplete))
+		if name not in self.node.words:
+			self.node.funcs.add((name +'  \t'+  self.file_name +' - '+ info, autocomplete))
+			self.node.words.add( name )
+	#}
+
+	def add_word_autocomplete(self, name) :
+	#{
+		if name not in self.node.words:
+			self.node.funcs.add((name, name))
+			self.node.words.add( name )
 	#}
 
 	def start_parse(self) :
@@ -898,11 +966,13 @@ class pawnParse :
 		while True :
 		#{
 			buffer = self.read_line()
+			# print_debug( 1, str( buffer ) )
 
 			if buffer is None :
 				break
 
 			buffer = self.read_string(buffer)
+
 			if len(buffer) <= 0 :
 				continue
 
@@ -910,6 +980,7 @@ class pawnParse :
 			#	print("read: skip:[%d] brace_level:[%d] buff:[%s]" % (self.skip_next_dataline, self.brace_level, buffer))
 
 			if self.skip_next_dataline :
+				# self.parse_words(buffer)
 				self.skip_next_dataline = False
 				continue
 
@@ -942,6 +1013,16 @@ class pawnParse :
 		#}
 	#}
 
+	def parse_words(self, buffer) :
+
+		if len(buffer) > 1:
+			# print_debug( 1, "Length: %d, Contents: %s" % ( len(buffer), buffer ) )
+
+			words = re.findall( r'[a-zA-Z_-]{2,}', buffer )
+			for word in words:
+				# print_debug( 1, "Word: " + word )
+				self.add_word_autocomplete( word )
+
 	def parse_define(self, buffer) :
 	#{
 		define = re.search('#define[\\s]+([^\\s]+)[\\s]+(.+)', buffer)
@@ -950,7 +1031,7 @@ class pawnParse :
 			buffer = ''
 			name = define.group(1)
 			value = define.group(2).strip()
-			self.add_autocomplete(name, 'define: '+value, name)
+			self.add_autocomplete(name, 'define: ' + value, name)
 			self.add_constant(name)
 
 			print_debug(8, "(analyzer) parse_define add: [%s]" % name)
@@ -975,7 +1056,7 @@ class pawnParse :
 			value = value[0:newline]
 		#}
 
-		self.add_autocomplete(name, 'const: '+value, name)
+		self.add_autocomplete(name, 'const: ' + value, name)
 		self.add_constant(name)
 		print_debug(8, "(analyzer) parse_const add: [%s]" % name)
 	#}
@@ -1043,7 +1124,7 @@ class pawnParse :
 						varName = varName.strip()
 
 						if (varName != '') :
-							self.add_autocomplete(varName, 'var', varName)
+							self.add_word_autocomplete( varName )
 							print_debug(8, "(analyzer) parse_variable add: [%s]" % varName)
 
 						varName = ''
@@ -1072,7 +1153,7 @@ class pawnParse :
 			#{
 				varName = varName.strip()
 				if varName != '' :
-					self.add_autocomplete(varName, 'var', varName)
+					self.add_word_autocomplete( varName )
 					print_debug(8, "(analyzer) parse_variable add: [%s]" % varName)
 			#}
 			else :
@@ -1149,6 +1230,7 @@ class pawnParse :
 			#}
 			if open_paren_found :
 			#{
+				# self.parse_words(buffer)
 				pos = buffer.find(')')
 				if pos != -1 :
 					full_func_str = buffer[0:pos + 1]
@@ -1174,6 +1256,7 @@ class pawnParse :
 		#{
 			error = self.parse_function_params(full_func_str, type)
 			if not error and type <= 2 :
+				# self.parse_words(buffer)
 				self.skip_function_block(buffer)
 				if not self.skip_brace_found :
 					self.skip_next_dataline = True
@@ -1208,7 +1291,7 @@ class pawnParse :
 		if funcname.startswith("operator") :
 			return 0
 
-		if not self.valid_name(funcname) :
+		if not self.is_valid_name(funcname) :
 			print_debug(4, "(analyzer) parse_params invalid name: [%s]" % funcname)
 			return 1
 
@@ -1246,7 +1329,7 @@ class pawnParse :
 def process_buffer(text, node) :
 #{
 	text_reader = TextReader(text)
-	pawnparse.start(text_reader, node)
+	pawnparse.start(text_reader, node, True)
 #}
 
 def process_include_file(node) :
@@ -1291,6 +1374,7 @@ g_enable_buildversion = False
 g_delay_time = 1.0
 g_include_dir = "."
 g_add_paremeters = False
+g_word_autocomplete = False
 
 to_process = OrderedSetQueue()
 nodes = dict()
