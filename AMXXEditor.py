@@ -712,12 +712,16 @@ class TextReader:
 class pawnParse :
 #{
 	def __init__(self) :
+		self.isTheCurrentFile = False
 		self.save_const_timer = None
 		self.constants_count = 0
 
 	def start(self, pFile, node,buffer=None) :
 	#{
 		print_debug(8, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
+
+		if buffer is not None:
+			self.isTheCurrentFile = True
 
 		self.file 				= pFile
 		self.file_name			= os.path.basename(node.file_name)
@@ -728,16 +732,14 @@ class pawnParse :
 		self.skip_next_dataline = False
 		self.enum_contents 		= ''
 		self.brace_level 		= 0
-
 		self.restore_buffer 	= None
 
 		self.node.funcs.clear()
-		self.node.words.clear()
 		self.node.doct.clear()
 
 		self.start_parse()
 
-		if buffer is not None:
+		if self.isTheCurrentFile:
 			self.parse_words(buffer)
 
 		if self.constants_count != len(g_constants_list) :
@@ -928,7 +930,7 @@ class pawnParse :
 	#{
 		self.node.words.add( name )
 
-		if self.node.isFromBufferOnly:
+		if self.node.isFromBufferOnly or self.isTheCurrentFile:
 			self.node.funcs.add( (name + '  \t' + info, autocomplete) )
 		else:
 			self.node.funcs.add( (name + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
@@ -939,7 +941,7 @@ class pawnParse :
 	#{
 		self.node.words.add( name )
 
-		if self.node.isFromBufferOnly:
+		if self.node.isFromBufferOnly or self.isTheCurrentFile:
 			self.node.funcs.add( (name + "(" + str( param_count ) + ")" + '  \t' + info, autocomplete) )
 		else:
 			self.node.funcs.add( (name + "(" + str( param_count ) + ")" + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
@@ -952,7 +954,10 @@ class pawnParse :
 		"""
 		if name not in self.node.words:
 			self.node.words.add( name )
-			self.node.funcs.add( (name, name) )
+			if self.isTheCurrentFile:
+				self.node.funcs.add( ( name, name ) )
+			else:
+				self.node.funcs.add( ( name + '  \t'+ self.file_name, name ) )
 
 
 	def start_parse(self) :
