@@ -342,9 +342,9 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		if view.match_selector(locations[0], 'source.sma string') :
 			if g_word_autocomplete:
-				return None
+				return ( [], sublime.INHIBIT_WORD_COMPLETIONS )
 			else:
-				return ([], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+				return None
 
 		if view.file_name() is None:
 
@@ -362,14 +362,13 @@ class AMXXEditor(sublime_plugin.EventListener):
 			if g_word_autocomplete:
 				return self.generate_funcset( file_name )
 			else:
-				return ( self.generate_funcset( file_name ), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS )
+				return ( self.generate_funcset( file_name ), sublime.INHIBIT_WORD_COMPLETIONS )
 
 		else:
-
 			if g_word_autocomplete:
-				return self.generate_funcset ( view.file_name()
+				return self.generate_funcset( view.file_name() )
 			else:
-				return ( self.generate_funcset ( view.file_name() ), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS )
+				return ( self.generate_funcset( view.file_name() ), sublime.INHIBIT_WORD_COMPLETIONS )
 
 	def generate_funcset(self, file_name) :
 		funcset = set()
@@ -598,8 +597,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 			current_node.remove_child(removed_node)
 
 		# To process the current file functions for autocomplete
-		if not g_use_all_autocomplete:
-			process_buffer(view_buffer, current_node)
+		process_buffer(view_buffer, current_node)
 
 	def process_existing_include(self, file_name) :
 		current_node = nodes.get(file_name)
@@ -748,14 +746,13 @@ class PawnParse :
 		if self.node is not None:
 			self.node.words.clear()
 
-	def start(self, pFile, node,buffer=None) :
-	#{
+	def start(self, pFile, node, isTheCurrentFile=False, buffer=None) :
+		"""
+			When the buffer is not None, it is always the current file.
+		"""
 		print_debug(8, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
-		self.isTheCurrentFile = False
 
-		if buffer is not None:
-			self.isTheCurrentFile = True
-
+		self.isTheCurrentFile   = isTheCurrentFile
 		self.file 				= pFile
 		self.file_name			= os.path.basename(node.file_name)
 		self.node 				= node
@@ -772,7 +769,7 @@ class PawnParse :
 
 		self.start_parse()
 
-		if self.isTheCurrentFile:
+		if buffer is not None:
 			self.parse_words(buffer)
 
 		if self.constants_count != len(g_constants_list) :
@@ -987,7 +984,7 @@ class PawnParse :
 		self.node.words.add( name )
 
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
-			self.node.funcs.add( (name + '  \t' + info, autocomplete) )
+			self.node.funcs.add( (name + '\t - ' + info, autocomplete) )
 		else:
 			self.node.funcs.add( (name + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
 
@@ -998,7 +995,7 @@ class PawnParse :
 		self.node.words.add( name )
 
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
-			self.node.funcs.add( (name + "(" + str( param_count ) + ")" + '  \t' + info, autocomplete) )
+			self.node.funcs.add( (name + "(" + str( param_count ) + ")" + '\t - ' + info, autocomplete) )
 		else:
 			self.node.funcs.add( (name + "(" + str( param_count ) + ")" + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
 	#}
@@ -1013,7 +1010,7 @@ class PawnParse :
 			if self.isTheCurrentFile:
 				self.node.funcs.add( ( name, name ) )
 			else:
-				self.node.funcs.add( ( name + '  \t'+ self.file_name, name ) )
+				self.node.funcs.add( ( name + '\t - '+ self.file_name, name ) )
 
 
 	def start_parse(self) :
@@ -1371,10 +1368,12 @@ class PawnParse :
 def process_buffer(text, node) :
 #{
 	text_reader = TextReader(text)
+
 	if g_word_autocomplete:
-		pawnParse.start(text_reader, node, text)
+		if not g_use_all_autocomplete:
+			pawnParse.start(text_reader, node, True, text)
 	else:
-		pawnParse.start(text_reader, node)
+		pawnParse.start(text_reader, node, True)
 #}
 
 def process_include_file(node) :
