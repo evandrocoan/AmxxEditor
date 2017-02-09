@@ -390,37 +390,10 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		doctset.update(node.doct)
 
-
-def is_package_enabled( userSettings, package_name ):
-
-	print_debug(4, "is_package_enabled = " + sublime.packages_path()
-	        + "/All Autocomplete/ is dir? " \
-			+ str( os.path.isdir( sublime.packages_path() + "/" + package_name ) ))
-
-	print_debug(4, "is_package_enabled = " + sublime.installed_packages_path()
-	        + "/All Autocomplete.sublime-package is file? " \
-			+ str( os.path.isfile( sublime.installed_packages_path() + "/" + package_name + ".sublime-package" ) ))
-
-	ignoredPackages = userSettings.get('ignored_packages')
-
-	if ignoredPackages is not None:
-
-		return ( os.path.isdir( sublime.packages_path() + "/" + package_name ) \
-				or os.path.isfile( sublime.installed_packages_path() + "/" + package_name + ".sublime-package" ) ) \
-				and not package_name in ignoredPackages
-
-	return os.path.isdir( sublime.packages_path() + "/" + package_name ) \
-			or os.path.isfile( sublime.installed_packages_path() + "/" + package_name + ".sublime-package" )
-
 def on_settings_modified(is_loading=False):
 #{
 	print_debug(4, "on_settings_modified" )
-
 	global g_enable_inteltip
-	global g_isAllAutoCompleteInstalled
-
-	userSettings 				 = sublime.load_settings("Preferences.sublime-settings")
-	g_isAllAutoCompleteInstalled = is_package_enabled( userSettings, "All Autocomplete" )
 
 	settings = sublime.load_settings("amxx.sublime-settings")
 	invalid  = is_invalid_settings(settings)
@@ -594,8 +567,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 			current_node.remove_child(removed_node)
 
 		# To process the current file functions for autocomplete
-		if not g_isAllAutoCompleteInstalled :
-			process_buffer(view_buffer, current_node)
+		process_buffer(view_buffer, current_node)
 
 	def process_existing_include(self, file_name) :
 		current_node = nodes.get(file_name)
@@ -1319,7 +1291,6 @@ g_enable_buildversion = False
 g_delay_time = 1.0
 g_include_dir = "."
 g_add_paremeters = False
-g_isAllAutoCompleteInstalled = False
 
 to_process = OrderedSetQueue()
 nodes = dict()
