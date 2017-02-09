@@ -395,6 +395,7 @@ def on_settings_modified(is_loading=False):
 	print_debug(4, "on_settings_modified" )
 	global g_enable_inteltip
 	global g_word_autocomplete
+	global g_use_all_autocomplete
 
 	settings = sublime.load_settings("amxx.sublime-settings")
 	invalid  = is_invalid_settings(settings)
@@ -430,6 +431,7 @@ def on_settings_modified(is_loading=False):
 	g_enable_inteltip 		= settings.get('enable_inteltip', True)
 	g_enable_buildversion 	= settings.get('enable_buildversion', False)
 	g_word_autocomplete 	= settings.get('word_autocomplete', False)
+	g_use_all_autocomplete 	= settings.get('use_all_autocomplete', False)
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')
@@ -569,7 +571,8 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 			current_node.remove_child(removed_node)
 
 		# To process the current file functions for autocomplete
-		process_buffer(view_buffer, current_node)
+		if not g_use_all_autocomplete:
+			process_buffer(view_buffer, current_node)
 
 	def process_existing_include(self, file_name) :
 		current_node = nodes.get(file_name)
@@ -1375,6 +1378,7 @@ g_delay_time = 1.0
 g_include_dir = "."
 g_add_paremeters = False
 g_word_autocomplete = False
+g_use_all_autocomplete = False
 
 to_process = OrderedSetQueue()
 nodes = dict()

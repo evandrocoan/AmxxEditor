@@ -9,8 +9,14 @@
     // ( true / false ) Enable IntelTip PopUp
     "enable_inteltip": false,
 
-    // ( true / false ) Enable word autocompleting from the current file.
+    // ( true / false ) Enable Auto-Increment Build/Version
+    "enable_buildversion": false,
+    
+    // ( true / false ) Enable auto completing words from the current file.
     "word_autocomplete": true,
+
+    // ( true / false ) Use the package `All Autocomplete` to do the completing on the current file.
+    "use_all_autocomplete": false,
 
     // Enable editor debug messages, see the file `amxmodx/AMXXEditor.py` for all debugging levels.
     //
