@@ -338,103 +338,60 @@ class AMXXEditor(sublime_plugin.EventListener):
 			This is a forward called by Sublime Text when it is about to show the use completions.
 			See: https://www.sublimetext.com/docs/3/api_reference.html#sublime_plugin.ViewEventListener
 		"""
-		if not is_amxmodx_file(view):
-			return None
-
-		if view.match_selector(locations[0], 'source.sma string') :
-			if g_word_autocomplete:
-				return self.all_views_autocomplete( view, prefix, locations )
-			else:
-				return ( [], sublime.INHIBIT_WORD_COMPLETIONS )
-
 		view_file_name = view.file_name()
 
-		if view_file_name is None:
-			view_file_name = str( view.buffer_id() )
+		if is_amxmodx_file(view):
 
-			# Just in case it is not processed yet
-			if not view_file_name in nodes :
+			if view_file_name is None:
+				view_file_name = str( view.buffer_id() )
 
-				print_debug(4, "( on_query_completions ) Adding buffer id " + view_file_name + " in nodes")
-				add_to_queue_forward(view)
+				# Just in case it is not processed yet
+				if not view_file_name in nodes:
 
-				# The queue is not processed yet, so there is nothing to show
+					print_debug(4, "( on_query_completions ) Adding buffer id " + view_file_name + " in nodes")
+					add_to_queue_forward( view )
+
+					# The queue is not processed yet, so there is nothing to show
+					if g_word_autocomplete:
+						return self.generate_funcset( view_file_name, view, prefix, locations, False )
+					else:
+						return None
+
 				if g_word_autocomplete:
-					return self.all_views_autocomplete( view, prefix, locations )
+					return self.generate_funcset( view_file_name, view, prefix, locations )
 				else:
-					None
-
-			if g_word_autocomplete:
-				return self.generate_funcset( view_file_name, view, prefix, locations )
+					return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
 			else:
-				return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
-		else:
-			if g_word_autocomplete:
-				return self.generate_funcset( view_file_name, view, prefix, locations )
-			else:
-				return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
 
-	def all_views_autocomplete( self, active_view, prefix, locations, funcset, words_set ):
+				if g_word_autocomplete:
+					return self.generate_funcset( view_file_name, view, prefix, locations )
+				else:
+					return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
 
-		if not g_word_autocomplete:
-			return None
+		return self.generate_funcset( view_file_name, view, prefix, locations, False )
 
-		# Limit number of views but always include the active view. This
-		# view goes first to prioritize matches close to cursor position.
-		other_views = [v for v in sublime.active_window().views() if v.id != active_view.id]
-		views       = other_views[0:MAX_VIEWS]
-		view_words  = None
+	def generate_funcset( self, file_name, view, prefix, locations, isToIncludeFunctions=True ) :
+		funcset   = set()
+		words_set = set()
 
-		if len( locations ) > 0:
-			view_words = active_view.extract_completions( prefix, locations[0] )
-		else:
-			view_words = active_view.extract_completions( prefix )
-
-		# view_words = filter_words( view_words )
-		view_words = fix_truncation( active_view, view_words )
-
-		for word in view_words:
-			# Remove the annoying `(` on the string
-			word = word.replace('$', '\\$').split('(')[0]
-
-			if word not in words_set:
-				words_set.add( word )
-				funcset.add( ( word, word ) )
-
-		if g_use_all_autocomplete:
-
-			for view in views:
-				view_base_name = os.path.basename( view.file_name() )
-				view_words     = view.extract_completions(prefix)
-				view_words     = filter_words(view_words)
-				view_words     = fix_truncation(view, view_words)
-
-				for word in view_words:
-					# Remove the annoying `(` on the string
-					word = word.replace('$', '\\$').split('(')[0]
-
-					if word not in words_set:
-						words_set.add( word )
-						funcset.add( ( word, word + '  \t' +  view_base_name ) )
-
-	def generate_funcset( self, file_name, view, prefix, locations ) :
-
-		if file_name in nodes:
+		if isToIncludeFunctions and file_name in nodes:
 			node    = nodes[file_name]
-			funcset = set()
 			visited = set()
 
 			if g_word_autocomplete:
-				words_set = set()
 
-				self.generate_funcset_recur( node, funcset, visited, words_set )
+				if isToIncludeFunctions and not view.match_selector(locations[0], 'source.sma string') :
+					self.generate_funcset_recur( node, funcset, visited, words_set )
+
 				self.all_views_autocomplete( view, prefix, locations, funcset, words_set )
-				return sort_nicely( funcset )
 			else:
 				self.generate_funcset_recur( node, funcset, visited )
-				return sort_nicely( funcset )
+		else:
+			self.all_views_autocomplete( view, prefix, locations, funcset, words_set )
 
-		return []
+		# print_debug( 16, "( generate_funcset ) view: " + str( funcset ) )
+		# print_debug( 16, "( generate_funcset ) funcset: " + str( sort_nicely( funcset ) ) )
+		return sort_nicely( funcset )
 
 	def generate_funcset_recur( self, node, funcset, visited, words_set=None ) :
 		if node in visited :
@@ -458,6 +415,59 @@ class AMXXEditor(sublime_plugin.EventListener):
 			self.generate_doctset_recur(child, doctset, visited)
 
 		doctset.update(node.doct)
+
+	def all_views_autocomplete( self, active_view, prefix, locations, funcset, words_set ):
+		print_debug( 16, "AMXXEditor::all_views_autocomplete(5)" )
+		print_debug( 16, "( all_views_autocomplete ) g_use_all_autocomplete: %d" % g_use_all_autocomplete )
+
+		if g_word_autocomplete:
+			view_words = None
+
+			if len( locations ) > 0:
+				view_words = active_view.extract_completions( prefix, locations[0] )
+			else:
+				view_words = active_view.extract_completions( prefix )
+
+			view_words = fix_truncation( active_view, view_words )
+
+			for word in view_words:
+				# Remove the annoying `(` on the string
+				word = word.replace('$', '\\$').split('(')[0]
+
+				if word not in words_set:
+					words_set.add( word )
+					funcset.add( ( word, word ) )
+
+		if g_use_all_autocomplete:
+			# Limit number of views but always include the active view. This
+			# view goes first to prioritize matches close to cursor position.
+			views          = sublime.active_window().views()
+			other_views    = []
+			active_view_id = active_view.id();
+
+			for view in views:
+
+				if view.id() != active_view_id:
+					other_views.append( view )
+
+			views      	   = other_views[0:MAX_VIEWS]
+			view_words 	   = None
+			view_base_name = None
+
+			for view in views:
+				print_debug( 16, "( all_views_autocomplete ) view: %d" % view.id() )
+				view_words     = view.extract_completions(prefix)
+				view_words     = fix_truncation(view, view_words)
+				view_base_name = os.path.basename( view.file_name() )
+
+				for word in view_words:
+					# Remove the annoying `(` on the string
+					word = word.replace('$', '\\$').split('(')[0]
+
+					if word not in words_set:
+						print_debug( 16, "( all_views_autocomplete ) word: %s" % word )
+						words_set.add( word )
+						funcset.add( ( word, word + '  \t' +  view_base_name ) )
 
 
 def filter_words(words):
@@ -1558,7 +1568,8 @@ print_debug_lastTime = startTime.microsecond
 # 2  - Outputs when it starts a file parsing.
 # 4  - General messages.
 # 8  - Analyzer parser.
-# 15 - All debugging levels at the same time.
+# 16 - Autocomplete debugging.
+# 31 - All debugging levels at the same time.
 g_debug_level = 0
 
 
