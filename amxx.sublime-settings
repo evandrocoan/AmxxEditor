@@ -1,9 +1,9 @@
 {
     // Example:
-    // Path to includes folder
+    // Path to includes folder, the files here will be used for auto completion.
     "include_directory": "C:\\amxmodx\\scripting\\include\\",
 
-    // ( true / false ) Enable the parameters addition when autocompleting.
+    // ( true / false ) Enable the parameters addition when auto completing.
     "add_function_parameters": true,
 
     // ( true / false ) Enable IntelTip PopUp
@@ -11,12 +11,16 @@
 
     // ( true / false ) Enable Auto-Increment Build/Version
     "enable_buildversion": false,
-    
+
+    // ( true / false ) Enable auto completing functions and global variables from the current file.
+    // If you change this setting, you need to restart Sublime Text before it can take effect.
+    "function_autocomplete": true,
+
     // ( true / false ) Enable auto completing words from the current file.
     "word_autocomplete": true,
 
-    // ( true / false ) Use the package `All Autocomplete` to do the completing on the current file.
-    "use_all_autocomplete": false,
+    // ( true / false ) Enable to add word completions from all opened files.
+    "use_all_autocomplete": true,
 
     // Enable editor debug messages, see the file `amxmodx/AMXXEditor.py` for all debugging levels.
     //
@@ -24,7 +28,7 @@
     // 1 - Errors messages.
     "debug_level": 1,
 
-    // ( white / dark ) Set color scheme
+    // ( color name ) Set color scheme ( dark / twlight / atomic / white / npp )
     "color_scheme": "dark",
 
     // ( 0.5 ~ 5.0 ) Delay before regenerating auto-completion snippets
