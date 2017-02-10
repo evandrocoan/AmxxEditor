@@ -935,12 +935,18 @@ class PawnParse :
 
 	def save_constants(self) :
 	#{
-		self.save_const_timer 	= None
-		self.constants_count 	= len(g_constants_list)
+		self.save_const_timer = None
+		self.constants_count  = len(g_constants_list)
+		active_window         = sublime.active_window()
+
+		# print_debug(4, "(save_constants) active_window.folders(): " + str( active_window.folders() ) )
+		# print_debug(4, "(save_constants) active_window.project_file_name(): " + str( active_window.project_file_name() ) )
 
 		# If you have a project within 10000 files, each time this is updated, will for sublime to
-		# process again all the files.
-		return
+		# process again all the files. Therefore only allow this on project with no files to index.
+		if len( active_window.folders() ) > 0:
+			print_debug( 4, "(save_constants) Not saving this time." )
+			return
 
 		constants = "___test"
 		for const in g_constants_list :
@@ -1122,7 +1128,7 @@ class PawnParse :
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
 			self.node.funcs.append( (name + '\t - ' + info, autocomplete) )
 		else:
-			self.node.funcs.append( (name + '  \t' +  self.file_name + ' - ' + info, autocomplete) )
+			self.node.funcs.append( (name + ' \t' +  self.file_name + ' - ' + info, autocomplete) )
 
 	#}
 
@@ -1134,7 +1140,7 @@ class PawnParse :
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
 			self.node.funcs.append( (show_name + '\t - ' + info, autocomplete) )
 		else:
-			self.node.funcs.append( (show_name + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
+			self.node.funcs.append( (show_name + ' \t'+  self.file_name + ' - ' + info, autocomplete) )
 	#}
 
 	def add_word_autocomplete(self, name) :
