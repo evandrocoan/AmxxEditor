@@ -418,7 +418,10 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 	def all_views_autocomplete( self, active_view, prefix, locations, funcset, words_set ):
 		print_debug( 16, "AMXXEditor::all_views_autocomplete(5)" )
-		print_debug( 16, "( all_views_autocomplete ) g_use_all_autocomplete: %d" % g_use_all_autocomplete )
+		# print_debug( 16, "( all_views_autocomplete ) funcset   size: %d" % len( funcset ) )
+		# print_debug( 16, "( all_views_autocomplete ) words_set size: %d" % len( words_set ) )
+
+		start_time = time.time()
 
 		if g_word_autocomplete:
 			view_words = None
@@ -438,36 +441,55 @@ class AMXXEditor(sublime_plugin.EventListener):
 					words_set.add( word )
 					funcset.add( ( word, word ) )
 
+				if time.time() - start_time > 0.1:
+					break
+
+		# print_debug( 16, "( all_views_autocomplete ) Current views loop took: %f" % ( time.time() - start_time ) )
+		# print_debug( 16, "( all_views_autocomplete ) funcset   size: %d" % len( funcset ) )
+		# print_debug( 16, "( all_views_autocomplete ) words_set size: %d" % len( words_set ) )
+
 		if g_use_all_autocomplete:
 			# Limit number of views but always include the active view. This
 			# view goes first to prioritize matches close to cursor position.
-			views          = sublime.active_window().views()
-			other_views    = []
-			active_view_id = active_view.id();
+			views = sublime.active_window().views()
 
-			for view in views:
-
-				if view.id() != active_view_id:
-					other_views.append( view )
-
-			views      	   = other_views[0:MAX_VIEWS]
+			buffers_id_set = set()
 			view_words 	   = None
 			view_base_name = None
 
+			buffers_id_set.add( active_view.buffer_id() )
+
 			for view in views:
-				print_debug( 16, "( all_views_autocomplete ) view: %d" % view.id() )
-				view_words     = view.extract_completions(prefix)
-				view_words     = fix_truncation(view, view_words)
-				view_base_name = os.path.basename( view.file_name() )
+				view_buffer_id = view.buffer_id()
+				# print_debug( 16, "( all_views_autocomplete ) view: %d" % view.id() )
+				# print_debug( 16, "( all_views_autocomplete ) buffers_id: %d" % view_buffer_id )
+				# print_debug( 16, "( all_views_autocomplete ) buffers_id_set size: %d" % len( buffers_id_set ) )
 
-				for word in view_words:
-					# Remove the annoying `(` on the string
-					word = word.replace('$', '\\$').split('(')[0]
+				if view_buffer_id not in buffers_id_set:
+					buffers_id_set.add( view_buffer_id )
 
-					if word not in words_set:
-						print_debug( 16, "( all_views_autocomplete ) word: %s" % word )
-						words_set.add( word )
-						funcset.add( ( word, word + '  \t' +  view_base_name ) )
+					view_words     = view.extract_completions(prefix)
+					view_words     = fix_truncation(view, view_words)
+					view_base_name = os.path.basename( view.file_name() )
+
+					for word in view_words:
+						# Remove the annoying `(` on the string
+						word = word.replace('$', '\\$').split('(')[0]
+
+						if word not in words_set:
+							# print_debug( 16, "( all_views_autocomplete ) word: %s" % word )
+							words_set.add( word )
+							funcset.add( ( word + '  \t' + view_base_name, word ) )
+
+						if time.time() - start_time > 0.3:
+							# print_debug( 16, "( all_views_autocomplete ) Breaking all views loop after: %f" % time.time() - start_time )
+							# print_debug( 16, "( all_views_autocomplete ) funcset   size: %d" % len( funcset ) )
+							# print_debug( 16, "( all_views_autocomplete ) words_set size: %d" % len( words_set ) )
+							return
+
+		# print_debug( 16, "( all_views_autocomplete ) All views loop took: %f" % ( time.time() - start_time ) )
+		# print_debug( 16, "( all_views_autocomplete ) funcset   size: %d" % len( funcset ) )
+		# print_debug( 16, "( all_views_autocomplete ) words_set size: %d" % len( words_set ) )
 
 
 def filter_words(words):
