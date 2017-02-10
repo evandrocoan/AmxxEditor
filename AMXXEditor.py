@@ -371,7 +371,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 		return self.generate_funcset( view_file_name, view, prefix, locations, False )
 
 	def generate_funcset( self, file_name, view, prefix, locations, isToIncludeFunctions=True ) :
-		funcset   = set()
+		func_list = []
 		words_set = set()
 
 		if isToIncludeFunctions and file_name in nodes:
@@ -379,28 +379,26 @@ class AMXXEditor(sublime_plugin.EventListener):
 			node    = nodes[file_name]
 
 			if isToIncludeFunctions and not view.match_selector(locations[0], 'source.sma string') :
-				self.generate_funcset_recur( node, funcset, visited, words_set )
+				self.generate_funcset_recur( node, func_list, visited, words_set )
 
-			self.all_views_autocomplete( view, prefix, locations, funcset, words_set )
-		else:
-			self.all_views_autocomplete( view, prefix, locations, funcset, words_set )
+		words_list = self.all_views_autocomplete( view, prefix, locations, words_set )
 
-		# print_debug( 16, "( generate_funcset ) view: " + str( funcset ) )
-		# print_debug( 16, "( generate_funcset ) funcset: " + str( sort_nicely( funcset ) ) )
-		return sort_nicely( funcset )
+		# print_debug( 16, "( generate_funcset ) func_list size: %d" % len( func_list ) )
+		# print_debug( 16, "( generate_funcset ) func_list items: " + str( sort_nicely( func_list ) ) )
+		return words_list + list( func_list )
 
-	def generate_funcset_recur( self, node, funcset, visited, words_set=None ) :
+	def generate_funcset_recur( self, node, func_list, visited, words_set ) :
+
 		if node in visited :
 			return
 
-		visited.add(node)
+		visited.add( node )
+
 		for child in node.children :
-			self.generate_funcset_recur( child, funcset, visited, words_set )
+			self.generate_funcset_recur( child, func_list, visited, words_set )
 
-		funcset.update(node.funcs)
-
-		if words_set is not None:
-			words_set.update(node.words)
+		func_list.extend( node.funcs )
+		words_set.update( node.words )
 
 	def generate_doctset_recur(self, node, doctset, visited) :
 		if node in visited :
@@ -412,11 +410,12 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		doctset.update(node.doct)
 
-	def all_views_autocomplete( self, active_view, prefix, locations, funcset, words_set ):
+	def all_views_autocomplete( self, active_view, prefix, locations, g_words_set ):
 		print_debug( 16, "AMXXEditor::all_views_autocomplete(5)" )
-		# print_debug( 16, "( all_views_autocomplete ) funcset   size: %d" % len( funcset ) )
-		# print_debug( 16, "( all_views_autocomplete ) words_set size: %d" % len( words_set ) )
+		# print_debug( 16, "( all_views_autocomplete ) g_words_set size: %d" % len( g_words_set ) )
 
+		words_set  = g_words_set.copy()
+		words_list = []
 		start_time = time.time()
 
 		if g_word_autocomplete:
@@ -435,13 +434,12 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 				if word not in words_set:
 					words_set.add( word )
-					funcset.add( ( word, word ) )
+					words_list.append( ( word, word ) )
 
 				if time.time() - start_time > 0.1:
 					break
 
 		# print_debug( 16, "( all_views_autocomplete ) Current views loop took: %f" % ( time.time() - start_time ) )
-		# print_debug( 16, "( all_views_autocomplete ) funcset   size: %d" % len( funcset ) )
 		# print_debug( 16, "( all_views_autocomplete ) words_set size: %d" % len( words_set ) )
 
 		if g_use_all_autocomplete:
@@ -475,17 +473,16 @@ class AMXXEditor(sublime_plugin.EventListener):
 						if word not in words_set:
 							# print_debug( 16, "( all_views_autocomplete ) word: %s" % word )
 							words_set.add( word )
-							funcset.add( ( word + '  \t' + view_base_name, word ) )
+							words_list.append( ( word + '  \t' + view_base_name, word ) )
 
 						if time.time() - start_time > 0.3:
 							# print_debug( 16, "( all_views_autocomplete ) Breaking all views loop after: %f" % time.time() - start_time )
-							# print_debug( 16, "( all_views_autocomplete ) funcset   size: %d" % len( funcset ) )
 							# print_debug( 16, "( all_views_autocomplete ) words_set size: %d" % len( words_set ) )
-							return
+							return words_list
 
 		# print_debug( 16, "( all_views_autocomplete ) All views loop took: %f" % ( time.time() - start_time ) )
-		# print_debug( 16, "( all_views_autocomplete ) funcset   size: %d" % len( funcset ) )
 		# print_debug( 16, "( all_views_autocomplete ) words_set size: %d" % len( words_set ) )
+		return words_list
 
 
 def filter_words(words):
@@ -839,7 +836,7 @@ class Node :
 		self.file_name = file_name
 		self.children = set()
 		self.parents = set()
-		self.funcs = set()
+		self.funcs = []
 		self.words = set()
 		self.doct = set()
 
@@ -863,7 +860,7 @@ class Node :
 	def remove_all_children_and_funcs(self) :
 		for child in self.children :
 			self.remove_child(node)
-		self.funcs.clear()
+		del self.funcs[:]
 		self.words.clear()
 		self.doct.clear()
 #}
@@ -919,7 +916,7 @@ class PawnParse :
 		self.brace_level 		= 0
 		self.restore_buffer 	= None
 
-		self.node.funcs.clear()
+		del self.node.funcs[:]
 		self.node.doct.clear()
 
 		self.start_parse()
@@ -1123,20 +1120,21 @@ class PawnParse :
 		self.node.words.add( name )
 
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
-			self.node.funcs.add( (name + '\t - ' + info, autocomplete) )
+			self.node.funcs.append( (name + '\t - ' + info, autocomplete) )
 		else:
-			self.node.funcs.add( (name + '  \t' +  self.file_name + ' - ' + info, autocomplete) )
+			self.node.funcs.append( (name + '  \t' +  self.file_name + ' - ' + info, autocomplete) )
 
 	#}
 
 	def add_function_autocomplete(self, name, info, autocomplete, param_count) :
 	#{
+		show_name = name + "(" + str( param_count ) + ")"
 		self.node.words.add( name )
 
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
-			self.node.funcs.add( (name + "(" + str( param_count ) + ")" + '\t - ' + info, autocomplete) )
+			self.node.funcs.append( (show_name + '\t - ' + info, autocomplete) )
 		else:
-			self.node.funcs.add( (name + "(" + str( param_count ) + ")" + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
+			self.node.funcs.append( (show_name + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
 	#}
 
 	def add_word_autocomplete(self, name) :
@@ -1147,9 +1145,9 @@ class PawnParse :
 		if name not in self.node.words:
 			self.node.words.add( name )
 			if self.isTheCurrentFile:
-				self.node.funcs.add( ( name, name ) )
+				self.node.funcs.append( ( name, name ) )
 			else:
-				self.node.funcs.add( ( name + '\t - '+ self.file_name, name ) )
+				self.node.funcs.append( ( name + '\t - '+ self.file_name, name ) )
 
 
 	def start_parse(self) :
