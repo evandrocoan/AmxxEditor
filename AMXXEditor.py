@@ -9,7 +9,7 @@ import webbrowser
 import datetime
 import time
 import urllib.request
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from queue import *
 from threading import Timer, Thread
 
@@ -18,6 +18,9 @@ import watchdog.events
 import watchdog.observers
 import watchdog.utils
 from watchdog.utils.bricks import OrderedSetQueue
+
+from os.path import basename
+
 
 def plugin_loaded() :
 #{
@@ -147,13 +150,13 @@ class AMXXEditor(sublime_plugin.EventListener):
 			return
 
 		view = window.active_view()
-		if not self.is_amxmodx_file(view) or not g_enable_buildversion :
+		if not is_amxmodx_file(view) or not g_enable_buildversion :
 			return
 
 		view.run_command("amxx_build_ver")
 
 	def on_selection_modified_async(self, view) :
-		if not self.is_amxmodx_file(view) or not g_enable_inteltip :
+		if not is_amxmodx_file(view) or not g_enable_inteltip :
 			return
 
 		region = view.sel()[0]
@@ -293,11 +296,12 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		print_debug(4, "on_activated_async(2)")
 		print_debug(4, "( on_activated_async ) view.match_selector(0, 'source.sma'): " + str( view.match_selector(0, 'source.sma') ))
+
 		# print_debug(4, "( on_activated_async ) nodes: " + str( nodes ))
 		print_debug(4, "( on_activated_async ) view.substr(): \n" \
-		        + view.substr( sublime.Region( 0, view_size if view_size < 200 else 200 ) ))
+				+ view.substr( sublime.Region( 0, view_size if view_size < 200 else 200 ) ))
 
-		if not self.is_amxmodx_file(view):
+		if not is_amxmodx_file(view):
 			print_debug(4, "( on_activated_async ) returning on` if not is_amxmodx_file(view)")
 			return
 
@@ -315,12 +319,12 @@ class AMXXEditor(sublime_plugin.EventListener):
 		self.add_to_queue_now(view)
 
 	def add_to_queue_now(self, view) :
-		if not self.is_amxmodx_file(view):
+		if not is_amxmodx_file(view):
 			return
 		add_to_queue(view)
 
 	def add_to_queue_delayed(self, view) :
-		if not self.is_amxmodx_file(view):
+		if not is_amxmodx_file(view):
 			return
 
 		if self.delay_queue is not None :
@@ -329,68 +333,121 @@ class AMXXEditor(sublime_plugin.EventListener):
 		self.delay_queue = Timer(float(g_delay_time), add_to_queue_forward, [ view ])
 		self.delay_queue.start()
 
-	def is_amxmodx_file(self, view) :
-		return view.match_selector(0, 'source.sma')
-
 	def on_query_completions(self, view, prefix, locations):
 		"""
 			This is a forward called by Sublime Text when it is about to show the use completions.
 			See: https://www.sublimetext.com/docs/3/api_reference.html#sublime_plugin.ViewEventListener
 		"""
-		if not self.is_amxmodx_file(view):
+		if not is_amxmodx_file(view):
 			return None
 
 		if view.match_selector(locations[0], 'source.sma string') :
 			if g_word_autocomplete:
-				return ( [], sublime.INHIBIT_WORD_COMPLETIONS )
+				return self.all_views_autocomplete( view, prefix, locations )
 			else:
-				return None
+				return ( [], sublime.INHIBIT_WORD_COMPLETIONS )
 
-		if view.file_name() is None:
+		view_file_name = view.file_name()
 
-			file_name = str( view.buffer_id() )
+		if view_file_name is None:
+			view_file_name = str( view.buffer_id() )
 
 			# Just in case it is not processed yet
-			if not file_name in nodes :
+			if not view_file_name in nodes :
 
-				print_debug(4, "( on_query_completions ) Adding buffer id " + file_name + " in nodes")
+				print_debug(4, "( on_query_completions ) Adding buffer id " + view_file_name + " in nodes")
 				add_to_queue_forward(view)
 
 				# The queue is not processed yet, so there is nothing to show
-				return None
+				if g_word_autocomplete:
+					return self.all_views_autocomplete( view, prefix, locations )
+				else:
+					None
 
 			if g_word_autocomplete:
-				return self.generate_funcset( file_name )
+				return self.generate_funcset( view_file_name, view, prefix, locations )
 			else:
-				return ( self.generate_funcset( file_name ), sublime.INHIBIT_WORD_COMPLETIONS )
-
+				return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
 		else:
 			if g_word_autocomplete:
-				return self.generate_funcset( view.file_name() )
+				return self.generate_funcset( view_file_name, view, prefix, locations )
 			else:
-				return ( self.generate_funcset( view.file_name() ), sublime.INHIBIT_WORD_COMPLETIONS )
+				return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
 
-	def generate_funcset(self, file_name) :
-		funcset = set()
-		visited = set()
+	def all_views_autocomplete( self, active_view, prefix, locations, funcset, words_set ):
+
+		if not g_word_autocomplete:
+			return None
+
+		# Limit number of views but always include the active view. This
+		# view goes first to prioritize matches close to cursor position.
+		other_views = [v for v in sublime.active_window().views() if v.id != active_view.id]
+		views       = other_views[0:MAX_VIEWS]
+		view_words  = None
+
+		if len( locations ) > 0:
+			view_words = active_view.extract_completions( prefix, locations[0] )
+		else:
+			view_words = active_view.extract_completions( prefix )
+
+		# view_words = filter_words( view_words )
+		view_words = fix_truncation( active_view, view_words )
+
+		for word in view_words:
+			# Remove the annoying `(` on the string
+			word = word.replace('$', '\\$').split('(')[0]
+
+			if word not in words_set:
+				words_set.add( word )
+				funcset.add( ( word, word ) )
+
+		if g_use_all_autocomplete:
+
+			for view in views:
+				view_base_name = os.path.basename( view.file_name() )
+				view_words     = view.extract_completions(prefix)
+				view_words     = filter_words(view_words)
+				view_words     = fix_truncation(view, view_words)
+
+				for word in view_words:
+					# Remove the annoying `(` on the string
+					word = word.replace('$', '\\$').split('(')[0]
+
+					if word not in words_set:
+						words_set.add( word )
+						funcset.add( ( word, word + '  \t' +  view_base_name ) )
+
+	def generate_funcset( self, file_name, view, prefix, locations ) :
 
 		if file_name in nodes:
-			node = nodes[file_name]
+			node    = nodes[file_name]
+			funcset = set()
+			visited = set()
 
-			self.generate_funcset_recur(node, funcset, visited)
-			return sorted_nicely(funcset)
+			if g_word_autocomplete:
+				words_set = set()
 
-		return None
+				self.generate_funcset_recur( node, funcset, visited, words_set )
+				self.all_views_autocomplete( view, prefix, locations, funcset, words_set )
+				return sort_nicely( funcset )
+			else:
+				self.generate_funcset_recur( node, funcset, visited )
+				return sort_nicely( funcset )
 
-	def generate_funcset_recur(self, node, funcset, visited) :
+		return []
+
+	def generate_funcset_recur( self, node, funcset, visited, words_set=None ) :
 		if node in visited :
 			return
 
 		visited.add(node)
 		for child in node.children :
-			self.generate_funcset_recur(child, funcset, visited)
+			self.generate_funcset_recur( child, funcset, visited, words_set )
 
 		funcset.update(node.funcs)
+
+		if words_set is not None:
+			words_set.update(node.words)
 
 	def generate_doctset_recur(self, node, doctset, visited) :
 		if node in visited :
@@ -402,11 +459,77 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		doctset.update(node.doct)
 
+
+def filter_words(words):
+	words = words[0:MAX_WORDS_PER_VIEW]
+	return [w for w in words if MIN_WORD_SIZE <= len(w) <= MAX_WORD_SIZE]
+
+
+# keeps first instance of every word and retains the original order
+# (n^2 but should not be a problem as len(words) <= MAX_VIEWS*MAX_WORDS_PER_VIEW)
+def without_duplicates(words):
+	result = []
+	used_words = []
+	for w, v in words:
+		if w not in used_words:
+			used_words.append(w)
+			result.append((w, v))
+	return result
+
+
+# Ugly workaround for truncation bug in Sublime when using view.extract_completions()
+# in some types of files.
+def fix_truncation(view, words):
+	fixed_words = []
+	start_time = time.time()
+
+	for i, w in enumerate(words):
+		#The word is truncated if and only if it cannot be found with a word boundary before and after
+
+		# this fails to match strings with trailing non-alpha chars, like
+		# 'foo?' or 'bar!', which are common for instance in Ruby.
+		match = view.find(r'\b' + re.escape(w) + r'\b', 0)
+		truncated = is_empty_match(match)
+		if truncated:
+			#Truncation is always by a single character, so we extend the word by one word character before a word boundary
+			extended_words = []
+			view.find_all(r'\b' + re.escape(w) + r'\w\b', 0, "$0", extended_words)
+			if len(extended_words) > 0:
+				fixed_words += extended_words
+			else:
+				# to compensate for the missing match problem mentioned above, just
+				# use the old word if we didn't find any extended matches
+				fixed_words.append(w)
+		else:
+			#Pass through non-truncated words
+			fixed_words.append(w)
+
+		# if too much time is spent in here, bail out,
+		# and don't bother fixing the remaining words
+		if time.time() - start_time > MAX_FIX_TIME_SECS_PER_VIEW:
+			return fixed_words + words[i+1:]
+
+	return fixed_words
+
+
+if sublime.version() >= '3000':
+	def is_empty_match(match):
+		return match.empty()
+else:
+	def is_empty_match(match):
+		return match is None
+
+
+def is_amxmodx_file(view) :
+	return view.match_selector(0, 'source.sma')
+
+
 def on_settings_modified(is_loading=False):
 #{
 	print_debug(4, "on_settings_modified" )
 	global g_enable_inteltip
 	global g_word_autocomplete
+	global g_function_autocomplete
 	global g_use_all_autocomplete
 
 	settings = sublime.load_settings("amxx.sublime-settings")
@@ -444,6 +567,7 @@ def on_settings_modified(is_loading=False):
 	g_enable_buildversion 	= settings.get('enable_buildversion', False)
 	g_word_autocomplete 	= settings.get('word_autocomplete', False)
 	g_use_all_autocomplete 	= settings.get('use_all_autocomplete', False)
+	g_function_autocomplete = settings.get('function_autocomplete', False)
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')
@@ -496,11 +620,14 @@ def fix_path(settings, key) :
 	settings.set(key, path)
 #}
 
-def sorted_nicely( l ):
-	""" Sort the given iterable in the way that humans expect."""
+def sort_nicely( words_set ):
+	"""
+		Sort the given iterable in the way that humans expect.
+	"""
 	convert = lambda text: int(text) if text.isdigit() else text
 	alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key[0]) ]
-	return sorted(l, key = alphanum_key)
+
+	return sorted( words_set, key = alphanum_key )
 
 def add_to_queue_forward(view) :
 	sublime.set_timeout_async(lambda: add_to_queue(view), 5000)
@@ -746,7 +873,7 @@ class PawnParse :
 		if self.node is not None:
 			self.node.words.clear()
 
-	def start(self, pFile, node, isTheCurrentFile=False, buffer=None) :
+	def start( self, pFile, node, isTheCurrentFile=False ) :
 		"""
 			When the buffer is not None, it is always the current file.
 		"""
@@ -769,9 +896,6 @@ class PawnParse :
 
 		self.start_parse()
 
-		if buffer is not None:
-			self.parse_words(buffer)
-
 		if self.constants_count != len(g_constants_list) :
 		#{
 			if self.save_const_timer :
@@ -783,19 +907,6 @@ class PawnParse :
 
 		print_debug(8, "(analyzer) CODE PARSE End [%s]" % node.file_name)
 	#}
-
-	def parse_words(self, buffer) :
-		"""
-			This must to be called only after all the symbols are processed by the other lists as
-			the function symbols and const variables.
-		"""
-		if len(buffer) > 1:
-			# print_debug( 1, "Length: %d, Contents: %s" % ( len(buffer), buffer ) )
-
-			words = re.findall( r'[a-zA-Z_-]{2,}', buffer )
-			for word in words:
-				# print_debug( 1, "Word: " + word )
-				self.add_word_autocomplete( word )
 
 	def save_constants(self) :
 	#{
@@ -986,7 +1097,7 @@ class PawnParse :
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
 			self.node.funcs.add( (name + '\t - ' + info, autocomplete) )
 		else:
-			self.node.funcs.add( (name + '  \t'+  self.file_name + ' - ' + info, autocomplete) )
+			self.node.funcs.add( (name + '  \t' +  self.file_name + ' - ' + info, autocomplete) )
 
 	#}
 
@@ -1367,12 +1478,8 @@ class PawnParse :
 
 def process_buffer(text, node) :
 #{
-	text_reader = TextReader(text)
-
-	if g_word_autocomplete:
-		if not g_use_all_autocomplete:
-			pawnParse.start(text_reader, node, True, text)
-	else:
+	if g_function_autocomplete:
+		text_reader = TextReader(text)
 		pawnParse.start(text_reader, node, True)
 #}
 
@@ -1420,6 +1527,7 @@ g_include_dir = "."
 g_add_paremeters = False
 g_word_autocomplete = False
 g_use_all_autocomplete = False
+g_function_autocomplete = False
 
 processingSetQueue = OrderedSetQueue()
 processingSetQueue_set = set()
@@ -1430,6 +1538,14 @@ file_event_handler = IncludeFileEventHandler()
 includes_re = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
 local_re = re.compile('\\.(sma|inc)$')
 pawnParse = PawnParse()
+
+# limits to prevent bogging down the system
+MIN_WORD_SIZE = 3
+MAX_WORD_SIZE = 50
+
+MAX_VIEWS = 20
+MAX_WORDS_PER_VIEW = 100
+MAX_FIX_TIME_SECS_PER_VIEW = 0.01
 
 # Debugging
 startTime = datetime.datetime.now()
