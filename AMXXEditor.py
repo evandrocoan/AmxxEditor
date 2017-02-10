@@ -355,7 +355,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 					if g_word_autocomplete:
 						return self.generate_funcset( view_file_name, view, prefix, locations, False )
 					else:
-						return None
+						return ( [], sublime.INHIBIT_WORD_COMPLETIONS )
 
 				if g_word_autocomplete:
 					return self.generate_funcset( view_file_name, view, prefix, locations )
@@ -375,17 +375,13 @@ class AMXXEditor(sublime_plugin.EventListener):
 		words_set = set()
 
 		if isToIncludeFunctions and file_name in nodes:
-			node    = nodes[file_name]
 			visited = set()
+			node    = nodes[file_name]
 
-			if g_word_autocomplete:
+			if isToIncludeFunctions and not view.match_selector(locations[0], 'source.sma string') :
+				self.generate_funcset_recur( node, funcset, visited, words_set )
 
-				if isToIncludeFunctions and not view.match_selector(locations[0], 'source.sma string') :
-					self.generate_funcset_recur( node, funcset, visited, words_set )
-
-				self.all_views_autocomplete( view, prefix, locations, funcset, words_set )
-			else:
-				self.generate_funcset_recur( node, funcset, visited )
+			self.all_views_autocomplete( view, prefix, locations, funcset, words_set )
 		else:
 			self.all_views_autocomplete( view, prefix, locations, funcset, words_set )
 
@@ -623,7 +619,7 @@ def on_settings_modified(is_loading=False):
 	g_color_schemes['count'] = len(g_color_schemes['list'])
 
 	file_observer.unschedule_all()
-	file_observer.schedule(file_event_handler, g_include_dir, True)
+	file_observer.schedule( file_event_handler, g_include_dir, True )
 #}
 
 def is_invalid_settings(settings) :
