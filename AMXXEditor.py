@@ -641,7 +641,13 @@ def is_invalid_settings(settings) :
 
 	temp = settings.get('include_directory')
 	if not os.path.isdir(temp) :
-		return "The `include_directory` directory not exist!\n\n\"%s\"\n\nPlease, go to the menu:\n`Amx Mod X -> Configure AMXX-Autocompletion Settings`" % temp
+		return "The `include_directory` directory does not exist!\n\n\"%s\"\n\nPlease, " % temp \
+			+ "go to the menu:\n`Amx Mod X -> Configure AMXX-Autocompletion Settings`"
+
+	temp = sublime.packages_path() + "/../" + settings.get('amxx_file_syntax')
+	if not os.path.isfile(temp) :
+		return "The `amxx_file_syntax` file does not exist!\n\n\"%s\"\n\nPlease, " % temp \
+			+ "go to the menu:\n`Amx Mod X -> Configure AMXX-Autocompletion Settings`"
 
 	return None
 #}
