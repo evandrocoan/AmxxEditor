@@ -464,7 +464,12 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 					view_words     = view.extract_completions(prefix)
 					view_words     = fix_truncation(view, view_words)
-					view_base_name = os.path.basename( view.file_name() )
+					view_base_name = view.file_name()
+
+					if view_base_name is None:
+						view_base_name = ""
+					else:
+						view_base_name = os.path.basename( view_base_name )
 
 					for word in view_words:
 						# Remove the annoying `(` on the string
@@ -473,7 +478,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 						if word not in words_set:
 							# print_debug( 16, "( all_views_autocomplete ) word: %s" % word )
 							words_set.add( word )
-							words_list.append( ( word + '  \t' + view_base_name, word ) )
+							words_list.append( ( word + ' \t' + view_base_name, word ) )
 
 						if time.time() - start_time > 0.3:
 							# print_debug( 16, "( all_views_autocomplete ) Breaking all views loop after: %f" % time.time() - start_time )
