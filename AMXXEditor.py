@@ -952,16 +952,22 @@ class PawnParse :
 	#{
 		self.save_const_timer = None
 		self.constants_count  = len(g_constants_list)
-		active_window         = sublime.active_window()
-
-		# print_debug(4, "(save_constants) active_window.folders(): " + str( active_window.folders() ) )
-		# print_debug(4, "(save_constants) active_window.project_file_name(): " + str( active_window.project_file_name() ) )
+		windows               = sublime.windows()
 
 		# If you have a project within 10000 files, each time this is updated, will for sublime to
 		# process again all the files. Therefore only allow this on project with no files to index.
-		if len( active_window.folders() ) > 0:
-			print_debug( 4, "(save_constants) Not saving this time." )
-			return
+		#
+		# If someone is calling this, it means there are some windows with a AMXX file open. Therefore
+		# we do not care to check whether that window has a project or not and there will always be
+		# constants to save.
+		for window in windows:
+			# print_debug(4, "(save_constants) window.id(): " + str( window.id() ) )
+			# print_debug(4, "(save_constants) window.folders(): " + str( window.folders() ) )
+			# print_debug(4, "(save_constants) window.project_file_name(): " + str( window.project_file_name() ) )
+
+			if len( window.folders() ) > 0:
+				print_debug( 4, "(save_constants) Not saving this time." )
+				return
 
 		constants = "___test"
 		for const in g_constants_list :
