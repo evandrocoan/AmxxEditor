@@ -43,9 +43,12 @@ def unload_handler() :
 class NewAmxxIncludeCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		new_file("inc")
+
+
 class NewAmxxPluginCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		new_file("sma")
+
 
 def new_file(type):
 #{
@@ -56,7 +59,12 @@ def new_file(type):
 	plugin_template = plugin_template.replace("\r", "")
 
 	view.run_command("insert_snippet", {"contents": plugin_template})
+	sublime.set_timeout_async( lambda: set_new_file_syntax( view ), 0 )
 #}
+
+def set_new_file_syntax( view ):
+	view.set_syntax_file(g_new_file_syntax)
+
 
 class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
 #{
@@ -558,6 +566,7 @@ def on_settings_modified(is_loading=False):
 #{
 	print_debug(4, "on_settings_modified" )
 	global g_enable_inteltip
+	global g_new_file_syntax
 	global g_word_autocomplete
 	global g_function_autocomplete
 	global g_use_all_autocomplete
@@ -598,6 +607,7 @@ def on_settings_modified(is_loading=False):
 	g_word_autocomplete 	= settings.get('word_autocomplete', False)
 	g_use_all_autocomplete 	= settings.get('use_all_autocomplete', False)
 	g_function_autocomplete = settings.get('function_autocomplete', False)
+	g_new_file_syntax       = settings.get('amxx_file_syntax', 'Packages/Amxx Pawn/AmxxPawn.sublime-syntax')
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')
@@ -1562,6 +1572,7 @@ g_enable_buildversion = False
 g_delay_time = 1.0
 g_include_dir = "."
 g_add_paremeters = False
+g_new_file_syntax = "Packages/Amxx Pawn/AmxxPawn.sublime-syntax"
 g_word_autocomplete = False
 g_use_all_autocomplete = False
 g_function_autocomplete = False
