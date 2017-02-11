@@ -634,20 +634,27 @@ def on_settings_modified(is_loading=False):
 	file_observer.schedule( file_event_handler, g_include_dir, True )
 #}
 
-def is_invalid_settings(settings) :
+def is_invalid_settings(settings):
 #{
-	if settings.get('include_directory') is None or settings.get('color_scheme') is None :
+	include_directory = settings.get('include_directory')
+
+	if include_directory is None or settings.get('color_scheme') is None:
 		return "You are not set correctly settings for AMXX-Editor.\n\nNo has configurado correctamente el AMXX-Editor."
 
-	temp = settings.get('include_directory')
-	if not os.path.isdir(temp) :
-		return "The `include_directory` directory does not exist!\n\n\"%s\"\n\nPlease, " % temp \
-			+ "go to the menu:\n`Amx Mod X -> Configure AMXX-Autocompletion Settings`"
+	if include_directory is not None:
 
-	temp = sublime.packages_path() + "/../" + settings.get('amxx_file_syntax')
-	if not os.path.isfile(temp) :
-		return "The `amxx_file_syntax` file does not exist!\n\n\"%s\"\n\nPlease, " % temp \
-			+ "go to the menu:\n`Amx Mod X -> Configure AMXX-Autocompletion Settings`"
+		if not os.path.isdir( include_directory ) :
+			return "The `include_directory` directory does not exist!\n\n\"%s\"\n\nPlease, " % include_directory \
+					+ "go to the menu:\n`Amx Mod X -> Configure AMXX-Autocompletion Settings`"
+
+	amxx_file_syntax = settings.get('amxx_file_syntax')
+
+	if amxx_file_syntax is not None:
+		amxx_file_syntax = sublime.packages_path() + "/../" + amxx_file_syntax
+
+		if not os.path.isfile(amxx_file_syntax):
+			return "The `amxx_file_syntax` file does not exist!\n\n\"%s\"\n\nPlease, " % amxx_file_syntax \
+					+ "go to the menu:\n`Amx Mod X -> Configure AMXX-Autocompletion Settings`"
 
 	return None
 #}
