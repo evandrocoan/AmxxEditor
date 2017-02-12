@@ -1244,13 +1244,38 @@ class PawnParse :
 	def parse_define(self, buffer) :
 	#{
 		define = re.search('#define[\\s]+([^\\s]+)[\\s]+(.+)', buffer)
+
 		if define :
 		#{
 			buffer = ''
-			name = define.group(1)
-			value = define.group(2).strip()
-			self.add_general_autocomplete(name, 'define: ' + value, name)
-			self.add_constant(name)
+			name   = define.group(1)
+			value  = define.group(2).strip()
+
+			count        = 0
+			params       = name.split('(')
+			name         = params[0]
+			params_count = 0
+
+			if len( params ) == 2:
+				params       = params[1].split(',')
+				comma_count  = len( params )
+				params_count = comma_count
+
+				# If we entered here, there are at least one parameter
+				params = "${1:param1}"
+				items  = range( 2, comma_count + 1 )
+
+				for item in items:
+					params += ", " + '${%d:param%d}' % ( item, item )
+			else:
+				params = ""
+
+			if params_count > 0:
+				self.add_function_autocomplete( name, 'define: ' + value, name + "(" + params + ")", params_count )
+			else:
+				self.add_general_autocomplete( name, 'define: ' + value, name )
+
+			self.add_constant( name )
 
 			print_debug(8, "(analyzer) parse_define add: [%s]" % name)
 		#}
