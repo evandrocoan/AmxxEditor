@@ -20,6 +20,7 @@ import watchdog.utils
 from watchdog.utils.bricks import OrderedSetQueue
 
 from os.path import basename
+import logging
 
 
 def plugin_loaded() :
@@ -938,11 +939,20 @@ class PawnParse :
 		self.node 				= node
 		self.found_comment 		= False
 		self.found_enum 		= False
-		self.skip_brace_found 	= False
-		self.skip_next_dataline = False
+		self.is_to_skip_brace 	= False
 		self.enum_contents 		= ''
 		self.brace_level 		= 0
 		self.restore_buffer 	= None
+
+		self.is_to_skip_next_line     = False
+		self.if_define_brace_level    = 0
+		self.else_defined_brace_level = 0
+
+		self.if_define_level   = 0
+		self.else_define_level = 0
+
+		self.is_on_if_define   = []
+		self.is_on_else_define = []
 
 		del self.node.funcs[:]
 		self.node.doct.clear()
@@ -1051,24 +1061,24 @@ class PawnParse :
 
 	def skip_function_block(self, buffer) :
 	#{
+		inChar    = False
+		inString  = False
 		num_brace = 0
-		inString = False
-		inChar = False
 
-		self.skip_brace_found = False
-
-		buffer = buffer + ' '
+		buffer                = buffer + ' '
+		self.is_to_skip_brace = False
 
 		while buffer is not None and buffer.isspace() :
 			buffer = self.read_line()
 
 		while buffer is not None :
 		#{
-			i = 0
-			pos = 0
-			lastChar = ''
+			# print_debug( 32, "skip_function_block:      " + buffer )
 
-			# print_debug( 1, "skip_function_block: " + buffer )
+			i               = 0
+			pos             = 0
+			lastChar        = ''
+			penultimateChar = ''
 
 			for c in buffer :
 			#{
@@ -1078,12 +1088,14 @@ class PawnParse :
 					self.found_comment = False
 
 				if not inString and not inChar and self.found_comment:
-					lastChar = c
+					penultimateChar = lastChar
+					lastChar        = c
 					continue
 
 				if not inString and not inChar and lastChar == '/' and c == '*' :
 					self.found_comment = True
-					lastChar = c
+					penultimateChar    = lastChar
+					lastChar           = c
 					continue
 
 				if not inString and not inChar and c == '/' and lastChar == '/' :
@@ -1093,6 +1105,7 @@ class PawnParse :
 
 					if inString and lastChar != '^' :
 						inString = False
+
 					else :
 						inString = True
 
@@ -1100,21 +1113,119 @@ class PawnParse :
 
 					if inChar and lastChar != '^' :
 						inChar = False
+
 					else :
 						inChar = True
 
+				# This is hard stuff. We need to fix the parsing for the following problem:
+				#
+				# public on_damage(id)
+				# {
+				# #if defined DAMAGE_RECIEVED
+				#     if ( is_user_connected(id) && is_user_connected(attacker) )
+				#     {
+				# #else
+				#     if ( is_user_connected(attacker) )
+				#     {
+				# #endif
+				#     }
+				#     return PLUGIN_CONTINUE
+				# }
+				# public death_hook()
+				# {
+				#     {
+				#         new kuid = get_user_userid(killer)
+				#     }
+				# }
+				#
+				# Above here we may notice, there are 2 braces opening but only one brace close.
+				# Therefore, we will skip the rest of the source code if we do not handle the braces
+				# definitions between the `#if` and `#else` macro clauses.
+				#
+				# To keep track about where we are, we need to keep track about how much braces
+				# levels are being opened and closed using the variables `self.if_define_brace_level`
+				# and `self.else_defined_brace_level`. And finally at the end of it all on the `#endif`,
+				# we update the `num_brace` with the correct brace level.
+				#
 				if not inString and not inChar :
 				#{
-					if (c == '{') :
-						num_brace += 1
-						self.skip_brace_found = True
-					elif (c == '}') :
+					# Flags when we enter and leave the `#if ... #else ... #endif` blocks
+					if penultimateChar == '#':
+
+						# Cares of `#if`
+						if lastChar == 'i' and c == 'f':
+							++self.if_define_level
+							self.is_on_if_define.append( True )
+
+						# Cares of `#else` and `#end`
+						elif lastChar == 'e':
+
+							if c == 'l':
+								++self.else_define_level
+								self.is_on_if_define.append( False )
+								self.is_on_else_define.append( True )
+
+							elif c == 'n':
+
+								# Decrement the `#else` level, only if it exists
+								if len( self.is_on_if_define ) > 0:
+
+									if not self.is_on_if_define[ -1 ]:
+										self.is_on_if_define.pop()
+
+										if len( self.is_on_else_define ) > 0:
+											--self.else_define_level
+											self.is_on_else_define.pop()
+
+									if len( self.is_on_if_define ) > 0:
+										--self.if_define_level
+										self.is_on_if_define.pop()
+
+									# If there are unclosed levels on the preprocessor, fix the `num_brace` level
+									extra_levels = max( self.else_defined_brace_level, self.if_define_brace_level )
+									num_brace   -= extra_levels
+
+									# Both must to be equals, so just reset their levels.
+									self.if_define_brace_level   -= extra_levels
+									self.else_defined_brace_level -= extra_levels
+
+					# Flags when we enter and leave the braces `{ ... }` blocks
+					if c == '{':
+						num_brace            += 1
+						self.is_to_skip_brace = True
+
+						if len( self.is_on_if_define ) > 0:
+
+							if self.is_on_if_define[ -1 ] :
+								self.if_define_brace_level += 1
+
+							else:
+								self.else_defined_brace_level += 1
+
+					elif c == '}':
+						pos        = i
 						num_brace -= 1
-						pos = i
+
+						if len( self.is_on_if_define ) > 0:
+
+							if self.is_on_if_define[ -1 ] :
+								self.if_define_brace_level -= 1
+
+							else:
+								self.else_defined_brace_level -= 1
 				#}
 
-				lastChar = c
+				penultimateChar = lastChar
+				lastChar        = c
 			#}
+
+			# print_debug( 32, "num_brace:                %d" % num_brace )
+			# print_debug( 32, "if_define_brace_level:    %d" % self.if_define_brace_level )
+			# print_debug( 32, "else_defined_brace_level: %d" % self.else_defined_brace_level )
+
+			# print_debug( 32, "is_on_if_define:          " + str( self.is_on_if_define ) )
+			# print_debug( 32, "is_on_else_define:        " + str( self.is_on_else_define ) )
+			# print_debug( 32, "" )
 
 			if num_brace == 0 :
 				self.restore_buffer = buffer[pos:]
@@ -1206,10 +1317,10 @@ class PawnParse :
 				continue
 
 			#if "sma" in self.node.file_name :
-			#	print("read: skip:[%d] brace_level:[%d] buff:[%s]" % (self.skip_next_dataline, self.brace_level, buffer))
+			#	print("read: skip:[%d] brace_level:[%d] buff:[%s]" % (self.is_to_skip_next_line, self.brace_level, buffer))
 
-			if self.skip_next_dataline :
-				self.skip_next_dataline = False
+			if self.is_to_skip_next_line :
+				self.is_to_skip_next_line = False
 				continue
 
 			if buffer.startswith('#pragma deprecated') :
@@ -1462,6 +1573,7 @@ class PawnParse :
 		#{
 
 			buffer = buffer.strip()
+
 			if not open_paren_found :
 			#{
 				parenpos = buffer.find('(')
@@ -1474,6 +1586,7 @@ class PawnParse :
 			if open_paren_found :
 			#{
 				pos = buffer.find(')')
+
 				if pos != -1 :
 					full_func_str = buffer[0:pos + 1]
 					buffer = buffer[pos+1:]
@@ -1488,6 +1601,7 @@ class PawnParse :
 			#}
 
 			buffer = self.read_line()
+
 			if buffer is None :
 				return
 
@@ -1497,12 +1611,14 @@ class PawnParse :
 		if full_func_str is not None :
 		#{
 			error = self.parse_function_params(full_func_str, type)
+
 			if not error and type <= 2 :
 				self.skip_function_block(buffer)
-				if not self.skip_brace_found :
-					self.skip_next_dataline = True
 
-			#print("skip_brace: error:[%d] type:[%d] found:[%d] skip:[%d] func:[%s]" % (error, type, self.skip_brace_found, self.skip_next_dataline, full_func_str))
+				if not self.is_to_skip_brace :
+					self.is_to_skip_next_line = True
+
+			#print("skip_brace: error:[%d] type:[%d] found:[%d] skip:[%d] func:[%s]" % (error, type, self.is_to_skip_brace, self.is_to_skip_next_line, full_func_str))
 		#}
 	#}
 
@@ -1515,6 +1631,7 @@ class PawnParse :
 			remaining = split[1]
 
 		split = remaining.split('(', 1)
+
 		if len(split) < 2 :
 			print_debug(4, "(analyzer) parse_params return1: [%s]" % split)
 			return 1
@@ -1523,6 +1640,7 @@ class PawnParse :
 		returntype = ''
 		funcname_and_return = split[0].strip()
 		split_funcname_and_return = funcname_and_return.split(':')
+
 		if len(split_funcname_and_return) > 1 :
 			funcname = split_funcname_and_return[1].strip()
 			returntype = split_funcname_and_return[0].strip()
@@ -1585,25 +1703,6 @@ def simple_escape(html) :
 	return html.replace('&', '&amp;')
 #}
 
-def print_debug(level, msg) :
-#{
-	global print_debug_lastTime
-	currentTime = datetime.datetime.now().microsecond
-
-	# You can access global variables without the global keyword.
-	if g_debug_level & level != 0:
-
-		print( "[AMXX-Editor] " \
-				+ str( datetime.datetime.now().hour ) + ":" \
-				+ str( datetime.datetime.now().minute ) + ":" \
-				+ str( datetime.datetime.now().second ) + ":" \
-				+ str( currentTime ) \
-				+ "%7s " % str( currentTime - print_debug_lastTime ) \
-				+ msg )
-
-		print_debug_lastTime = currentTime
-#}
-
 EDITOR_VERSION = "3.0"
 FUNC_TYPES = [ "Function", "Public", "Stock", "Forward", "Native" ]
 
@@ -1640,6 +1739,10 @@ MAX_WORDS_PER_VIEW = 100
 MAX_FIX_TIME_SECS_PER_VIEW = 0.01
 
 # Debugging
+if 'LOG_FILE_NAME' in globals():
+	del LOG_FILE_NAME
+
+# LOG_FILE_NAME = os.path.abspath('AMXXEditor.log')
 startTime = datetime.datetime.now()
 print_debug_lastTime = startTime.microsecond
 
@@ -1651,7 +1754,53 @@ print_debug_lastTime = startTime.microsecond
 # 4  - General messages.
 # 8  - Analyzer parser.
 # 16 - Autocomplete debugging.
-# 31 - All debugging levels at the same time.
+# 32 - Function parsing debugging.
+# 63 - All debugging levels at the same time.
 g_debug_level = 0
+
+if 'LOG_FILE_NAME' in globals():
+
+	# Clear the log file contents
+	open(LOG_FILE_NAME, 'w').close()
+	print( "Logging the AMXXEditor debug to the file " + LOG_FILE_NAME )
+
+	# Setup the logger
+	logging.basicConfig( filename=LOG_FILE_NAME, format='%(asctime)s %(message)s', level=logging.DEBUG )
+
+	def print_debug(level, msg) :
+	#{
+		global print_debug_lastTime
+		currentTime = datetime.datetime.now().microsecond
+
+		# You can access global variables without the global keyword.
+		if g_debug_level & level != 0:
+
+			logging.debug( "[AMXX-Editor] " \
+					+ str( currentTime ) \
+					+ "%7d " % ( currentTime - print_debug_lastTime ) \
+					+ msg )
+
+			print_debug_lastTime = currentTime
+	#}
+else:
+
+	def print_debug(level, msg) :
+	#{
+		global print_debug_lastTime
+		currentTime = datetime.datetime.now().microsecond
+
+		# You can access global variables without the global keyword.
+		if g_debug_level & level != 0:
+
+			print( "[AMXX-Editor] " \
+					+ "%02d" % datetime.datetime.now().hour + ":" \
+					+ "%02d" % datetime.datetime.now().minute + ":" \
+					+ "%02d" % datetime.datetime.now().second + ":" \
+					+ str( currentTime ) \
+					+ "%7d " % ( currentTime - print_debug_lastTime ) \
+					+ msg )
+
+			print_debug_lastTime = currentTime
+	#}
 
 
