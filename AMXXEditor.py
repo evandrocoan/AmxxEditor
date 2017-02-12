@@ -791,7 +791,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 			includes = includes_re.findall(f.read())
 
 		for include in includes:
-			self.load_from_file(view_file_name, include, current_node, current_node, base_includes)
+			self.load_from_file(file_name, include, current_node, current_node, base_includes)
 
 		for removed_node in current_node.children.difference(base_includes) :
 			current_node.remove_child(removed_node)
