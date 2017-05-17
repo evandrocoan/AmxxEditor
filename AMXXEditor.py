@@ -420,7 +420,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 		doctset.update(node.doct)
 
 	def all_views_autocomplete( self, active_view, prefix, locations, g_words_set ):
-		print_debug( 16, "AMXXEditor::all_views_autocomplete(5)" )
+		# print_debug( 16, "AMXXEditor::all_views_autocomplete(5)" )
 		# print_debug( 16, "( all_views_autocomplete ) g_words_set size: %d" % len( g_words_set ) )
 
 		words_set  = g_words_set.copy()
@@ -445,7 +445,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 					words_set.add( word )
 					words_list.append( ( word, word ) )
 
-				if time.time() - start_time > 0.1:
+				if time.time() - start_time > 0.05:
 					break
 
 		# print_debug( 16, "( all_views_autocomplete ) Current views loop took: %f" % ( time.time() - start_time ) )
