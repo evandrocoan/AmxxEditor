@@ -1,6 +1,6 @@
 {
     "working_dir": "$file_path",
-    "cmd": ["sh","$packages/Amxx Pawn/AmxxPawn.sh","$file", "$file_base_name", "$packages", "$file_path"],
+    "cmd": ["sh","$packages/User/Amxx/AmxxPawn.sh","$file", "$file_base_name", "$packages", "$file_path"],
 
     // "target": "ansi_color_build",
     "syntax": "Packages/amxmodx/AMXX-Console.sublime-syntax",
@@ -9,11 +9,11 @@
     [
         {
             "name": "Build Plugin with Linux/Cygwin",
-            "cmd": ["sh","$packages/Amxx Pawn/AmxxPawn.sh","$file", "$file_base_name", "$packages", "$file_path"],
+            "cmd": ["sh","$packages/User/Amxx/AmxxPawn.sh","$file", "$file_base_name", "$packages", "$file_path"],
         },
         {
             "name": "Build Plugin with Windows/Bat",
-            "cmd": ["$packages/Amxx Pawn/AmxxPawn.bat","$file", "$file_base_name", "$packages", "$file_path"],
+            "cmd": ["$packages/User/Amxx/AmxxPawn.bat","$file", "$file_base_name", "$packages", "$file_path"],
         },
     ],
 

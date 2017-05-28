@@ -19,17 +19,40 @@ import watchdog.observers
 import watchdog.utils
 from watchdog.utils.bricks import OrderedSetQueue
 
+from shutil import copyfile
 from os.path import basename
 import logging
+
+
+PACKAGE_NAME = "amxmodx"
 
 
 def plugin_loaded() :
 #{
 	settings = sublime.load_settings("amxx.sublime-settings")
 
+	install_build_systens("AmxxPawn.sh")
+	install_build_systens("AmxxPawn.bat")
+
 	on_settings_modified( True );
 	settings.add_on_change('amxx', on_settings_modified)
 	sublime.set_timeout_async(check_update, 2500)
+#}
+
+def install_build_systens(target_file_name):
+#{
+	target_folder = "Amxx"
+
+	input_file  = os.path.join( sublime.packages_path(), PACKAGE_NAME, target_file_name )
+	target_file = os.path.join( sublime.packages_path(), "User"      , target_folder, target_file_name )
+
+	target_directory = os.path.join( sublime.packages_path(), "User", target_folder )
+
+	if not os.path.exists( target_directory ):
+		os.makedirs( target_directory )
+
+	if not os.path.exists( target_file ):
+		copyfile( input_file, target_file )
 #}
 
 def unload_handler() :
@@ -608,7 +631,7 @@ def on_settings_modified(is_loading=False):
 	g_word_autocomplete 	= settings.get('word_autocomplete', False)
 	g_use_all_autocomplete 	= settings.get('use_all_autocomplete', False)
 	g_function_autocomplete = settings.get('function_autocomplete', False)
-	g_new_file_syntax       = settings.get('amxx_file_syntax', 'Packages/Amxx Pawn/AmxxPawn.sublime-syntax')
+	g_new_file_syntax       = settings.get('amxx_file_syntax', 'Packages/amxmodx/AMXX-Pawn.sublime-syntax')
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')
