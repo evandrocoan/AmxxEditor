@@ -33,7 +33,7 @@
 				<string>#ffffffff</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Comment</string>
@@ -83,7 +83,7 @@
 				<string>#C2712F</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn Functions</string>
@@ -134,7 +134,7 @@
 				<string>#17A1EB22</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn Define Constant</string>
@@ -250,7 +250,7 @@
 				<string>#ccc</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn Function Types</string>
@@ -288,7 +288,7 @@
 				<string>#B5B861</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn Constant Vars</string>
@@ -302,7 +302,7 @@
 				<string>#8B6AAD</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn String</string>
@@ -327,7 +327,7 @@
 				<string>#9FC748</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Invalid – Illegal</string>
@@ -341,8 +341,8 @@
 				<string>#000000</string>
 			</dict>
 		</dict>
-		
-		<!------------------ CONSOLE! ---------------------->
+
+		<!--  CONSOLE! -->
 		<dict>
 			<key>name</key>
 			<string>Console Comment</string>
@@ -461,7 +461,7 @@
 				<string>#3C7D96</string>
 			</dict>
 		</dict>
-		
+
 	</array>
 </dict>
 </plist>
