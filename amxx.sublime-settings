@@ -1,5 +1,4 @@
 {
-    // Example:
     // Path to includes folder, the files here will be used for auto completion.
     "include_directory": "C:\\amxmodx\\scripting\\include\\",
 

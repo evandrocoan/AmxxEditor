@@ -9,7 +9,7 @@
                 "children":
                 [
 					{
-						"caption": "AmxMod-X",
+						"caption": "Amx Mod X",
 						"id": "amxmodx",
 						"children":
 						[
@@ -47,9 +47,15 @@
                         [
                             {
                                 "command": "open_file",
-                                "args": { "file": "${packages}/User/AMXX-Console.sublime-settings" },
-                                "caption": "Edit AMXX-Console Settings"
+                                "args": {"file": "${packages}/User/Amxx/AmxxPawn.sh"},
+                                "caption": "Configure Linux/Cygwin Compiler"
                             },
+                            {
+                                "command": "open_file",
+                                "args": {"file": "${packages}/User/Amxx/AmxxPawn.bat"},
+                                "caption": "Configure Windows/Bat Compiler"
+                            },
+                            { "caption": "-" },
                             {
                                 "command": "open_file",
                                 "args": { "file": "${packages}/User/amxx.sublime-settings" },
