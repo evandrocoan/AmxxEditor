@@ -19,7 +19,6 @@ import watchdog.observers
 import watchdog.utils
 from watchdog.utils.bricks import OrderedSetQueue
 
-from shutil import copyfile
 from os.path import basename
 import logging
 
@@ -43,8 +42,8 @@ def install_build_systens(target_file_name):
 #{
 	target_folder = "Amxx"
 
-	input_file  = os.path.join( sublime.packages_path(), PACKAGE_NAME, target_file_name )
-	target_file = os.path.join( sublime.packages_path(), "User"      , target_folder, target_file_name )
+	target_file       = os.path.join( sublime.packages_path(), "User", target_folder, target_file_name )
+	input_file_string = sublime.load_resource( "Packages/%s/%s" % ( PACKAGE_NAME, target_file_name ) )
 
 	target_directory = os.path.join( sublime.packages_path(), "User", target_folder )
 
@@ -52,7 +51,9 @@ def install_build_systens(target_file_name):
 		os.makedirs( target_directory )
 
 	if not os.path.exists( target_file ):
-		copyfile( input_file, target_file )
+		text_file = open( target_file, "w" )
+		text_file.write( input_file_string )
+		text_file.close()
 #}
 
 def unload_handler() :
