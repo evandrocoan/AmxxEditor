@@ -8,22 +8,22 @@
                 "caption": "Packages",
                 "children":
                 [
-					{
-						"caption": "Amx Mod X",
-						"id": "amxmodx",
-						"children":
-						[
-							{ "caption": "-" },
-							{
-								"command": "new_amxx_include",
-								"caption": "New Include"
-							},
-							{
-								"command": "new_amxx_plugin",
-								"caption": "New Plug-In"
-							}
-						]
-					}
+                    {
+                        "caption": "Amx Mod X",
+                        "id": "amxmodx",
+                        "children":
+                        [
+                            { "caption": "-" },
+                            {
+                                "command": "new_amxx_include",
+                                "caption": "New Include"
+                            },
+                            {
+                                "command": "new_amxx_plugin",
+                                "caption": "New Plug-In"
+                            }
+                        ]
+                    }
                 ]
             }
         ]
@@ -56,6 +56,11 @@
                                 "caption": "Configure Windows/Bat Compiler"
                             },
                             { "caption": "-" },
+                            {
+                                "command": "open_file",
+                                "args": { "file": "${packages}/User/AMXX-Console.sublime-settings" },
+                                "caption": "Edit AMXX-Console Settings"
+                            },
                             {
                                 "command": "open_file",
                                 "args": { "file": "${packages}/User/amxx.sublime-settings" },
