@@ -44,7 +44,8 @@ set AMXX_COMPILER_PATH=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\amxmo
 
 
 
-rem Components:
+rem
+rem Setup the time calculation script
 rem
 rem Time calculation downloaded from:
 rem http://stackoverflow.com/questions/9922498/calculate-time-difference-in-windows-batch-file
@@ -58,36 +59,71 @@ for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
 )
 
 
-rem %1 is the first shell argument and %2 is the second shell argument passed by AmxxPawn.sublime-build
+rem
+rem Setup the batch variables
+rem
+rem $1 is the first shell argument and $2 is the second shell argument passed by AmxxPawn.sublime-build
 rem Usually they should be the plugin's file full path and the plugin's file name without extension.
 rem
-rem Example: %1=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\my_plugin.sma
-set PLUGIN_SOURCE_CODE_FILE_PATH="%1"
+rem Example: $1=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\my_plugin.sma
+set PLUGIN_SOURCE_CODE_FILE_PATH=%1
 
-rem %4 is the path of the folder where the plugin source code is.
+rem Removing double quotes from variables in batch file creates problems with CMD environment
+rem https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
+set PLUGIN_SOURCE_CODE_FILE_PATH=%PLUGIN_SOURCE_CODE_FILE_PATH:"=%
+
+rem $4 is the path of the folder where the plugin source code is.
 rem Example F:\SteamCMD\steamapps\common\Half-Life\czero\addons\
 set SOURCE_CODE_INCLUDE_FOLDER=%4\include
-
-
+set SOURCE_CODE_INCLUDE_FOLDER=%SOURCE_CODE_INCLUDE_FOLDER:"=%
 
 rem Example: $2="my_plugin"
 set PLUGIN_BASE_FILE_NAME=%2
+set PLUGIN_BASE_FILE_NAME=%PLUGIN_BASE_FILE_NAME:"=%
 set PLUGIN_BINARY_FILE_PATH=%folders_list[0]%\%PLUGIN_BASE_FILE_NAME%.amxx
 
-IF %PLUGIN_BASE_FILE_NAME%=="" echo You must to save the plugin before to compile it. & goto end
+IF "%PLUGIN_BASE_FILE_NAME%"=="" echo You must to save the plugin before to compile it. & goto end
 
+
+rem
+rem Copy the include files to the compiler include files, if they exist.
+rem
+setlocal enabledelayedexpansion enableextensions
+
+rem See: http://stackoverflow.com/questions/659647/how-to-get-folder-path-from-file-path-with-cmd
+rem set AMXX_COMPILER_PATH=C:\Somewhere\Somewhere\SomeFile.txt
+call :path_from_file_name AMXX_COMPILER_FOLDER !AMXX_COMPILER_PATH!
+
+rem Build the compiler include folder path
+set COMPILER_INCLUDE_FOLDER_PATH=%AMXX_COMPILER_FOLDER%include
+
+rem echo $COMPILER_INCLUDE_FOLDER_PATH: %COMPILER_INCLUDE_FOLDER_PATH%
+rem echo $SOURCE_CODE_INCLUDE_FOLDER:   %SOURCE_CODE_INCLUDE_FOLDER%
+
+for %%A in ("%COMPILER_INCLUDE_FOLDER_PATH%") do for %%B in ("%SOURCE_CODE_INCLUDE_FOLDER%") do if "%%~fA"=="%%~fB" goto end
+IF EXIST "%SOURCE_CODE_INCLUDE_FOLDER%" call xcopy /S /Y "%SOURCE_CODE_INCLUDE_FOLDER%" "%COMPILER_INCLUDE_FOLDER_PATH%" > nul
+
+rem Closes the `enabledelayedexpansion` scope
+endlocal
+
+
+rem
+rem Compile the AMXX plugin
+rem
 rem Delete the old binary in case some crazy problem on the compiler, or in the system while copy it.
 rem So, this way there is not way you are going to use the wrong version of the plugin without knowing it.
 IF EXIST "%PLUGIN_BINARY_FILE_PATH%" del "%PLUGIN_BINARY_FILE_PATH%"
 
 rem To call the compiler to compile the plugin to the output folder $PLUGIN_BINARY_FILE_PATH
-"%AMXX_COMPILER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%/" -o"%PLUGIN_BINARY_FILE_PATH%" %PLUGIN_SOURCE_CODE_FILE_PATH%
+"%AMXX_COMPILER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%/" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
 
 rem If there was a compilation error, there is nothing more to be done.
 IF NOT EXIST "%PLUGIN_BINARY_FILE_PATH%" goto end
 
 
-
+rem
+rem Copy the compiled plugin to the game folder(s)
+rem
 echo.
 echo 1 File(s) copied, to the folder %folders_list[0]%
 
@@ -115,29 +151,13 @@ if defined folders_list[%currentIndex%] (
 )
 
 
+rem
+rem Subroutines/Function calls
+rem
+goto :end
 
 rem Copy the include files to the compiler include files, if they exist.
 setlocal enabledelayedexpansion enableextensions
-
-rem See: http://stackoverflow.com/questions/659647/how-to-get-folder-path-from-file-path-with-cmd
-rem set myPath=C:\Somewhere\Somewhere\SomeFile.txt
-set myPath=%AMXX_COMPILER_PATH%
-call :path_from_file_name result !myPath!
-
-
-rem Build the compiler include folder path
-set COMPILER_INCLUDE_FOLDER_PATH=%result%include
-
-rem echo COMPILER_INCLUDE_FOLDER_PATH: %COMPILER_INCLUDE_FOLDER_PATH%
-rem echo SOURCE_CODE_INCLUDE_FOLDER: %SOURCE_CODE_INCLUDE_FOLDER%
-
-for %%A in ("%COMPILER_INCLUDE_FOLDER_PATH%") do for %%B in ("%SOURCE_CODE_INCLUDE_FOLDER%") do if "%%~fA"=="%%~fB" goto end
-IF EXIST "%SOURCE_CODE_INCLUDE_FOLDER%" call xcopy /S /Y "%SOURCE_CODE_INCLUDE_FOLDER%" "%COMPILER_INCLUDE_FOLDER_PATH%" > nul
-
-
-
-rem Sub routines
-goto :end
 
 rem This one must to be on the `enabledelayedexpansion` range
 :path_from_file_name <resultVar> <pathVar>
@@ -150,15 +170,17 @@ rem Closes the `enabledelayedexpansion` scope
 endlocal
 
 
-
+rem
+rem The end of the compilation
+rem
 :end
 
-rem Calculating the duration is easy.
+rem Calculating the duration is easy
 for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
    set /A "end=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"
 )
 
-rem Get elapsed time.
+rem Get elapsed time
 set /A elapsed=end-start
 
 rem Show elapsed time:
@@ -167,13 +189,13 @@ if %mm% lss 10 set mm=0%mm%
 if %ss% lss 10 set ss=0%ss%
 if %cc% lss 10 set cc=0%cc%
 
-rem Outputting.
+rem Outputting
 echo.
 echo Took %hh%:%mm%:%ss%,%cc% seconds to run this script.
 
-rem Pause the script for result reading, when it is run without any command line parameters.
+rem Pause the script for result reading, when it is run without any command line parameters
 echo.
-if %PLUGIN_SOURCE_CODE_FILE_PATH%=="" pause
+if "%PLUGIN_SOURCE_CODE_FILE_PATH%"=="" pause
 
 
 
