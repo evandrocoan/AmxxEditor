@@ -80,7 +80,7 @@ git clone https://github.com/evandrocoan/SublimeAMXX_Editor amxmodx
 
 
 ___
-## Licence
+## License
 
 # SourcePawn Completions is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ https://amxmodx-es.com/Thread-Editor-Sublime-Text-3-auto-completion-pawn-syntax-
 
 See:
 
-1. The [LICENSE](LICENSE.TXT) file.
+1. The [LICENSE](LICENSE) file.
 1. And the website [https://www.gnu.org/licenses/gpl-3.0.en.html](https://www.gnu.org/licenses/gpl-3.0.en.html).
 
 
