@@ -104,8 +104,8 @@ https://amxmodx-es.com/Thread-Editor-Sublime-Text-3-auto-completion-pawn-syntax-
 
 See:
 
-1. The [LICENSE](LICENSE) file.
-1. And the website [https://www.gnu.org/licenses/gpl-3.0.en.html](https://www.gnu.org/licenses/gpl-3.0.en.html).
+1. The [LICENSE](LICENSE) file
+1. The website https://www.gnu.org/licenses/gpl-3.0.en.html
 
 
 
