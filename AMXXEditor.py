@@ -1656,25 +1656,28 @@ class PawnParse :
 			return 1
 
 		remaining = remaining.strip()
-		if remaining == ')' :
+
+		if remaining == ')':
 			params = []
-		else :
+
+		else:
 			params = remaining.strip()[:-1].split(',')
 
 		if g_add_paremeters:
-
-			autocomplete = funcname + '('
 			i = 1
-			for param in params :
-				if i > 1 :
+			autocomplete = funcname + '('
+
+			for param in params:
+
+				if i > 1:
 					autocomplete += ', '
+
 				autocomplete += '${%d:%s}' % (i, param.strip())
 				i += 1
 
 			autocomplete += ')'
 
 		else:
-
 			autocomplete = funcname + "()"
 
 		self.add_function_autocomplete(funcname, FUNC_TYPES[type].lower(), autocomplete, len( params ))
