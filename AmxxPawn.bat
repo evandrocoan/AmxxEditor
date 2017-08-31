@@ -36,7 +36,7 @@ set folders_list[2]=F:\SteamLibrary\steamapps\common\Sven Co-op Dedicated Server
 rem Where is your compiler?
 rem
 rem Example:
-rem F:/SteamCMD/steamapps/common/Half-Life/czero/addons/amxmodx/scripting/amxxpc.exe
+rem F:\SteamCMD\steamapps\common\Half-Life\czero\addons\amxmodx\scripting\amxxpc.exe
 rem
 set AMXX_COMPILER_PATH=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\amxmodx\scripting\amxxpc.exe
 
