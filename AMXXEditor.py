@@ -64,9 +64,14 @@ def attempt_to_install_file( target_directory, target_file, input_file_string ):
 	if not os.path.exists( target_directory ):
 		os.makedirs( target_directory )
 
+	# How can I force Python's file.write() to use the same newline format in Windows as in Linux (“\r\n” vs. “\n”)?
+	# https://stackoverflow.com/questions/9184107/how-can-i-force-pythons-file-write-to-use-the-same-newline-format-in-windows
+	#
+	# TypeError: 'str' does not support the buffer interface
+	# https://stackoverflow.com/questions/5471158/typeerror-str-does-not-support-the-buffer-interface
 	if not os.path.exists( target_file ):
-		text_file = open( target_file, "w" )
-		text_file.write( input_file_string )
+		text_file = open( target_file, "wb" )
+		text_file.write( bytes(input_file_string, 'UTF-8') )
 		text_file.close()
 #}
 
