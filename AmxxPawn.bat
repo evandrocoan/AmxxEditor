@@ -97,10 +97,12 @@ call :path_from_file_name AMXX_COMPILER_FOLDER !AMXX_COMPILER_PATH!
 :: Build the compiler include folder path
 set COMPILER_INCLUDE_FOLDER_PATH=%AMXX_COMPILER_FOLDER%include
 
+:: Check for cyclic copies and skip copying the include folder.
 :: echo $COMPILER_INCLUDE_FOLDER_PATH: %COMPILER_INCLUDE_FOLDER_PATH%
 :: echo $SOURCE_CODE_INCLUDE_FOLDER:   %SOURCE_CODE_INCLUDE_FOLDER%
+for %%A in ("%COMPILER_INCLUDE_FOLDER_PATH%") do for %%B in ("%SOURCE_CODE_INCLUDE_FOLDER%") do if "%%~fA"=="%%~fB" echo Skipping copy include files... & goto compile_the_plugin
 
-for %%A in ("%COMPILER_INCLUDE_FOLDER_PATH%") do for %%B in ("%SOURCE_CODE_INCLUDE_FOLDER%") do if "%%~fA"=="%%~fB" goto end
+:: Copy the include folder
 IF EXIST "%SOURCE_CODE_INCLUDE_FOLDER%" call xcopy /S /Y "%SOURCE_CODE_INCLUDE_FOLDER%" "%COMPILER_INCLUDE_FOLDER_PATH%" > nul
 
 :: Closes the `enabledelayedexpansion` scope
@@ -109,7 +111,8 @@ endlocal
 
 ::
 :: Compile the AMXX plugin
-::
+:compile_the_plugin
+
 :: Delete the old binary in case some crazy problem on the compiler, or in the system while copy it.
 :: So, this way there is not way you are going to use the wrong version of the plugin without knowing it.
 IF EXIST "%PLUGIN_BINARY_FILE_PATH%" del "%PLUGIN_BINARY_FILE_PATH%"
@@ -118,7 +121,7 @@ IF EXIST "%PLUGIN_BINARY_FILE_PATH%" del "%PLUGIN_BINARY_FILE_PATH%"
 "%AMXX_COMPILER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%/" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
 
 :: If there was a compilation error, there is nothing more to be done.
-IF NOT EXIST "%PLUGIN_BINARY_FILE_PATH%" goto end
+IF NOT EXIST "%PLUGIN_BINARY_FILE_PATH%" echo There was an compilation error. Exiting... & goto end
 
 
 ::
