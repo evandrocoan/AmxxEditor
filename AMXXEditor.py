@@ -26,7 +26,7 @@ import logging
 PACKAGE_NAME = "amxmodx"
 
 
-def plugin_loaded() :
+def plugin_loaded():
 #{
 	settings = sublime.load_settings("amxx.sublime-settings")
 
@@ -36,8 +36,20 @@ def plugin_loaded() :
 	install_setting_file("amxx.sublime-settings")
 	install_setting_file("AMXX-Console.sublime-settings")
 
-	on_settings_modified( True );
+	# Fixes the settings dialog showing up when installing the package for the first time
+	global g_is_package_loading
+
+	g_is_package_loading=True
+	sublime.set_timeout( unlock_is_package_loading, 10000 )
+
+	on_settings_modified();
 	settings.add_on_change('amxx', on_settings_modified)
+#}
+
+def unlock_is_package_loading():
+#{
+	global g_is_package_loading
+	g_is_package_loading = False
 #}
 
 def install_build_systens(target_file_name):
@@ -569,7 +581,7 @@ def is_amxmodx_file(view) :
 	return view.match_selector(0, 'source.sma')
 
 
-def on_settings_modified(is_loading=False):
+def on_settings_modified():
 #{
 	print_debug(4, "on_settings_modified" )
 	global g_enable_inteltip
@@ -583,7 +595,7 @@ def on_settings_modified(is_loading=False):
 
 	if invalid:
 	#{
-		if not is_loading:
+		if not g_is_package_loading:
 			sublime.message_dialog("AMXX-Editor:\n\n" + invalid)
 
 		g_enable_inteltip = 0
