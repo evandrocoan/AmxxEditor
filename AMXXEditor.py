@@ -26,6 +26,12 @@ import logging
 PACKAGE_NAME = "amxmodx"
 
 
+def plugin_unloaded():
+#{
+	global g_is_package_loading
+	g_is_package_loading=True
+#}
+
 def plugin_loaded():
 #{
 	settings = sublime.load_settings("amxx.sublime-settings")
