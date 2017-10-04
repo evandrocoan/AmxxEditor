@@ -24,7 +24,13 @@ import logging
 
 
 PACKAGE_NAME = "amxmodx"
+g_is_package_loading = False
 
+def plugin_unloaded():
+#{
+	global g_is_package_loading
+	g_is_package_loading=True
+#}
 
 def plugin_loaded():
 #{
