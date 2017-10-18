@@ -35,7 +35,7 @@
     // "Packages/Amxx Pawn/AmxxPawn.sublime-syntax"
     // "Packages/amxmodx/AMXX-Pawn.sublime-syntax"
     //
-    "amxx_file_syntax": "Packages/Amxx Pawn/AmxxPawn.sublime-syntax",
+    "amxx_file_syntax": "Packages/AmxxPawn/AmxxPawn.sublime-syntax",
 
     // ( 0.5 ~ 5.0 ) Delay before regenerating auto-completion snippets
     "live_refresh_delay": 60.0

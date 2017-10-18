@@ -12,7 +12,6 @@ Now it is a fork filled within new settings and improvements. You can some of it
 Its feature is auto-complete. This is the settings file:
 ```javascript
 {
-    // Example:
     // Path to includes folder, the files here will be used for auto completion.
     "include_directory": "C:\\amxmodx\\scripting\\include\\",
 
@@ -50,7 +49,7 @@ Its feature is auto-complete. This is the settings file:
     // "Packages/Amxx Pawn/AmxxPawn.sublime-syntax"
     // "Packages/amxmodx/AMXX-Pawn.sublime-syntax"
     //
-    "amxx_file_syntax": "Packages/Amxx Pawn/AmxxPawn.sublime-syntax",
+    "amxx_file_syntax": "Packages/AmxxPawn/AmxxPawn.sublime-syntax",
 
     // ( 0.5 ~ 5.0 ) Delay before regenerating auto-completion snippets
     "live_refresh_delay":   1.0
