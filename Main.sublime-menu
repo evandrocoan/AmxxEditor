@@ -1,4 +1,74 @@
-
 [
-
+    {
+        "caption": "Preferences",
+        "mnemonic": "n",
+        "id": "preferences",
+        "children":
+        [
+            {
+                "caption": "Package Settings",
+                "mnemonic": "P",
+                "id": "package-settings",
+                "children":
+                [
+                    {
+                        "caption": "Amx Mod X",
+                        "children":
+                        [
+                            {
+                                "command": "open_file",
+                                "args": {"file": "${packages}/User/Amxx/AmxxPawn.sh"},
+                                "caption": "Configure Linux/Cygwin Compiler"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": {"file": "${packages}/User/Amxx/AmxxPawn.bat"},
+                                "caption": "Configure Windows/Bat Compiler"
+                            },
+                            { "caption": "-" },
+                            {
+                                "command": "open_file",
+                                "args": { "file": "${packages}/User/AMXX-Console.sublime-settings" },
+                                "caption": "Edit AMXX-Console Settings"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": { "file": "${packages}/User/amxx.sublime-settings" },
+                                "caption": "Edit AMXX-Autocompletion Settings"
+                            },
+                        ]
+                    },
+                ]
+            },
+        ]
+    },
+    {
+        "id": "tools",
+        "children":
+        [
+            {
+                "id": "packages",
+                "caption": "Packages",
+                "children":
+                [
+                    {
+                        "caption": "Amx Mod X",
+                        "id": "amxmodx",
+                        "children":
+                        [
+                            { "caption": "-" },
+                            {
+                                "command": "new_amxx_include",
+                                "caption": "New Include"
+                            },
+                            {
+                                "command": "new_amxx_plugin",
+                                "caption": "New Plug-In"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
 ]
