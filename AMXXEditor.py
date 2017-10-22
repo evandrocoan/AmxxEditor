@@ -660,29 +660,52 @@ def on_settings_modified():
 #}
 
 def is_invalid_settings(settings):
-#{
-	include_directory = settings.get('include_directory')
+	general_error = "You are not set correctly settings for AMXX-Editor.\n\n"
+	setting_names = [ "include_directory", "color_scheme", "amxx_file_syntax" ]
 
-	if include_directory is None or settings.get('color_scheme') is None:
-		return "You are not set correctly settings for AMXX-Editor.\n\nNo has configurado correctamente el AMXX-Editor."
+	for setting_name in setting_names:
+		result = general_settings_checker( settings, setting_name, general_error )
 
-	if include_directory is not None:
+		if result:
+			return result
 
-		if not os.path.isdir( include_directory ) :
-			return "The `include_directory` directory does not exist!\n\n\"%s\"\n\nPlease, " % include_directory \
-					+ "go to the menu:\n`Amx Mod X -> Configure AMXX-Autocompletion Settings`"
+	path_settings = \
+	[
+		( "include_directory", "F:\\SteamCMD\\steamapps\\common\\Half-Life\\czero\\addons\\amxmodx\\scripting\\include", "" ),
+		( "amxx_file_syntax", "Packages/AmxxPawn/AmxxPawn.sublime-syntax", os.path.dirname( sublime.packages_path() ) )
+	]
 
-	amxx_file_syntax = settings.get('amxx_file_syntax')
+	for setting_name, default_value, path_prefix in path_settings:
+		result = path_settings_checker( settings, setting_name, default_value, path_prefix )
 
-	if amxx_file_syntax is not None:
-		amxx_file_syntax = sublime.packages_path() + "/../" + amxx_file_syntax
+		if result:
+			return result
 
-		if not os.path.isfile(amxx_file_syntax):
-			return "The `amxx_file_syntax` file does not exist!\n\n\"%s\"\n\nPlease, " % amxx_file_syntax \
-					+ "go to the menu:\n`Amx Mod X -> Configure AMXX-Autocompletion Settings`"
 
-	return None
-#}
+def general_settings_checker(settings, settings_name, general_error):
+	setting_value = settings.get( settings_name )
+
+	if setting_value is None:
+		return general_error + "Missing `%s` value." % settings_name
+
+
+def path_settings_checker(settings, settings_name, default_value, prefix_path=""):
+	setting_value = settings.get( settings_name )
+
+	if setting_value != default_value:
+
+		if not os.path.exists( os.path.join( prefix_path, setting_value ) ):
+			lines = \
+			[
+				"The setting `%s` is not configured correctly. The following path does not exists:\n\n" % settings_name,
+				str( setting_value ),
+				"\n\nPlease, go to the following menu and fix the setting:\n\n"
+				"`Amx Mod X -> Configure AMXX-Autocompletion Settings`\n\n",
+				"`Preferences -> Packages Settings -> Amx Mod X -> Configure AMXX-Autocompletion Settings`",
+			]
+
+			return "".join( lines )
+
 
 def fix_path(settings, key) :
 #{
