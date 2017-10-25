@@ -30,6 +30,9 @@ def plugin_unloaded():
 #{
 	global g_is_package_loading
 	g_is_package_loading=True
+
+	settings = sublime.load_settings("amxx.sublime-settings")
+	settings.clear_on_change('amxx')
 #}
 
 def plugin_loaded():
