@@ -22,8 +22,9 @@ from watchdog.utils.bricks import OrderedSetQueue
 from os.path import basename
 import logging
 
+CURRENT_PACKAGE_ROOT_DIRECTORY = os.path.dirname( os.path.realpath( __file__ ) ).replace( ".sublime-package", "" )
+CURRENT_PACKAGE_NAME           = os.path.basename( CURRENT_PACKAGE_ROOT_DIRECTORY )
 
-PACKAGE_NAME = "amxmodx"
 g_is_package_loading = False
 
 def plugin_unloaded():
@@ -65,7 +66,7 @@ def install_build_systens(target_file_name):
 #{
 	target_folder     = "Amxx"
 	target_file       = os.path.join( sublime.packages_path(), "User", target_folder, target_file_name )
-	input_file_string = sublime.load_resource( "Packages/%s/%s" % ( PACKAGE_NAME, target_file_name ) )
+	input_file_string = sublime.load_resource( "Packages/%s/%s" % ( CURRENT_PACKAGE_NAME, target_file_name ) )
 
 	target_directory = os.path.join( sublime.packages_path(), "User", target_folder )
 	attempt_to_install_file( target_directory, target_file, input_file_string )
@@ -74,7 +75,7 @@ def install_build_systens(target_file_name):
 def install_setting_file( target_file_name ):
 #{
 	target_file       = os.path.join( sublime.packages_path(), "User", target_file_name )
-	input_file_string = sublime.load_resource( "Packages/%s/%s" % ( PACKAGE_NAME, target_file_name ) )
+	input_file_string = sublime.load_resource( "Packages/%s/%s" % ( CURRENT_PACKAGE_NAME, target_file_name ) )
 
 	target_directory = os.path.join( sublime.packages_path(), "User" )
 	attempt_to_install_file( target_directory, target_file, input_file_string )
