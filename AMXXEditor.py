@@ -25,7 +25,7 @@ import logging
 CURRENT_PACKAGE_ROOT_DIRECTORY = os.path.dirname( os.path.realpath( __file__ ) ).replace( ".sublime-package", "" )
 CURRENT_PACKAGE_NAME           = os.path.basename( CURRENT_PACKAGE_ROOT_DIRECTORY )
 
-g_is_package_loading = False
+g_is_package_loading = True
 
 def plugin_unloaded():
 #{
