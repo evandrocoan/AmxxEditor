@@ -18,9 +18,6 @@
     // ( true / false ) Enable auto completing words from the current file.
     "word_autocomplete": true,
 
-    // ( true / false ) Enable to add word completions from all opened files.
-    "use_all_autocomplete": true,
-
     // Enable editor debug messages, see the file `amxmodx/AMXXEditor.py` for all debugging levels.
     //
     // 0 - Disabled debugging.
