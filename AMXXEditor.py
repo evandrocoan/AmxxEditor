@@ -116,12 +116,12 @@ class NewAmxxPluginCommand(sublime_plugin.WindowCommand):
 		new_file("sma")
 
 
-def new_file(type):
+def new_file(file_type):
 #{
 	view = sublime.active_window().new_file()
-	view.set_name("untitled."+type)
+	view.set_name("untitled."+file_type)
 
-	plugin_template = sublime.load_resource("Packages/amxmodx/default."+type)
+	plugin_template = sublime.load_resource("Packages/%s/default.%s" % (CURRENT_PACKAGE_NAME, file_type))
 	plugin_template = plugin_template.replace("\r", "")
 
 	view.run_command("insert_snippet", {"contents": plugin_template})
@@ -471,7 +471,7 @@ def on_settings_modified():
 	#}
 
 	# check package path
-	packages_path = sublime.packages_path() + "/amxmodx"
+	packages_path = os.path.join( sublime.packages_path(), CURRENT_PACKAGE_NAME )
 	if not os.path.isdir(packages_path) :
 		os.mkdir(packages_path)
 
@@ -483,7 +483,7 @@ def on_settings_modified():
 
 	# popUp.CSS
 	global g_inteltip_style
-	g_inteltip_style = sublime.load_resource("Packages/amxmodx/"+ color_scheme +"-popup.css")
+	g_inteltip_style = sublime.load_resource("Packages/%s/%s-popup.css" % (CURRENT_PACKAGE_NAME, color_scheme))
 	g_inteltip_style = g_inteltip_style.replace("\r", "") # fix win/linux newlines
 
 	# cache setting
@@ -493,7 +493,7 @@ def on_settings_modified():
 	g_enable_buildversion 	= settings.get('enable_buildversion', False)
 	g_word_autocomplete 	= settings.get('word_autocomplete', False)
 	g_function_autocomplete = settings.get('function_autocomplete', False)
-	g_new_file_syntax       = settings.get('amxx_file_syntax', 'Packages/amxmodx/AMXX-Pawn.sublime-syntax')
+	g_new_file_syntax       = settings.get('amxx_file_syntax', 'Packages/%s/AMXX-Pawn.sublime-syntax' % CURRENT_PACKAGE_NAME)
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')
@@ -502,19 +502,6 @@ def on_settings_modified():
 	print_debug(4, "( on_settings_modified ) g_debug_level: %d" % g_debug_level)
 	print_debug(4, "( on_settings_modified ) g_include_dir: " + g_include_dir)
 	print_debug(4, "( on_settings_modified ) g_add_paremeters: " + str( g_add_paremeters ))
-
-	# generate list of color schemes
-	global g_color_schemes, g_default_schemes
-	g_color_schemes['list'] = g_default_schemes[:]
-	g_color_schemes['active'] = color_scheme
-
-	for file in os.listdir(sublime.packages_path()+"/amxmodx/") :
-	#{
-		if file.endswith("-pawn.tmTheme") :
-			g_color_schemes['list'] += [ file.replace("-pawn.tmTheme", "") ]
-	#}
-
-	g_color_schemes['count'] = len(g_color_schemes['list'])
 
 	file_observer.unschedule_all()
 	file_observer.schedule( file_event_handler, g_include_dir, True )
@@ -907,7 +894,7 @@ class PawnParse :
 		syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b(" \
 				+ constants + ")\\b\s*(?!\()\n      scope: constant.vars.pawn\n\n"
 
-		file_name = sublime.packages_path() + "/amxmodx/const.sublime-syntax"
+		file_name = os.path.join(sublime.packages_path(), CURRENT_PACKAGE_NAME, "const.sublime-syntax")
 
 		f = open(file_name, 'w')
 		f.write(syntax)
@@ -1617,8 +1604,6 @@ def simple_escape(html) :
 EDITOR_VERSION = "3.0_zz"
 FUNC_TYPES = [ "Function", "Public", "Stock", "Forward", "Native" ]
 
-g_default_schemes = [ "atomic", "dark", "mistrick", "npp", "twlight", "white" ]
-g_color_schemes = { "list": g_default_schemes[:], "count":0, "active":0 }
 g_constants_list = set()
 g_inteltip_style = ""
 g_enable_inteltip = False
