@@ -390,21 +390,28 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 					# The queue is not processed yet, so there is nothing to show
 					if g_word_autocomplete:
+						print_debug( 16, "(new buffer) Word autocomplete")
 						return None
 					else:
+						print_debug( 16, "(new buffer) Without word autocomplete")
 						return ( [], sublime.INHIBIT_WORD_COMPLETIONS )
 
 				if g_word_autocomplete:
+					print_debug( 16, "(Buffer) Word autocomplete + function")
 					return self.generate_funcset( view_file_name, view, prefix, locations )
 				else:
+					print_debug( 16, "(Buffer) Without word autocomplete + function")
 					return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
 			else:
 
 				if g_word_autocomplete:
+					print_debug( 16, "(File) Word autocomplete + function")
 					return self.generate_funcset( view_file_name, view, prefix, locations )
 				else:
+					print_debug( 16, "(File) Without word autocomplete + function")
 					return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
 
+		print_debug( 16, "No completions")
 		return None
 
 	def generate_funcset( self, file_name, view, prefix, locations ) :
@@ -415,7 +422,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 			node    = nodes[file_name]
 			visited = set()
 
-			if not view.match_selector(locations[0], 'source.sma string') :
+			if not view.match_selector(locations[0], 'string') :
 				self.generate_funcset_recur( node, visited, func_list, words_list )
 
 		# print_debug( 16, "( generate_funcset ) func_list size: %d" % len( func_list ) )
@@ -430,7 +437,7 @@ class AMXXEditor(sublime_plugin.EventListener):
 		visited.add( node )
 
 		for child in node.children :
-			self.generate_funcset_recur( child, func_list, visited, words_list )
+			self.generate_funcset_recur( child, visited, func_list, words_list )
 
 		func_list.extend( node.funcs )
 		words_list.extend( node.words )
@@ -655,10 +662,8 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 				self.process(file_name, view_buffer)
 
 	def process(self, view_file_name, view_buffer) :
-		(current_node, node_added) = get_or_add_node(view_file_name)
-
 		base_includes = set()
-		pawnParse.clearUniqueCompletionBuffer();
+		(current_node, node_added) = get_or_add_node(view_file_name)
 
 		# Here we parse the text file to know which modules it is including.
 		includes = includes_re.findall(view_buffer)
@@ -758,11 +763,14 @@ class Node :
 #{
 	def __init__(self, file_name) :
 		self.file_name = file_name
+
+		self.doct = set()
 		self.children = set()
 		self.parents = set()
-		self.funcs = []
+
+		# They are list to keep ordering
 		self.words = []
-		self.doct = set()
+		self.funcs = []
 
 		try:
 			float(file_name)
@@ -784,9 +792,9 @@ class Node :
 	def remove_all_children_and_funcs(self) :
 		for child in self.children :
 			self.remove_child(node)
-		del self.funcs[:]
-		self.words.clear()
 		self.doct.clear()
+		self.words.clear()
+		self.funcs.clear()
 #}
 
 class TextReader:
@@ -818,10 +826,6 @@ class PawnParse :
 		self.save_const_timer = None
 		self.constants_count = 0
 
-	def clearUniqueCompletionBuffer(self) :
-		if self.node is not None:
-			self.node.words.clear()
-
 	def start( self, pFile, node, isTheCurrentFile=False ) :
 		"""
 			When the buffer is not None, it is always the current file.
@@ -849,8 +853,9 @@ class PawnParse :
 		self.is_on_if_define   = []
 		self.is_on_else_define = []
 
-		del self.node.funcs[:]
 		self.node.doct.clear()
+		self.node.words.clear()
+		self.node.funcs.clear()
 
 		self.start_parse()
 
@@ -1144,7 +1149,6 @@ class PawnParse :
 		if fixname :
 			name = fixname.group(1)
 			g_constants_list.add(name)
-			self.node.words.append( name )
 	#}
 
 	def add_enum(self, buffer) :
@@ -1155,21 +1159,20 @@ class PawnParse :
 
 		split = buffer.split('[')
 
-		self.add_general_autocomplete(buffer, 'enum', split[0])
 		self.add_constant(split[0])
+		self.add_general_autocomplete(buffer, 'enum', split[0])
 
 		print_debug(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
 	#}
 
 	def add_general_autocomplete(self, name, info, autocomplete) :
 	#{
-		self.node.words.append( name )
+		self.add_word_autocomplete( name )
 
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
-			self.node.funcs.append( (name + '\t - ' + info, autocomplete) )
+			self.node.funcs.append( ["{}\t - {}".format( name, info ), autocomplete] )
 		else:
-			self.node.funcs.append( (name + ' \t' +  self.file_name + ' - ' + info, autocomplete) )
-
+			self.node.funcs.append( ["{} \t{} - {}".format( name, self.file_name, info ), autocomplete] )
 	#}
 
 	def add_function_autocomplete(self, name, info, autocomplete, param_count) :
@@ -1178,9 +1181,9 @@ class PawnParse :
 		self.node.words.append( name )
 
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
-			self.node.funcs.append( (show_name + '\t - ' + info, autocomplete) )
+			self.node.funcs.append( ["{}\t - {}".format( show_name, info ), autocomplete] )
 		else:
-			self.node.funcs.append( (show_name + ' \t'+  self.file_name + ' - ' + info, autocomplete) )
+			self.node.funcs.append( ["{} \t{} - {}".format( show_name, self.file_name, info ), autocomplete] )
 	#}
 
 	def add_word_autocomplete(self, name) :
@@ -1190,11 +1193,11 @@ class PawnParse :
 		"""
 		if name not in self.node.words:
 			self.node.words.append( name )
-			if self.isTheCurrentFile:
-				self.node.funcs.append( ( name, name ) )
-			else:
-				self.node.funcs.append( ( name + '\t - '+ self.file_name, name ) )
 
+			if self.isTheCurrentFile:
+				self.node.words.append( [name, name] )
+			else:
+				self.node.words.append( ["{}\t - {}".format( name, self.file_name ), name] )
 
 	def start_parse(self) :
 	#{
@@ -1282,6 +1285,7 @@ class PawnParse :
 				self.add_general_autocomplete( name, 'define: ' + value, name )
 
 			self.add_constant( name )
+			self.add_word_autocomplete( name )
 
 			print_debug(8, "(analyzer) parse_define add: [%s]" % name)
 		#}
@@ -1305,8 +1309,9 @@ class PawnParse :
 			value = value[0:newline]
 		#}
 
-		self.add_general_autocomplete(name, 'const: ' + value, name)
 		self.add_constant(name)
+		self.add_general_autocomplete(name, 'const: ' + value, name)
+
 		print_debug(8, "(analyzer) parse_const add: [%s]" % name)
 	#}
 
