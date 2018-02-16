@@ -379,6 +379,12 @@ class AMXXEditor(sublime_plugin.EventListener):
 
 		if is_amxmodx_file(view):
 
+			# temporarily masking word_separators
+			# https://github.com/SublimeTextIssues/Core/issues/819
+			word_separators = view.settings().get("word_separators")
+			view.settings().set("word_separators", "")
+			sublime.set_timeout(lambda: view.settings().set("word_separators", word_separators), 0)
+
 			if view_file_name is None:
 				view_file_name = str( view.buffer_id() )
 
@@ -415,21 +421,42 @@ class AMXXEditor(sublime_plugin.EventListener):
 		return None
 
 	def generate_funcset( self, file_name, view, prefix, locations ) :
-		func_list  = []
 		words_list = []
+		func_list = []
+		func_word_list = []
 
 		if file_name in nodes:
 			node    = nodes[file_name]
 			visited = set()
 
 			if not view.match_selector(locations[0], 'string') :
-				self.generate_funcset_recur( node, visited, func_list, words_list )
+				self.generate_funcset_recur( node, visited, func_list, func_word_list )
+
+		if g_word_autocomplete:
+			start_time = time.time()
+
+			if len( locations ) > 0:
+				view_words = view.extract_completions( prefix, locations[0] )
+
+			else:
+				view_words = view.extract_completions( prefix )
+
+			# This view goes first to prioritize matches close to cursor position.
+			for word in view_words:
+				# Remove the annoying `(` on the string
+				word = word.replace('$', '\\$').split('(')[0]
+
+				if word not in func_word_list:
+					words_list.append( ( word, word ) )
+
+				if time.time() - start_time > 0.05:
+					break
 
 		# print_debug( 16, "( generate_funcset ) func_list size: %d" % len( func_list ) )
 		# print_debug( 16, "( generate_funcset ) func_list items: " + str( sort_nicely( func_list ) ) )
 		return words_list + func_list
 
-	def generate_funcset_recur( self, node, visited, func_list, words_list ) :
+	def generate_funcset_recur( self, node, visited, func_list, func_word_list ) :
 
 		if node in visited :
 			return
@@ -437,10 +464,10 @@ class AMXXEditor(sublime_plugin.EventListener):
 		visited.add( node )
 
 		for child in node.children :
-			self.generate_funcset_recur( child, visited, func_list, words_list )
+			self.generate_funcset_recur( child, visited, func_list, func_word_list )
 
 		func_list.extend( node.funcs )
-		words_list.extend( node.words )
+		func_word_list.extend( node.func_words )
 
 	def generate_doctset_recur(self, node, doctset, visited) :
 		if node in visited :
@@ -769,8 +796,8 @@ class Node :
 		self.parents = set()
 
 		# They are list to keep ordering
-		self.words = []
 		self.funcs = []
+		self.func_words = []
 
 		try:
 			float(file_name)
@@ -792,10 +819,10 @@ class Node :
 	def remove_all_children_and_funcs(self) :
 		for child in self.children :
 			self.remove_child(node)
+
 		self.doct.clear()
-		self.words.clear()
 		self.funcs.clear()
-#}
+		self.func_words.clear()
 
 class TextReader:
 #{
@@ -854,8 +881,8 @@ class PawnParse :
 		self.is_on_else_define = []
 
 		self.node.doct.clear()
-		self.node.words.clear()
 		self.node.funcs.clear()
+		self.node.func_words.clear()
 
 		self.start_parse()
 
@@ -1146,6 +1173,7 @@ class PawnParse :
 	def add_constant(self, name) :
 	#{
 		fixname = re.search('(\\w*)', name)
+
 		if fixname :
 			name = fixname.group(1)
 			g_constants_list.add(name)
@@ -1158,17 +1186,18 @@ class PawnParse :
 			return
 
 		split = buffer.split('[')
-
 		self.add_constant(split[0])
-		self.add_general_autocomplete(buffer, 'enum', split[0])
 
+		self.add_general_autocomplete(buffer, 'enum', split[0])
 		print_debug(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
 	#}
 
 	def add_general_autocomplete(self, name, info, autocomplete) :
 	#{
+		self.node.func_words.append( name )
+
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
-			self.node.funcs.append( ["{}\t - {}".format( name, info ), autocomplete] )
+			self.node.funcs.append( ["{}\t {}".format( name, info ), autocomplete] )
 		else:
 			self.node.funcs.append( ["{} \t{} - {}".format( name, self.file_name, info ), autocomplete] )
 	#}
@@ -1176,9 +1205,12 @@ class PawnParse :
 	def add_function_autocomplete(self, name, info, autocomplete, param_count) :
 	#{
 		show_name = name + "(" + str( param_count ) + ")"
+		self.node.func_words.append( name )
 
+		# We do not check whether `if name in func_words` because we can have several functions
+		# with the same name but different parameters
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
-			self.node.funcs.append( ["{}\t - {}".format( show_name, info ), autocomplete] )
+			self.node.funcs.append( ["{}\t {}".format( show_name, info ), autocomplete] )
 		else:
 			self.node.funcs.append( ["{} \t{} - {}".format( show_name, self.file_name, info ), autocomplete] )
 	#}
@@ -1188,12 +1220,15 @@ class PawnParse :
 			Used to add a word to the auto completion of the current buffer. Therefore, it does not
 			need the file name as the auto completion for words from other files/sources.
 		"""
-		if name not in self.node.words:
+
+		if name not in self.node.func_words:
 
 			if self.isTheCurrentFile:
-				self.node.words.append( [name, name] )
+				self.node.funcs.append( [name, name] )
 			else:
-				self.node.words.append( ["{}\t - {}".format( name, self.file_name ), name] )
+				self.node.funcs.append( ["{}\t - {}".format( name, self.file_name ), name] )
+
+		self.node.func_words.append( name )
 
 	def start_parse(self) :
 	#{
