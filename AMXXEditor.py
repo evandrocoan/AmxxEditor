@@ -1178,7 +1178,6 @@ class PawnParse :
 	def add_function_autocomplete(self, name, info, autocomplete, param_count) :
 	#{
 		show_name = name + "(" + str( param_count ) + ")"
-		self.node.words.append( name )
 
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
 			self.node.funcs.append( ["{}\t - {}".format( show_name, info ), autocomplete] )
@@ -1192,7 +1191,6 @@ class PawnParse :
 			need the file name as the auto completion for words from other files/sources.
 		"""
 		if name not in self.node.words:
-			self.node.words.append( name )
 
 			if self.isTheCurrentFile:
 				self.node.words.append( [name, name] )
