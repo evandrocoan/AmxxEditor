@@ -1,9 +1,0 @@
-{
-	// Example:
-	"include_directory":	"C:\\amxmodx\\scripting\\include\\",	// Path to includes folder
-
-	"enable_inteltip": 		true,		// ( true / false ) 	Enable IntelTip PopUp
-	"debug_level": 			0,			// ( 0 ~ 3 ) 			Enable editor debug messages
-	"color_scheme": 		"dark", 	// ( white / dark )		Set color scheme 
-	"live_refresh_delay": 	1.0 		// ( 0.5 ~ 5.0 ) 		Delay before regenerating auto-completion snippets
-}

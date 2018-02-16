@@ -32,19 +32,19 @@ def plugin_unloaded():
 	global g_is_package_loading
 	g_is_package_loading=True
 
-	settings = sublime.load_settings("amxx.sublime-settings")
-	settings.clear_on_change('amxx')
+	settings = sublime.load_settings("Amxmodx.sublime-settings")
+	settings.clear_on_change('Amxmodx')
 #}
 
 def plugin_loaded():
 #{
-	settings = sublime.load_settings("amxx.sublime-settings")
+	settings = sublime.load_settings("Amxmodx.sublime-settings")
 
 	install_build_systens("AmxxPawn.sh")
 	install_build_systens("AmxxPawn.bat")
 
-	install_setting_file("amxx.sublime-settings")
-	install_setting_file("AMXX-Console.sublime-settings")
+	install_setting_file("Amxmodx.sublime-settings")
+	install_setting_file("AmxmodxConsole.sublime-settings")
 
 	# Fixes the settings dialog showing up when installing the package for the first time
 	global g_is_package_loading
@@ -53,7 +53,7 @@ def plugin_loaded():
 	sublime.set_timeout( unlock_is_package_loading, 10000 )
 
 	on_settings_modified();
-	settings.add_on_change('amxx', on_settings_modified)
+	settings.add_on_change('Amxmodx', on_settings_modified)
 #}
 
 def unlock_is_package_loading():
@@ -64,7 +64,7 @@ def unlock_is_package_loading():
 
 def install_build_systens(target_file_name):
 #{
-	target_folder     = "Amxx"
+	target_folder     = "Amxmodx"
 	target_file       = os.path.join( sublime.packages_path(), "User", target_folder, target_file_name )
 	input_file_string = sublime.load_resource( "Packages/%s/%s" % ( CURRENT_PACKAGE_NAME, target_file_name ) )
 
@@ -103,7 +103,7 @@ def unload_handler() :
 	process_thread.stop()
 
 	processingSetQueue.put(("", ""))
-	sublime.load_settings("amxx.sublime-settings").clear_on_change("amxx")
+	sublime.load_settings("Amxmodx.sublime-settings" % CURRENT_PACKAGE_NAME).clear_on_change(CURRENT_PACKAGE_NAME)
 #}
 
 class NewAmxxIncludeCommand(sublime_plugin.WindowCommand):
@@ -492,7 +492,7 @@ def on_settings_modified():
 	global g_word_autocomplete
 	global g_function_autocomplete
 
-	settings = sublime.load_settings("amxx.sublime-settings")
+	settings = sublime.load_settings("Amxmodx.sublime-settings")
 	invalid  = is_invalid_settings(settings)
 
 	if invalid:
@@ -527,7 +527,7 @@ def on_settings_modified():
 	g_enable_buildversion 	= settings.get('enable_buildversion', False)
 	g_word_autocomplete 	= settings.get('word_autocomplete', False)
 	g_function_autocomplete = settings.get('function_autocomplete', False)
-	g_new_file_syntax       = settings.get('amxx_file_syntax', 'Packages/%s/AMXX-Pawn.sublime-syntax' % CURRENT_PACKAGE_NAME)
+	g_new_file_syntax       = settings.get('amxx_file_syntax', 'Packages/%s/Amxmodx.sublime-syntax' % CURRENT_PACKAGE_NAME)
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')

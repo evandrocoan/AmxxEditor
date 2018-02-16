@@ -48,24 +48,24 @@
                         [
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/User/Amxx/AmxxPawn.sh"},
+                                "args": {"file": "${packages}/User/Amxmodx/AmxxPawn.sh"},
                                 "caption": "Configure Linux/Cygwin Compiler"
                             },
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/User/Amxx/AmxxPawn.bat"},
+                                "args": {"file": "${packages}/User/Amxmodx/AmxxPawn.bat"},
                                 "caption": "Configure Windows/Bat Compiler"
                             },
                             { "caption": "-" },
                             {
                                 "command": "open_file",
-                                "args": { "file": "${packages}/User/AMXX-Console.sublime-settings" },
-                                "caption": "Edit AMXX-Console Settings"
+                                "args": { "file": "${packages}/User/AmxmodxConsole.sublime-settings" },
+                                "caption": "Edit Amxmodx Console Settings"
                             },
                             {
                                 "command": "open_file",
-                                "args": { "file": "${packages}/User/amxx.sublime-settings" },
-                                "caption": "Edit AMXX-Autocompletion Settings"
+                                "args": { "file": "${packages}/User/Amxmodx.sublime-settings" },
+                                "caption": "Edit Amxmodx Autocompletion Settings"
                             },
                         ]
                     },
