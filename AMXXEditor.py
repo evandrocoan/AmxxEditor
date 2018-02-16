@@ -1167,8 +1167,6 @@ class PawnParse :
 
 	def add_general_autocomplete(self, name, info, autocomplete) :
 	#{
-		self.add_word_autocomplete( name )
-
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
 			self.node.funcs.append( ["{}\t - {}".format( name, info ), autocomplete] )
 		else:
@@ -1283,8 +1281,6 @@ class PawnParse :
 				self.add_general_autocomplete( name, 'define: ' + value, name )
 
 			self.add_constant( name )
-			self.add_word_autocomplete( name )
-
 			print_debug(8, "(analyzer) parse_define add: [%s]" % name)
 		#}
 	#}
