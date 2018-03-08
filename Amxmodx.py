@@ -22,9 +22,7 @@ from watchdog.utils.bricks import OrderedSetQueue
 from os.path import basename
 import logging
 
-PACKAGE_ROOT_DIRECTORY = os.path.dirname( os.path.realpath( __file__ ) ).replace( ".sublime-package", "" )
-CURRENT_PACKAGE_NAME = os.path.basename( PACKAGE_ROOT_DIRECTORY )
-
+CURRENT_PACKAGE_NAME = __package__
 g_is_package_loading = True
 
 def plugin_unloaded():
