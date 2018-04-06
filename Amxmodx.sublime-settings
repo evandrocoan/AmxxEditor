@@ -11,28 +11,27 @@
     // ( true / false ) Enable Auto-Increment Build/Version
     "enable_buildversion": false,
 
-    // ( true / false ) Enable auto completing functions and global variables from the current file.
-    // If you change this setting, you need to restart Sublime Text before it can take effect.
+    // ( true / false ) Enable auto completing functions and global variables
+    // from the current file. If you change this setting, you need to restart
+    // Sublime Text before it can take effect.
     "function_autocomplete": true,
 
     // ( true / false ) Enable auto completing words from the current file.
     "word_autocomplete": true,
 
-    // Enable editor debug messages, see the file `amxmodx/AMXXEditor.py` for all debugging levels.
-    //
+    // Enable editor debug messages:
     // 0 - Disabled debugging.
     // 1 - Errors messages.
     "debug_level": 1,
 
     // ( color name ) Set color scheme ( dark / twlight / atomic / white / npp )
-    "color_scheme": "dark",
+    "popup_color_scheme": "dark",
 
-    // The new file syntax when using the menu `Amx Mod X -> New Plug-in`. Possible values are:
-    //
-    // "Packages/Amxx Pawn/AmxxPawn.sublime-syntax"
-    // "Packages/amxmodx/AMXX-Pawn.sublime-syntax"
-    //
-    "amxx_file_syntax": "Packages/AmxxPawn/AmxxPawn.sublime-syntax",
+    // The new file syntax when using the menu `Amx Mod X -> New Plug-in`.
+    // Possible values are:
+    // "Packages/Amxmodx/AmxmodxPawn.sublime-syntax",
+    // "Packages/AmxxPawn/AmxxPawn.sublime-syntax",
+    "amxx_file_syntax": "Packages/Amxmodx/AmxmodxPawn.sublime-syntax",
 
     // ( 0.5 ~ 5.0 ) Delay before regenerating auto-completion snippets
     "live_refresh_delay": 60.0

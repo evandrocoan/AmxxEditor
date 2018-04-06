@@ -1,6 +1,6 @@
 %YAML 1.2
 ---
-name: AMXX-Pawn
+name: AmxmodxPawn
 file_extensions: [sma, inc]
 scope: source.sma
 contexts:
@@ -74,7 +74,7 @@ contexts:
         - include: directive_invalid
     - match: '%\d' # Colored %1 %2...
       scope: keyword.other.preprocessor.group.pawn
-    
+
 
   directive_include:
     - match: (include)\s+((["][\t ]*[\w\-\/]*\.(inc|sma)?[\t ]*["])|([<][\t ]*[\w\-\/]*[\t ]*[>])|([^\s]*))
@@ -101,7 +101,7 @@ contexts:
         - meta_scope: entity.name.constant.preprocessor
         - include: pawn_coment
         - match: \n|$
-          pop: true 
+          pop: true
 
   directive_invalid:
     - match: '[^\n]*'
@@ -202,7 +202,7 @@ contexts:
           scope: function.parens.pawn
           pop: true
         - include: main
-      
+
 
   ########################################################
 

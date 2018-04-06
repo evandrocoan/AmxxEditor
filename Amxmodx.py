@@ -101,7 +101,7 @@ def unload_handler() :
 	process_thread.stop()
 
 	processingSetQueue.put(("", ""))
-	sublime.load_settings("Amxmodx.sublime-settings" % CURRENT_PACKAGE_NAME).clear_on_change(CURRENT_PACKAGE_NAME)
+	sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME).clear_on_change(CURRENT_PACKAGE_NAME)
 #}
 
 class NewAmxxIncludeCommand(sublime_plugin.WindowCommand):
@@ -511,11 +511,11 @@ def on_settings_modified():
 	fix_path(settings, 'include_directory')
 
 	# Get the set color scheme
-	color_scheme = settings.get('color_scheme')
+	popup_color_scheme = settings.get('popup_color_scheme')
 
 	# popUp.CSS
 	global g_inteltip_style
-	g_inteltip_style = sublime.load_resource("Packages/%s/%s-popup.css" % (CURRENT_PACKAGE_NAME, color_scheme))
+	g_inteltip_style = sublime.load_resource("Packages/%s/%s-popup.css" % (CURRENT_PACKAGE_NAME, popup_color_scheme))
 	g_inteltip_style = g_inteltip_style.replace("\r", "") # fix win/linux newlines
 
 	# cache setting
@@ -541,7 +541,7 @@ def on_settings_modified():
 
 def is_invalid_settings(settings):
 	general_error = "You are not set correctly settings for AMXX-Editor.\n\n"
-	setting_names = [ "include_directory", "color_scheme", "amxx_file_syntax" ]
+	setting_names = [ "include_directory", "popup_color_scheme", "amxx_file_syntax" ]
 
 	for setting_name in setting_names:
 		result = general_settings_checker( settings, setting_name, general_error )
@@ -552,7 +552,7 @@ def is_invalid_settings(settings):
 	path_settings = \
 	[
 		( "include_directory", "F:\\SteamCMD\\steamapps\\common\\Half-Life\\czero\\addons\\amxmodx\\scripting\\include", "" ),
-		( "amxx_file_syntax", "Packages/AmxxPawn/AmxxPawn.sublime-syntax", os.path.dirname( sublime.packages_path() ) )
+		( "amxx_file_syntax", "Packages/Amxmodx/AmxmodxPawn.sublime-syntax", os.path.dirname( sublime.packages_path() ) )
 	]
 
 	for setting_name, default_value, path_prefix in path_settings:
@@ -573,8 +573,9 @@ def path_settings_checker(settings, settings_name, default_value, prefix_path=""
 	setting_value = settings.get( settings_name )
 
 	if setting_value != default_value:
+		full_path = os.path.join( prefix_path, setting_value )
 
-		if not os.path.exists( os.path.join( prefix_path, setting_value ) ):
+		if not os.path.exists( full_path ):
 			lines = \
 			[
 				"The setting `%s` is not configured correctly. The following path does not exists:\n\n" % settings_name,
@@ -1643,7 +1644,7 @@ g_enable_buildversion = False
 g_delay_time = 1.0
 g_include_dir = "."
 g_add_paremeters = False
-g_new_file_syntax = "Packages/AmxxPawn/AmxxPawn.sublime-syntax"
+g_new_file_syntax = "Packages/Amxmodx/AmxmodxPawn.sublime-syntax"
 g_word_autocomplete = False
 g_function_autocomplete = False
 
