@@ -27,7 +27,7 @@ To be used as a submodule at My Sublime Text Settings: https://github.com/evandr
 
 1. Go to <i>Preferences > Browse Packages...</i> and clone this package into there.
 <pre><code>
-git clone https://github.com/evandrocoan/SublimeAMXX_Editor amxmodx
+git clone https://github.com/evandrocoan/SublimeAMXX_Editor Amxmodx
 </code></pre>
 1. Restart Sublime
 

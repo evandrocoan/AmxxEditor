@@ -3,7 +3,7 @@
     "cmd": ["sh","$packages/User/Amxx/AmxxPawn.sh","$file", "$file_base_name", "$packages", "$file_path"],
 
     // "target": "ansi_color_build",
-    "syntax": "Packages/amxmodx/AmxmodxConsole.sublime-syntax",
+    "syntax": "Packages/Amxmodx/AmxmodxConsole.sublime-syntax",
 
     "variants":
     [

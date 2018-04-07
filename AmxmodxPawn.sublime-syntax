@@ -22,7 +22,7 @@ contexts:
     # Constants
     - match: (true|false)
       scope: constant.language
-    - include: Packages/amxmodx/const.sublime-syntax
+    - include: Packages/Amxmodx/const.sublime-syntax
 
 
   ########################################################
