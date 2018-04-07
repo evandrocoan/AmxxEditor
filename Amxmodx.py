@@ -579,7 +579,7 @@ def path_settings_checker(settings, settings_name, default_value, prefix_path=""
 			lines = \
 			[
 				"The setting `%s` is not configured correctly. The following path does not exists:\n\n" % settings_name,
-				str( setting_value ),
+				"%s (%s)" % (setting_value, full_path),
 				"\n\nPlease, go to the following menu and fix the setting:\n\n"
 				"`Amx Mod X -> Configure AMXX-Autocompletion Settings`\n\n",
 				"`Preferences -> Packages Settings -> Amx Mod X -> Configure AMXX-Autocompletion Settings`",
