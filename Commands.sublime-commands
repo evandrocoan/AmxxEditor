@@ -21,12 +21,12 @@
     { "caption": "-" },
     {
         "command": "open_file",
-        "args": { "file": "${packages}/User/AMXX-Console.sublime-settings" },
+        "args": { "file": "${packages}/User/AmxmodxConsole.sublime-settings" },
         "caption": "Amx Mod X: Console Settings"
     },
     {
         "command": "open_file",
-        "args": { "file": "${packages}/User/amxx.sublime-settings" },
+        "args": { "file": "${packages}/User/Amxmodx.sublime-settings" },
         "caption": "Amx Mod X: Autocompletion Settings"
     },
     {
