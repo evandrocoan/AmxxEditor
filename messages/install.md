@@ -21,7 +21,7 @@ ___
 
 By default,this version do not create the `Amxmodx` menu, because not everybody want that menu showing up.
 
-You can add the menu going on `Preferences -> Browse Packages` and creating the
+You can add the menu going on the Sublime Text menu `Preferences -> Browse Packages...` and creating the
 file `Main.sublime-menu` on the `User/` directory or any subfolder/directory inside it:
 
     [
