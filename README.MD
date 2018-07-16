@@ -1,4 +1,4 @@
-# Sublime AMXX-Editor
+# Sublime AmxxEditor
 
 This was initially a mirror from the Sublime AMXX-Editor available on:
 
@@ -9,7 +9,7 @@ Now it is a fork filled within new settings and improvements. You can some of it
 
 1. [[TUT] Compiling AMXX plugins with Sublime Text](https://forums.alliedmods.net/showthread.php?t=293376)
 
-Its feature is auto-complete. This is the settings file: [Amxmodx.sublime-settings](Amxmodx.sublime-settings)
+Its feature is auto-complete. This is the settings file: [AmxxEditor.sublime-settings](AmxxEditor.sublime-settings)
 
 
 It had the purpose to be that's project fork, as it is not available on github at the moment.
@@ -27,7 +27,7 @@ To be used as a submodule at My Sublime Text Settings: https://github.com/evandr
 
 1. Go to <i>Preferences > Browse Packages...</i> and clone this package into there.
 <pre><code>
-git clone https://github.com/evandrocoan/SublimeAMXX_Editor Amxmodx
+git clone https://github.com/evandrocoan/SublimeAMXX_Editor AmxxEditor
 </code></pre>
 1. Restart Sublime
 

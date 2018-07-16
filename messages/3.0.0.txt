@@ -1,0 +1,24 @@
+
+# AmxxEditor 3.0.0 Breaking Changes
+
+The new version of the AmxxEditor package has just been installed in your machine.
+
+On this version, the package have been renamed from `Amxmodx` to `AmxxEditor`. Also, its settings
+files have been renamed. You will need to copy them from the old file to the new file:
+
+## Script files
+1. `User/Amxmodx/AmxxPawn.sh`  to `User/AmxxEditor/AmxxEditor.sh`
+1. `User/Amxmodx/AmxxPawn.bat` to `User/AmxxEditor/AmxxEditor.bat`
+
+## Syntax files
+1. `User/AmxmodxPawn.sublime-syntax`   to `User/AmxxEditorPawn.sublime-syntax`
+2. `User/AmxmodxConsole.sublime-syntax`   to `User/AmxxEditorConsole.sublime-syntax`
+
+## Settings files
+1. `User/Amxmodx.sublime-settings`        to `User/AmxxEditor.sublime-settings`
+2. `User/AmxmodxPawn.sublime-settings`    to `User/AmxxEditorPawn.sublime-settings`
+3. `User/AmxmodxConsole.sublime-settings` to `User/AmxxEditorConsole.sublime-settings`
+
+If you need help, you can post your problem on the AlliedModders forum thread:
+[TUT] Compiling AMXX plugins with Sublime Text: https://forums.alliedmods.net/showthread.php?t=293376
+

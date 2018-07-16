@@ -1,0 +1,17 @@
+
+
+# AmxxEditor 2.0.0 Breaking Changes
+
+The new version of the AmxxEditor package has just been installed in your machine.
+
+On this version, the package have been renamed from `AmxxEditor` to `AmxxEditor`. Also, its settings files
+have been renamed. You will need to copy them from the old file to the new file:
+
+1. `User/amxx.sublime-settings` to `User/AmxxEditor.sublime-settings`
+1. `User/AMXX-Console.sublime-settings` to `User/AmxxEditorConsole.sublime-settings`
+
+The standard syntax file has also been renamed from `AmxxEditor/AMXX-Pawn.sublime-syntax` to `AmxxEditor/AmxxEditor.sublime-syntax`.
+
+If you need help, you can post your problem on the AlliedModders forum thread:
+https://forums.alliedmods.net/showthread.php?t=293376
+

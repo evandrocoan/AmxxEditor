@@ -62,7 +62,7 @@ for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
 ::
 :: Setup the batch variables
 ::
-:: $1 is the first shell argument and $2 is the second shell argument passed by AmxxPawn.sublime-build
+:: $1 is the first shell argument and $2 is the second shell argument passed by AmxxEditor.sublime-build
 :: Usually they should be the plugin's file full path and the plugin's file name without extension.
 ::
 :: Example: $1=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\my_plugin.sma

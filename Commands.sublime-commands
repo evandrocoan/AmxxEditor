@@ -2,36 +2,36 @@
 [
     {
         "command": "new_amxx_include",
-        "caption": "Amx Mod X: New Include"
+        "caption": "AmxxEditor: New Include"
     },
     {
         "command": "new_amxx_plugin",
-        "caption": "Amx Mod X: New Plug-In"
+        "caption": "AmxxEditor: New Plug-In"
     },
     {
         "command": "open_file",
-        "args": { "file": "${packages}/User/Amxx/AmxxPawn.sh" },
-        "caption": "Amx Mod X: Configure Linux/Cygwin Compiler"
+        "args": { "file": "${packages}/User/AmxxEditor/AmxxEditor.sh" },
+        "caption": "AmxxEditor: Configure Linux/Cygwin Compiler"
     },
     {
         "command": "open_file",
-        "args": { "file": "${packages}/User/Amxx/AmxxPawn.bat" },
-        "caption": "Amx Mod X: Configure Windows/Bat Compiler"
+        "args": { "file": "${packages}/User/AmxxEditor/AmxxEditor.bat" },
+        "caption": "AmxxEditor: Configure Windows/Bat Compiler"
     },
     { "caption": "-" },
     {
         "command": "open_file",
-        "args": { "file": "${packages}/User/AmxmodxConsole.sublime-settings" },
-        "caption": "Amx Mod X: Console Settings"
+        "args": { "file": "${packages}/User/AmxxEditorConsole.sublime-settings" },
+        "caption": "AmxxEditor: Console Settings"
     },
     {
         "command": "open_file",
-        "args": { "file": "${packages}/User/Amxmodx.sublime-settings" },
-        "caption": "Amx Mod X: Autocompletion Settings"
+        "args": { "file": "${packages}/User/AmxxEditor.sublime-settings" },
+        "caption": "AmxxEditor: Autocompletion Settings"
     },
     {
         "command": "about_amxx_editor",
-        "caption": "Amx Mod X: About AMXX-Editor"
+        "caption": "AmxxEditor: About AMXX-Editor"
     },
 ]
 

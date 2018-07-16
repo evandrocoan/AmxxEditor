@@ -1,6 +1,6 @@
 %YAML 1.2
 ---
-name: AmxmodxPawn
+name: AmxxEditorPawn
 file_extensions: [sma, inc]
 scope: source.sma
 contexts:
@@ -22,7 +22,7 @@ contexts:
     # Constants
     - match: (true|false)
       scope: constant.language
-    - include: Packages/Amxmodx/const.sublime-syntax
+    - include: Packages/AmxxEditor/AmxxEditorConsts.sublime-syntax
 
 
   ########################################################

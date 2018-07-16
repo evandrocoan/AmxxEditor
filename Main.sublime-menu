@@ -11,8 +11,8 @@
                 "children":
                 [
                     {
-                        "caption": "Amx Mod X",
-                        "id": "amxmodx",
+                        "caption": "AmxxEditor",
+                        "id": "AmxxEditor",
                         "children":
                         [
                             { "caption": "-" },
@@ -43,29 +43,29 @@
                 "children":
                 [
                     {
-                        "caption": "Amx Mod X",
+                        "caption": "AmxxEditor",
                         "children":
                         [
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/User/Amxmodx/AmxxPawn.sh"},
+                                "args": {"file": "${packages}/User/AmxxEditor/AmxxEditor.sh"},
                                 "caption": "Configure Linux/Cygwin Compiler"
                             },
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/User/Amxmodx/AmxxPawn.bat"},
+                                "args": {"file": "${packages}/User/AmxxEditor/AmxxEditor.bat"},
                                 "caption": "Configure Windows/Bat Compiler"
                             },
                             { "caption": "-" },
                             {
                                 "command": "open_file",
-                                "args": { "file": "${packages}/User/AmxmodxConsole.sublime-settings" },
-                                "caption": "Edit Amxmodx Console Settings"
+                                "args": { "file": "${packages}/User/AmxxEditorConsole.sublime-settings" },
+                                "caption": "Edit AmxxEditor Console Settings"
                             },
                             {
                                 "command": "open_file",
-                                "args": { "file": "${packages}/User/Amxmodx.sublime-settings" },
-                                "caption": "Edit Amxmodx Autocompletion Settings"
+                                "args": { "file": "${packages}/User/AmxxEditor.sublime-settings" },
+                                "caption": "Edit AmxxEditor Autocompletion Settings"
                             },
                         ]
                     },

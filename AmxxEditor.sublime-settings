@@ -27,11 +27,11 @@
     // ( color name ) Set color scheme ( dark / twlight / atomic / white / npp )
     "popup_color_scheme": "dark",
 
-    // The new file syntax when using the menu `Amx Mod X -> New Plug-in`.
+    // The new file syntax when using the menu `AmxxEditor -> New Plug-in`.
     // Possible values are:
-    // "Packages/Amxmodx/AmxmodxPawn.sublime-syntax",
-    // "Packages/AmxxPawn/AmxxPawn.sublime-syntax",
-    "amxx_file_syntax": "Packages/Amxmodx/AmxmodxPawn.sublime-syntax",
+    // "Packages/AmxxEditor/AmxxEditorPawn.sublime-syntax",
+    // "Packages/AmxxEditor/AmxxEditor.sublime-syntax",
+    "amxx_file_syntax": "Packages/AmxxEditor/AmxxEditorPawn.sublime-syntax",
 
     // ( 0.5 ~ 5.0 ) Delay before regenerating auto-completion snippets
     "live_refresh_delay": 60.0

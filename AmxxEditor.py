@@ -1,4 +1,5 @@
 # Sublime AMXX-Editor by Destro
+# Sublime AmxxEditor by addons_zz @ 2018
 
 import os
 import re
@@ -30,19 +31,19 @@ def plugin_unloaded():
 	global g_is_package_loading
 	g_is_package_loading=True
 
-	settings = sublime.load_settings("Amxmodx.sublime-settings")
-	settings.clear_on_change('Amxmodx')
+	settings = sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME)
+	settings.clear_on_change(CURRENT_PACKAGE_NAME)
 #}
 
 def plugin_loaded():
 #{
-	settings = sublime.load_settings("Amxmodx.sublime-settings")
+	settings = sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME)
 
-	install_build_systens("AmxxPawn.sh")
-	install_build_systens("AmxxPawn.bat")
+	install_build_systens("AmxxEditor.sh")
+	install_build_systens("AmxxEditor.bat")
 
-	install_setting_file("Amxmodx.sublime-settings")
-	install_setting_file("AmxmodxConsole.sublime-settings")
+	install_setting_file("%s.sublime-settings" % CURRENT_PACKAGE_NAME)
+	install_setting_file("AmxxEditorConsole.sublime-settings")
 
 	# Fixes the settings dialog showing up when installing the package for the first time
 	global g_is_package_loading
@@ -51,7 +52,7 @@ def plugin_loaded():
 	sublime.set_timeout( unlock_is_package_loading, 10000 )
 
 	on_settings_modified();
-	settings.add_on_change('Amxmodx', on_settings_modified)
+	settings.add_on_change(CURRENT_PACKAGE_NAME, on_settings_modified)
 #}
 
 def unlock_is_package_loading():
@@ -62,7 +63,7 @@ def unlock_is_package_loading():
 
 def install_build_systens(target_file_name):
 #{
-	target_folder     = "Amxmodx"
+	target_folder     = CURRENT_PACKAGE_NAME
 	target_file       = os.path.join( sublime.packages_path(), "User", target_folder, target_file_name )
 	input_file_string = sublime.load_resource( "Packages/%s/%s" % ( CURRENT_PACKAGE_NAME, target_file_name ) )
 
@@ -134,7 +135,7 @@ class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
 #{
 	def run(self):
 	#{
-		about = "Sublime AMXX-Editor v"+ EDITOR_VERSION +" by Destro\n\n\n"
+		about = "Sublime AmxxEditor v"+ EDITOR_VERSION +" by Destro\n\n\n"
 
 		about += "CREDITs:\n"
 		about += "- Great:\n"
@@ -174,7 +175,8 @@ class AmxxBuildVerCommand(sublime_plugin.TextCommand):
 
 		self.view.replace(edit, region, result.group(1) + str(build) + beta + '\"')
 
-class AMXXEditor(sublime_plugin.EventListener):
+
+class AmxxEditor(sublime_plugin.EventListener):
 	def __init__(self) :
 		process_thread.start()
 		self.delay_queue = None
@@ -490,13 +492,13 @@ def on_settings_modified():
 	global g_word_autocomplete
 	global g_function_autocomplete
 
-	settings = sublime.load_settings("Amxmodx.sublime-settings")
+	settings = sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME)
 	invalid  = is_invalid_settings(settings)
 
 	if invalid:
 	#{
 		if not g_is_package_loading:
-			sublime.message_dialog("AMXX-Editor:\n\n" + invalid)
+			sublime.message_dialog("AmxxEditor:\n\n" + invalid)
 
 		g_enable_inteltip = 0
 		return
@@ -525,7 +527,7 @@ def on_settings_modified():
 	g_enable_buildversion 	= settings.get('enable_buildversion', False)
 	g_word_autocomplete 	= settings.get('word_autocomplete', False)
 	g_function_autocomplete = settings.get('function_autocomplete', False)
-	g_new_file_syntax       = settings.get('amxx_file_syntax', 'Packages/%s/Amxmodx.sublime-syntax' % CURRENT_PACKAGE_NAME)
+	g_new_file_syntax       = settings.get('amxx_file_syntax', g_new_file_syntax)
 	g_debug_level 			= settings.get('debug_level', 0)
 	g_delay_time			= settings.get('live_refresh_delay', 1.0)
 	g_include_dir 			= settings.get('include_directory')
@@ -540,7 +542,7 @@ def on_settings_modified():
 #}
 
 def is_invalid_settings(settings):
-	general_error = "You are not set correctly settings for AMXX-Editor.\n\n"
+	general_error = "You are not set correctly settings for AmxxEditor.\n\n"
 	setting_names = [ "include_directory", "popup_color_scheme", "amxx_file_syntax" ]
 
 	for setting_name in setting_names:
@@ -552,7 +554,7 @@ def is_invalid_settings(settings):
 	path_settings = \
 	[
 		( "include_directory", "F:\\SteamCMD\\steamapps\\common\\Half-Life\\czero\\addons\\amxmodx\\scripting\\include", "" ),
-		( "amxx_file_syntax", "Packages/Amxmodx/AmxmodxPawn.sublime-syntax", os.path.dirname( sublime.packages_path() ) )
+		( "amxx_file_syntax", g_new_file_syntax, os.path.dirname( sublime.packages_path() ) )
 	]
 
 	for setting_name, default_value, path_prefix in path_settings:
@@ -581,8 +583,8 @@ def path_settings_checker(settings, settings_name, default_value, prefix_path=""
 				"The setting `%s` is not configured correctly. The following path does not exists:\n\n" % settings_name,
 				"%s (%s)" % (setting_value, full_path),
 				"\n\nPlease, go to the following menu and fix the setting:\n\n"
-				"`Amx Mod X -> Configure AMXX-Autocompletion Settings`\n\n",
-				"`Preferences -> Packages Settings -> Amx Mod X -> Configure AMXX-Autocompletion Settings`",
+				"`AmxxEditor -> Configure AMXX-Autocompletion Settings`\n\n",
+				"`Preferences -> Packages Settings -> AmxxEditor -> Configure AMXX-Autocompletion Settings`",
 			]
 
 			return "".join( lines )
@@ -925,7 +927,7 @@ class PawnParse :
 		syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b(" \
 				+ constants + ")\\b\s*(?!\()\n      scope: constant.vars.pawn\n\n"
 
-		file_name = os.path.join(sublime.packages_path(), CURRENT_PACKAGE_NAME, "const.sublime-syntax")
+		file_name = os.path.join(sublime.packages_path(), CURRENT_PACKAGE_NAME, "AmxxEditorConsts.sublime-syntax")
 
 		f = open(file_name, 'w')
 		f.write(syntax)
@@ -1644,7 +1646,7 @@ g_enable_buildversion = False
 g_delay_time = 1.0
 g_include_dir = "."
 g_add_paremeters = False
-g_new_file_syntax = "Packages/Amxmodx/AmxmodxPawn.sublime-syntax"
+g_new_file_syntax = "Packages/%s/%sPawn.sublime-syntax" % (CURRENT_PACKAGE_NAME, CURRENT_PACKAGE_NAME)
 g_word_autocomplete = False
 g_function_autocomplete = False
 
@@ -1670,7 +1672,7 @@ MAX_FIX_TIME_SECS_PER_VIEW = 0.01
 if 'LOG_FILE_NAME' in globals():
 	del LOG_FILE_NAME
 
-# LOG_FILE_NAME = os.path.abspath('AMXXEditor.log')
+# LOG_FILE_NAME = os.path.abspath('AmxxEditor.log')
 startTime = datetime.datetime.now()
 print_debug_lastTime = startTime.microsecond
 
@@ -1690,7 +1692,7 @@ if 'LOG_FILE_NAME' in globals():
 
 	# Clear the log file contents
 	open(LOG_FILE_NAME, 'w').close()
-	print( "Logging the AMXXEditor debug to the file " + LOG_FILE_NAME )
+	print( "Logging the AmxxEditor debug to the file " + LOG_FILE_NAME )
 
 	# Setup the logger
 	logging.basicConfig( filename=LOG_FILE_NAME, format='%(asctime)s %(message)s', level=logging.DEBUG )
@@ -1703,7 +1705,7 @@ if 'LOG_FILE_NAME' in globals():
 		# You can access global variables without the global keyword.
 		if g_debug_level & level != 0:
 
-			logging.debug( "[AMXX-Editor] " \
+			logging.debug( "[AmxxEditor] " \
 					+ str( currentTime ) \
 					+ "%7d " % ( currentTime - print_debug_lastTime ) \
 					+ msg )
@@ -1720,7 +1722,7 @@ else:
 		# You can access global variables without the global keyword.
 		if g_debug_level & level != 0:
 
-			print( "[AMXX-Editor] " \
+			print( "[AmxxEditor] " \
 					+ "%02d" % datetime.datetime.now().hour + ":" \
 					+ "%02d" % datetime.datetime.now().minute + ":" \
 					+ "%02d" % datetime.datetime.now().second + ":" \
