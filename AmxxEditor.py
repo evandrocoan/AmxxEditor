@@ -248,6 +248,10 @@ class AmxxEditor(sublime_plugin.EventListener):
 		view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
 
 	def inteltip_function(self, view, region) :
+		file_name   = view.file_name()
+
+		if not file_name:
+			return
 
 		word_region = view.word(region)
 		location 	= word_region.end() + 1
@@ -255,7 +259,7 @@ class AmxxEditor(sublime_plugin.EventListener):
 		doctset 	= set()
 		visited 	= set()
 		found 		= None
-		node 		= nodes[view.file_name()]
+		node 		= nodes[file_name]
 
 		self.generate_doctset_recur(node, doctset, visited)
 
@@ -266,7 +270,7 @@ class AmxxEditor(sublime_plugin.EventListener):
 					break
 
 		if found:
-			print_debug(1, "param2: [%s]" % simple_escape(found[1]))
+			print_debug(4, "param2: [%s]" % simple_escape(found[1]))
 			filename = os.path.basename(found[2])
 
 
