@@ -380,12 +380,13 @@ class AMXXEditor(sublime_plugin.EventListener):
 		view_file_name = view.file_name()
 
 		if is_amxmodx_file(view):
-
-			# temporarily masking word_separators
-			# https://github.com/SublimeTextIssues/Core/issues/819
-			word_separators = view.settings().get("word_separators")
-			view.settings().set("word_separators", "")
-			sublime.set_timeout(lambda: view.settings().set("word_separators", word_separators), 0)
+			# # # Autocompletion issue
+			# # # https://github.com/evandrocoan/AmxxEditor/issues/9
+			# # temporarily masking word_separators
+			# # https://github.com/SublimeTextIssues/Core/issues/819
+			# word_separators = view.settings().get("word_separators")
+			# view.settings().set("word_separators", "")
+			# sublime.set_timeout(lambda: view.settings().set("word_separators", word_separators), 0)
 
 			if view_file_name is None:
 				view_file_name = str( view.buffer_id() )
