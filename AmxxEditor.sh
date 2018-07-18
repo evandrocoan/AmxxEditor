@@ -196,6 +196,22 @@ else
         rm "$PLUGIN_BINARY_FILE_PATH"
     fi
 
+    # Copy the include files to the compiler include files, if they exist.
+    if [ -d $SOURCE_CODE_INCLUDE_FOLDER ]
+    then
+        # Build the compiler include folder path
+        COMPILER_FOLDER_PATH=$(dirname "${AMXX_COMPILER_PATH}")/
+
+        # echo "$(readlink -f "$SOURCE_CODE_FOLDER")"
+        # echo "$(readlink -f "$COMPILER_FOLDER_PATH")"
+
+        # See: http://stackoverflow.com/questions/42105743/how-to-check-if-two-variables-in-a-shell-script-point-to-the-same-folder
+        if [ "$(readlink -f "$SOURCE_CODE_FOLDER")" != "$(readlink -f "$COMPILER_FOLDER_PATH")" ]
+        then
+            cp -r "$SOURCE_CODE_INCLUDE_FOLDER" "$COMPILER_FOLDER_PATH"
+        fi
+    fi
+
     # To call the compiler to compile the plugin to the output folder $PLUGIN_BINARY_FILE_PATH
     printf "\n"
     "$AMXX_COMPILER_PATH" -i"$SOURCE_CODE_INCLUDE_FOLDER/" -o"$PLUGIN_BINARY_FILE_PATH" "$PLUGIN_SOURCE_CODE_FILE_PATH"
@@ -216,22 +232,6 @@ else
             rm "$current_output_folder/$PLUGIN_BASE_FILE_NAME.amxx"
             cp "$PLUGIN_BINARY_FILE_PATH" "$current_output_folder"
         done
-
-        # Copy the include files to the compiler include files, if they exist.
-        if [ -d $SOURCE_CODE_INCLUDE_FOLDER ]
-        then
-            # Build the compiler include folder path
-            COMPILER_FOLDER_PATH=$(dirname "${AMXX_COMPILER_PATH}")/
-
-            # echo "$(readlink -f "$SOURCE_CODE_FOLDER")"
-            # echo "$(readlink -f "$COMPILER_FOLDER_PATH")"
-
-            # See: http://stackoverflow.com/questions/42105743/how-to-check-if-two-variables-in-a-shell-script-point-to-the-same-folder
-            if [ "$(readlink -f "$SOURCE_CODE_FOLDER")" != "$(readlink -f "$COMPILER_FOLDER_PATH")" ]
-            then
-                cp -r "$SOURCE_CODE_INCLUDE_FOLDER" "$COMPILER_FOLDER_PATH"
-            fi
-        fi
     fi
 fi
 
