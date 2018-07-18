@@ -104,7 +104,7 @@ for %%A in ("%COMPILER_INCLUDE_FOLDER_PATH%") do for %%B in ("%SOURCE_CODE_INCLU
 
 :: Copy the include folder
 :: https://stackoverflow.com/questions/3018289/xcopy-file-rename-suppress-does-xxx-specify-a-file-name-message
-IF EXIST "%SOURCE_CODE_INCLUDE_FOLDER%" call echo d | xcopy /S /Y "%SOURCE_CODE_INCLUDE_FOLDER%" "%COMPILER_INCLUDE_FOLDER_PATH%" > nul
+:: IF EXIST "%SOURCE_CODE_INCLUDE_FOLDER%" call echo d | xcopy /S /Y "%SOURCE_CODE_INCLUDE_FOLDER%" "%COMPILER_INCLUDE_FOLDER_PATH%" > nul
 
 :: Closes the `enabledelayedexpansion` scope
 endlocal

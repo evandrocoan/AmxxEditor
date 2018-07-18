@@ -208,7 +208,8 @@ else
         # See: http://stackoverflow.com/questions/42105743/how-to-check-if-two-variables-in-a-shell-script-point-to-the-same-folder
         if [ "$(readlink -f "$SOURCE_CODE_FOLDER")" != "$(readlink -f "$COMPILER_FOLDER_PATH")" ]
         then
-            cp -r "$SOURCE_CODE_INCLUDE_FOLDER" "$COMPILER_FOLDER_PATH"
+            # cp -r "$SOURCE_CODE_INCLUDE_FOLDER" "$COMPILER_FOLDER_PATH"
+            :
         fi
     fi
 
