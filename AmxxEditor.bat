@@ -107,7 +107,10 @@ for %%A in ("%COMPILER_INCLUDE_FOLDER_PATH%") do for %%B in ("%SOURCE_CODE_INCLU
 :: IF EXIST "%SOURCE_CODE_INCLUDE_FOLDER%" call echo d | xcopy /S /Y "%SOURCE_CODE_INCLUDE_FOLDER%" "%COMPILER_INCLUDE_FOLDER_PATH%" > nul
 
 :: Closes the `enabledelayedexpansion` scope
-endlocal
+:: https://stackoverflow.com/questions/15494688/batch-script-make-setlocal-variable-accessed-by-other-batch-files
+endlocal & (
+  set "COMPILER_INCLUDE_FOLDER_PATH=%COMPILER_INCLUDE_FOLDER_PATH%"
+)
 
 
 ::
@@ -119,7 +122,7 @@ endlocal
 IF EXIST "%PLUGIN_BINARY_FILE_PATH%" del "%PLUGIN_BINARY_FILE_PATH%"
 
 :: To call the compiler to compile the plugin to the output folder $PLUGIN_BINARY_FILE_PATH
-"%AMXX_COMPILER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%/" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
+"%AMXX_COMPILER_PATH%" -i"%COMPILER_INCLUDE_FOLDER_PATH%/" -i"%SOURCE_CODE_INCLUDE_FOLDER%/" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
 
 :: If there was a compilation error, there is nothing more to be done.
 IF NOT EXIST "%PLUGIN_BINARY_FILE_PATH%" echo There was an compilation error. Exiting... & goto end
