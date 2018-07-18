@@ -132,14 +132,23 @@ echo.
 echo 1 File(s) copied, to the folder %folders_list[0]%
 
 :: Initial array index to loop into.
-set "currentIndex=1"
+set "currentIndex=0"
 
 :: Loop throw all games to install the new files.
 :SymLoop
+
+:: Update the next 'for/array' index to copy/install.
+set /a "currentIndex+=1"
+
 if defined folders_list[%currentIndex%] (
 
     :: Some how the AMXX compiler could not compiling/copied some times, so let us know when it does not.
     setlocal EnableDelayedExpansion
+
+    IF NOT EXIST "!folders_list[%currentIndex%]!" (
+        echo Error: The destine folder does not exists: "!folders_list[%currentIndex%]!"
+        goto :SymLoop
+    )
 
     :: Try to delete the file only if it exists
     IF EXIST "!folders_list[%currentIndex%]!\%PLUGIN_BASE_FILE_NAME%.amxx" del "!folders_list[%currentIndex%]!\%PLUGIN_BASE_FILE_NAME%.amxx"
@@ -147,9 +156,6 @@ if defined folders_list[%currentIndex%] (
     :: To do the actual copying/installing.
     for /f "delims=" %%a in ( 'xcopy /S /Y "%PLUGIN_BINARY_FILE_PATH%"^
             "!folders_list[%currentIndex%]!"^|find /v "%PLUGIN_BASE_FILE_NAME%"' ) do echo %%a, to the folder !folders_list[%currentIndex%]!
-
-    :: Update the next 'for/array' index to copy/install.
-    set /a "currentIndex+=1"
 
     goto :SymLoop
 )
