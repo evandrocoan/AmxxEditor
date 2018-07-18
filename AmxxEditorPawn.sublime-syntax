@@ -1,7 +1,11 @@
 %YAML 1.2
 ---
 name: AmxxEditorPawn
-file_extensions: [sma, inc]
+
+file_extensions:
+  - inc
+  - sma
+
 scope: source.sma
 contexts:
 
