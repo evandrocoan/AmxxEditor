@@ -111,7 +111,7 @@ set COMPILER_INCLUDE_FOLDER_PATH=%AMXX_COMPILER_FOLDER%include
 IF EXIST "%PLUGIN_BINARY_FILE_PATH%" del "%PLUGIN_BINARY_FILE_PATH%"
 
 :: To call the compiler to compile the plugin to the output folder $PLUGIN_BINARY_FILE_PATH
-:: Comment the following line and uncomment the next line to it, if you want to override your compiler files
+:: Comment the following line and uncomment the next line to it, if you not want to override your compiler files
 "%AMXX_COMPILER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
 :: "%AMXX_COMPILER_PATH%" -i"%COMPILER_INCLUDE_FOLDER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
 

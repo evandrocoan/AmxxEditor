@@ -16,7 +16,7 @@
 #
 
 
-printf "\nCompiling $2... Current time is: $(date)\n"
+printf "\nCompiling $2... "
 
 # Put here the paths to the folders where do you want to install the plugin.
 # You must to provide at least one folder.
@@ -194,17 +194,20 @@ SOURCE_CODE_FOLDER=$4
 SOURCE_CODE_INCLUDE_FOLDER=$SOURCE_CODE_FOLDER/include
 
 # Build the compiler include folder path
-COMPILER_FOLDER_PATH=$(dirname "${AMXX_COMPILER_PATH}")/include
+COMPILER_FOLDER_PATH=$(dirname "${AMXX_COMPILER_PATH}")
+COMPILER_INCLUDE_FOLDER_PATH=$COMPILER_FOLDER_PATH/include
 
 
 
 # Example: $2="my_plugin"
+printf "\n"
 PLUGIN_BASE_FILE_NAME="$2"
 PLUGIN_BINARY_FILE_PATH=${folders_list[0]}/$PLUGIN_BASE_FILE_NAME.amxx
 
 if [[ $PLUGIN_BASE_FILE_NAME == "" ]]
 then
-    printf "\nYou must to save the plugin before to compile it.\n"
+    printf "You must to save the plugin before to compile it.\n"
+
 else
     # Delete the old binary in case some crazy problem on the compiler, or in the system while copy it.
     # So, this way there is not way you are going to use the wrong version of the plugin without knowing it.
@@ -214,8 +217,9 @@ else
     fi
 
     # To call the compiler to compile the plugin to the output folder $PLUGIN_BINARY_FILE_PATH
-    printf "\n"
-    "$AMXX_COMPILER_PATH" -i"$COMPILER_FOLDER_PATH" -i"$SOURCE_CODE_INCLUDE_FOLDER" -o"$PLUGIN_BINARY_FILE_PATH" "$PLUGIN_SOURCE_CODE_FILE_PATH"
+    # Comment the following line and uncomment the next line to it, if you not want to override your compiler files
+    "$AMXX_COMPILER_PATH" -i"$SOURCE_CODE_INCLUDE_FOLDER" -o"$PLUGIN_BINARY_FILE_PATH" "$PLUGIN_SOURCE_CODE_FILE_PATH"
+    # "$AMXX_COMPILER_PATH" -i"$COMPILER_INCLUDE_FOLDER_PATH" -i"$SOURCE_CODE_INCLUDE_FOLDER" -o"$PLUGIN_BINARY_FILE_PATH" "$PLUGIN_SOURCE_CODE_FILE_PATH"
 
     # If there was a compilation error, there is nothing more to be done.
     if [ -f $PLUGIN_BINARY_FILE_PATH ]
