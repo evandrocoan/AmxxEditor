@@ -85,10 +85,10 @@ set PLUGIN_BINARY_FILE_PATH=%folders_list[0]%\%PLUGIN_BASE_FILE_NAME%.amxx
 IF "%PLUGIN_BASE_FILE_NAME%"=="" echo You must to save the plugin before to compile it. & goto end
 
 
+
 ::
-:: Copy the include files to the compiler include files, if they exist.
-::
-setlocal enabledelayedexpansion enableextensions
+:: Compile the AMXX plugin
+:compile_the_plugin
 
 :: See: http://stackoverflow.com/questions/659647/how-to-get-folder-path-from-file-path-with-cmd
 :: set AMXX_COMPILER_PATH=C:\Somewhere\Somewhere\SomeFile.txt
@@ -97,32 +97,12 @@ call :path_from_file_name AMXX_COMPILER_FOLDER !AMXX_COMPILER_PATH!
 :: Build the compiler include folder path
 set COMPILER_INCLUDE_FOLDER_PATH=%AMXX_COMPILER_FOLDER%include
 
-:: Check for cyclic copies and skip copying the include folder.
-:: echo $COMPILER_INCLUDE_FOLDER_PATH: %COMPILER_INCLUDE_FOLDER_PATH%
-:: echo $SOURCE_CODE_INCLUDE_FOLDER:   %SOURCE_CODE_INCLUDE_FOLDER%
-for %%A in ("%COMPILER_INCLUDE_FOLDER_PATH%") do for %%B in ("%SOURCE_CODE_INCLUDE_FOLDER%") do if "%%~fA"=="%%~fB" echo Skipping copy include files... & goto compile_the_plugin
-
-:: Copy the include folder
-:: https://stackoverflow.com/questions/3018289/xcopy-file-rename-suppress-does-xxx-specify-a-file-name-message
-:: IF EXIST "%SOURCE_CODE_INCLUDE_FOLDER%" call echo d | xcopy /S /Y "%SOURCE_CODE_INCLUDE_FOLDER%" "%COMPILER_INCLUDE_FOLDER_PATH%" > nul
-
-:: Closes the `enabledelayedexpansion` scope
-:: https://stackoverflow.com/questions/15494688/batch-script-make-setlocal-variable-accessed-by-other-batch-files
-endlocal & (
-  set "COMPILER_INCLUDE_FOLDER_PATH=%COMPILER_INCLUDE_FOLDER_PATH%"
-)
-
-
-::
-:: Compile the AMXX plugin
-:compile_the_plugin
-
 :: Delete the old binary in case some crazy problem on the compiler, or in the system while copy it.
 :: So, this way there is not way you are going to use the wrong version of the plugin without knowing it.
 IF EXIST "%PLUGIN_BINARY_FILE_PATH%" del "%PLUGIN_BINARY_FILE_PATH%"
 
 :: To call the compiler to compile the plugin to the output folder $PLUGIN_BINARY_FILE_PATH
-"%AMXX_COMPILER_PATH%" -i"%COMPILER_INCLUDE_FOLDER_PATH%/" -i"%SOURCE_CODE_INCLUDE_FOLDER%/" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
+"%AMXX_COMPILER_PATH%" -i"%COMPILER_INCLUDE_FOLDER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
 
 :: If there was a compilation error, there is nothing more to be done.
 IF NOT EXIST "%PLUGIN_BINARY_FILE_PATH%" echo There was an compilation error. Exiting... & goto end
@@ -209,6 +189,4 @@ echo Took %hh%:%mm%:%ss%,%cc% seconds to run this script.
 :: Pause the script for result reading, when it is run without any command line parameters
 echo.
 if "%PLUGIN_SOURCE_CODE_FILE_PATH%"=="" pause
-
-
 
