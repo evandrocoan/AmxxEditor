@@ -1,3 +1,4 @@
+#!/bin/bash
 
 # AMXX Plugin Compiler Script
 #
@@ -16,7 +17,7 @@
 #
 
 
-printf "\nCompiling $2... "
+printf "\\nCompiling %s... " "$2"
 
 # Put here the paths to the folders where do you want to install the plugin.
 # You must to provide at least one folder.
@@ -52,8 +53,8 @@ then
     # Create a flag file to avoid override the initial time and save it.
     printf "%s" "$(date +%s.%N)" > $updateFlagFilePath
 
-    printf "Current time: %s\\n" "$(date)"
     # printf "$1\\n"
+    printf "Current time: %s\\n" "$(date)"
 fi
 
 # Clean the flag file
@@ -96,7 +97,7 @@ showTheElapsedSeconds()
 # https://unix.stackexchange.com/questions/131073/awk-printf-number-in-width-and-round-it-up
 convert_seconds()
 {
-    # printf "$1$2\n"
+    # printf "$1$2\\n"
     printf "%s %s" "$1" "$2" | awk '{printf("%d:%02d:%02d:%02d.%02.0f", ($1/60/60/24), ($1/60/60%24), ($1/60%60), ($1%60), (($2-$1)*100))}'
 }
 
@@ -200,18 +201,18 @@ COMPILER_INCLUDE_FOLDER_PATH=$COMPILER_FOLDER_PATH/include
 
 
 # Example: $2="my_plugin"
-printf "\n"
+printf "\\n"
 PLUGIN_BASE_FILE_NAME="$2"
 PLUGIN_BINARY_FILE_PATH=${folders_list[0]}/$PLUGIN_BASE_FILE_NAME.amxx
 
 if [[ $PLUGIN_BASE_FILE_NAME == "" ]]
 then
-    printf "You must to save the plugin before to compile it.\n"
+    printf "You must to save the plugin before to compile it.\\n"
 
 else
     # Delete the old binary in case some crazy problem on the compiler, or in the system while copy it.
     # So, this way there is not way you are going to use the wrong version of the plugin without knowing it.
-    if [ -f $PLUGIN_BINARY_FILE_PATH ]
+    if [ -f "$PLUGIN_BINARY_FILE_PATH" ]
     then
         rm "$PLUGIN_BINARY_FILE_PATH"
     fi
@@ -222,17 +223,17 @@ else
     # "$AMXX_COMPILER_PATH" -i"$COMPILER_INCLUDE_FOLDER_PATH" -i"$SOURCE_CODE_INCLUDE_FOLDER" -o"$PLUGIN_BINARY_FILE_PATH" "$PLUGIN_SOURCE_CODE_FILE_PATH"
 
     # If there was a compilation error, there is nothing more to be done.
-    if [ -f $PLUGIN_BINARY_FILE_PATH ]
+    if [ -f "$PLUGIN_BINARY_FILE_PATH" ]
     then
-        printf "\nInstalling the plugin to the folder ${folders_list[0]}\n"
+        printf "\\nInstalling the plugin to the folder %s\\n" "${folders_list[0]}"
 
         # Remove the first element, as it was already processed and it is the source file.
-        unset folders_list[0]
+        unset "folders_list[0]"
 
         # Now loop through the above array
         for current_output_folder in "${folders_list[@]}"
         do
-            printf "Installing the plugin to the folder $current_output_folder\n"
+            printf "Installing the plugin to the folder %s\\n" "$current_output_folder"
 
             rm "$current_output_folder/$PLUGIN_BASE_FILE_NAME.amxx"
             cp "$PLUGIN_BINARY_FILE_PATH" "$current_output_folder"
@@ -240,8 +241,8 @@ else
     fi
 fi
 
-FULL_PATH_TO_SCRIPT=$(echo $0 | sed -r "s|\\\|\/|g" | sed -r "s|:||g")
+FULL_PATH_TO_SCRIPT=$(echo "$0" | sed -r 's|\\|\/|g' | sed -r 's|:||g')
 
-printf "\n"
+printf "\\n"
 showTheElapsedSeconds "$FULL_PATH_TO_SCRIPT"
 
