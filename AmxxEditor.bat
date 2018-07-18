@@ -90,9 +90,18 @@ IF "%PLUGIN_BASE_FILE_NAME%"=="" echo You must to save the plugin before to comp
 :: Compile the AMXX plugin
 :compile_the_plugin
 
+:: Build the compiler include folder path
+setlocal enabledelayedexpansion enableextensions
+
 :: See: http://stackoverflow.com/questions/659647/how-to-get-folder-path-from-file-path-with-cmd
 :: set AMXX_COMPILER_PATH=C:\Somewhere\Somewhere\SomeFile.txt
 call :path_from_file_name AMXX_COMPILER_FOLDER !AMXX_COMPILER_PATH!
+
+:: Batch script make setlocal variable accessed by other batch files
+:: https://stackoverflow.com/questions/15494688/batch-script-make-setlocal-variable-accessed-by-other-batch-files
+endlocal & (
+  set "AMXX_COMPILER_FOLDER=%AMXX_COMPILER_FOLDER%"
+)
 
 :: Build the compiler include folder path
 set COMPILER_INCLUDE_FOLDER_PATH=%AMXX_COMPILER_FOLDER%include
@@ -102,10 +111,13 @@ set COMPILER_INCLUDE_FOLDER_PATH=%AMXX_COMPILER_FOLDER%include
 IF EXIST "%PLUGIN_BINARY_FILE_PATH%" del "%PLUGIN_BINARY_FILE_PATH%"
 
 :: To call the compiler to compile the plugin to the output folder $PLUGIN_BINARY_FILE_PATH
-"%AMXX_COMPILER_PATH%" -i"%COMPILER_INCLUDE_FOLDER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
+:: Comment the following line and uncomment the next line to it, if you want to override your compiler files
+"%AMXX_COMPILER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
+:: "%AMXX_COMPILER_PATH%" -i"%COMPILER_INCLUDE_FOLDER_PATH%" -i"%SOURCE_CODE_INCLUDE_FOLDER%" -o"%PLUGIN_BINARY_FILE_PATH%" "%PLUGIN_SOURCE_CODE_FILE_PATH%"
 
 :: If there was a compilation error, there is nothing more to be done.
 IF NOT EXIST "%PLUGIN_BINARY_FILE_PATH%" echo There was an compilation error. Exiting... & goto end
+
 
 
 ::
@@ -149,9 +161,6 @@ if defined folders_list[%currentIndex%] (
 ::
 goto :end
 
-:: Copy the include files to the compiler include files, if they exist.
-setlocal enabledelayedexpansion enableextensions
-
 :: This one must to be on the `enabledelayedexpansion` range
 :path_from_file_name <resultVar> <pathVar>
 (
@@ -159,8 +168,6 @@ setlocal enabledelayedexpansion enableextensions
     exit /b
 )
 
-:: Closes the `enabledelayedexpansion` scope
-endlocal
 
 
 ::
