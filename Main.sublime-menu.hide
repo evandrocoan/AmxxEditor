@@ -1,0 +1,38 @@
+[
+    {
+        "caption": "AmxxEditor",
+        "id": "AmxxEditor",
+        "children":
+        [
+            {
+                "command": "new_amxx_include",
+                "caption": "New Include"
+            },
+            {
+                "command": "new_amxx_plugin",
+                "caption": "New Plug-In"
+            },
+            {
+                "command": "open_file",
+                "args": {"file": "${packages}/User/AmxxEditor/AmxxEditor.sh"},
+                "caption": "Configure Linux/Cygwin Compiler"
+            },
+            {
+                "command": "open_file",
+                "args": {"file": "${packages}/User/AmxxEditor/AmxxEditor.bat"},
+                "caption": "Configure Windows/Bat Compiler"
+            },
+            { "caption": "-" },
+            {
+                "command": "open_file",
+                "args": { "file": "${packages}/User/AmxxEditorConsole.sublime-settings" },
+                "caption": "Edit AmxxEditor Console Settings"
+            },
+            {
+                "command": "open_file",
+                "args": { "file": "${packages}/User/AmxxEditor.sublime-settings" },
+                "caption": "Edit AmxxEditor Autocompletion Settings"
+            },
+        ]
+    },
+]

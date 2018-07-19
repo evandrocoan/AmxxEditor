@@ -67,6 +67,9 @@
                                 "args": { "file": "${packages}/User/AmxxEditor.sublime-settings" },
                                 "caption": "Edit AmxxEditor Autocompletion Settings"
                             },
+                            { "caption": "-" },
+                            { "caption": "Install AmxxEditor Menu", "command": "amxx_editor_install_main_amxx_editor_menu" },
+                            { "caption": "Uninstall AmxxEditor Menu", "command": "amxx_editor_uninstall_main_amxx_editor_menu" },
                         ]
                     },
                 ]

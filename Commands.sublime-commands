@@ -1,37 +1,44 @@
 
 [
     {
+        "caption": "AmxxEditor: New Include",
         "command": "new_amxx_include",
-        "caption": "AmxxEditor: New Include"
     },
     {
+        "caption": "AmxxEditor: New Plug-In",
         "command": "new_amxx_plugin",
-        "caption": "AmxxEditor: New Plug-In"
     },
     {
+        "caption": "AmxxEditor: Configure Linux/Cygwin Compiler",
         "command": "open_file",
         "args": { "file": "${packages}/User/AmxxEditor/AmxxEditor.sh" },
-        "caption": "AmxxEditor: Configure Linux/Cygwin Compiler"
     },
     {
+        "caption": "AmxxEditor: Configure Windows/Bat Compiler",
         "command": "open_file",
         "args": { "file": "${packages}/User/AmxxEditor/AmxxEditor.bat" },
-        "caption": "AmxxEditor: Configure Windows/Bat Compiler"
     },
-    { "caption": "-" },
     {
+        "caption": "AmxxEditor: Console Settings",
         "command": "open_file",
         "args": { "file": "${packages}/User/AmxxEditorConsole.sublime-settings" },
-        "caption": "AmxxEditor: Console Settings"
     },
     {
+        "caption": "AmxxEditor: Autocompletion Settings",
         "command": "open_file",
         "args": { "file": "${packages}/User/AmxxEditor.sublime-settings" },
-        "caption": "AmxxEditor: Autocompletion Settings"
     },
     {
+        "caption": "AmxxEditor: Install Amxmodx Menu",
+        "command": "amxx_editor_install_main_amxx_editor_menu",
+    },
+    {
+        "caption": "AmxxEditor: Uninstall Amxmodx Menu",
+        "command": "amxx_editor_uninstall_main_amxx_editor_menu",
+    },
+    {
+        "caption": "AmxxEditor: About AMXX-Editor",
         "command": "about_amxx_editor",
-        "caption": "AmxxEditor: About AMXX-Editor"
     },
 ]
 
