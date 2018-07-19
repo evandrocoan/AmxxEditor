@@ -42,7 +42,9 @@ from debug_tools import getLogger
 log = getLogger( 1, __name__ )
 
 
+AMXX_CHANNEL = "AmxxChannel"
 MENU_FILE_NAME = "Main.sublime-menu"
+
 CURRENT_PACKAGE_NAME = __package__
 PACKAGE_ROOT_DIRECTORY = os.path.dirname( os.path.realpath( __file__ ) )
 
@@ -50,18 +52,25 @@ PACKAGE_ROOT_DIRECTORY = os.path.dirname( os.path.realpath( __file__ ) )
 def plugin_loaded():
     global USER_MENU_FILES_DIRECTORY
     USER_MENU_FILES_DIRECTORY = os.path.join( sublime.packages_path(), "User", CURRENT_PACKAGE_NAME )
+    install_amxx_editor_menu_on_first_run()
 
+
+def install_amxx_editor_menu_on_first_run():
     # https://packagecontrol.io/docs/events
     from package_control import events
-    from package_control.package_manager import PackageManager
 
     if events.install( CURRENT_PACKAGE_NAME ):
         log( 1, 'Installed %s!', events.install( CURRENT_PACKAGE_NAME ) )
+        from package_control.package_manager import PackageManager
+
         package_manager = PackageManager()
         all_packages = set( package_manager.list_packages() )
 
-        if "AmxxChannel" in all_packages:
-            add_main_menu()
+        if AMXX_CHANNEL in all_packages:
+            amxx_channel_path = os.path.join( PACKAGE_ROOT_DIRECTORY, AMXX_CHANNEL )
+
+            if not os.path.exists( amxx_channel_path ):
+                add_main_menu()
 
 
 class AmxxEditorInstallMainAmxxEditorMenu( sublime_plugin.ApplicationCommand ):
