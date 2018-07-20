@@ -29,16 +29,16 @@ echo.
 
 :: Put here the paths to the folders where do you want to install the plugin.
 :: You must to provide at least one folder.
-set folders_list[0]=F:\SteamCMD\steamapps\common\Half-Life\cstrike\addons\amxmodx\plugins
-set folders_list[1]=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\amxmodx\plugins
-set folders_list[2]=F:\SteamLibrary\steamapps\common\Sven Co-op Dedicated Server\svencoop\addons\amxmodx\plugins
+set "folders_list[0]=F:\SteamCMD\steamapps\common\Half-Life\cstrike\addons\amxmodx\plugins"
+set "folders_list[1]=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\amxmodx\plugins"
+set "folders_list[2]=F:\SteamLibrary\steamapps\common\Sven Co-op Dedicated Server\svencoop\addons\amxmodx\plugins"
 
 :: Where is your compiler?
 ::
 :: Example:
 :: F:\SteamCMD\steamapps\common\Half-Life\czero\addons\amxmodx\scripting\amxxpc.exe
 ::
-set AMXX_COMPILER_PATH=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\amxmodx\scripting\amxxpc.exe
+set "AMXX_COMPILER_PATH=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\amxmodx\scripting\amxxpc.exe"
 
 
 
@@ -61,27 +61,29 @@ for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
 
 ::
 :: Setup the batch variables
+:: Example: $1=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\my_plugin.sma
 ::
 :: $1 is the first shell argument and $2 is the second shell argument passed by AmxxEditor.sublime-build
 :: Usually they should be the plugin's file full path and the plugin's file name without extension.
 ::
-:: Example: $1=F:\SteamCMD\steamapps\common\Half-Life\czero\addons\my_plugin.sma
-set PLUGIN_SOURCE_CODE_FILE_PATH=%1
-
 :: Removing double quotes from variables in batch file creates problems with CMD environment
 :: https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
-set PLUGIN_SOURCE_CODE_FILE_PATH=%PLUGIN_SOURCE_CODE_FILE_PATH:"=%
+set "PLUGIN_SOURCE_CODE_FILE_PATH=%1"
+set "PLUGIN_SOURCE_CODE_FILE_PATH=%PLUGIN_SOURCE_CODE_FILE_PATH:"=%"
 
 :: $4 is the path of the folder where the plugin source code is.
 :: Example F:\SteamCMD\steamapps\common\Half-Life\czero\addons\
-set SOURCE_CODE_INCLUDE_FOLDER=%4\include
-set SOURCE_CODE_INCLUDE_FOLDER=%SOURCE_CODE_INCLUDE_FOLDER:"=%
+set "SOURCE_CODE_FOLDER=%4"
+set "SOURCE_CODE_FOLDER=%SOURCE_CODE_FOLDER:"=%"
+set "SOURCE_CODE_INCLUDE_FOLDER=%SOURCE_CODE_FOLDER%\include"
 
 :: Example: $2="my_plugin"
-set PLUGIN_BASE_FILE_NAME=%2
-set PLUGIN_BASE_FILE_NAME=%PLUGIN_BASE_FILE_NAME:"=%
-set PLUGIN_BINARY_FILE_PATH=%folders_list[0]%\%PLUGIN_BASE_FILE_NAME%.amxx
+set "PLUGIN_BASE_FILE_NAME=%2"
+set "PLUGIN_BASE_FILE_NAME=%PLUGIN_BASE_FILE_NAME:"=%"
+set "PLUGIN_BINARY_FILE_PATH=%folders_list[0]%\%PLUGIN_BASE_FILE_NAME%.amxx"
 
+:: Set a path variable with spaces in the path in a Windows .cmd file or batch file
+:: https://stackoverflow.com/questions/1851012/set-a-path-variable-with-spaces-in-the-path-in-a-windows-cmd-file-or-batch-file
 IF "%PLUGIN_BASE_FILE_NAME%"=="" echo You must to save the plugin before to compile it. & goto end
 
 
@@ -104,7 +106,7 @@ endlocal & (
 )
 
 :: Build the compiler include folder path
-set COMPILER_INCLUDE_FOLDER_PATH=%AMXX_COMPILER_FOLDER%include
+set "COMPILER_INCLUDE_FOLDER_PATH=%AMXX_COMPILER_FOLDER%include"
 
 :: Delete the old binary in case some crazy problem on the compiler, or in the system while copy it.
 :: So, this way there is not way you are going to use the wrong version of the plugin without knowing it.
@@ -124,7 +126,7 @@ IF NOT EXIST "%PLUGIN_BINARY_FILE_PATH%" echo There was an compilation error. Ex
 :: Copy the compiled plugin to the game folder(s)
 ::
 echo.
-echo 1 File(s) copied, to the folder %folders_list[0]%
+echo 1 File(s) copied, to the folder %PLUGIN_BINARY_FILE_PATH%
 
 :: Initial array index to loop into.
 set "currentIndex=0"
@@ -141,7 +143,7 @@ if defined folders_list[%currentIndex%] (
     setlocal EnableDelayedExpansion
 
     IF NOT EXIST "!folders_list[%currentIndex%]!" (
-        echo Error: The destine folder does not exists: "!folders_list[%currentIndex%]!"
+        echo Error: The destine folder does not exists: !folders_list[%currentIndex%]!
         goto :SymLoop
     )
 
