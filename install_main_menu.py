@@ -4,8 +4,8 @@
 #
 # Licensing
 #
-# Channel Manager Utilities, functions to be used by the common tasks
-# Copyright (C) 2017 Evandro Coan <https://github.com/evandrocoan>
+# Install AmxxEditor Main Menus, install and uninstall package menus
+# Copyright (C) 2018 Evandro Coan <https://github.com/evandrocoan>
 #
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
