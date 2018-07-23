@@ -240,7 +240,7 @@ contexts:
       scope: keyword.brackets.pawn
 
   pawn_keywords:
-    - match: \s*(case (.*):)\s+
+    - match: \s*(case\b([^:\n]*):)\s+
       captures:
         1: keyword.control.pawn
         2: storage.type.vars.pawn
