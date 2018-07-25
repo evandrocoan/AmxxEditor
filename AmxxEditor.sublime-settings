@@ -29,10 +29,10 @@
 
     // The new file syntax when using the menu `AmxxEditor -> New Plug-in`.
     // Possible values are:
+    // "Packages/AmxxPawn/AmxxPawn.sublime-syntax",
     // "Packages/AmxxEditor/AmxxEditorPawn.sublime-syntax",
-    // "Packages/AmxxEditor/AmxxEditor.sublime-syntax",
     "amxx_file_syntax": "Packages/AmxxEditor/AmxxEditorPawn.sublime-syntax",
 
-    // ( 0.5 ~ 5.0 ) Delay before regenerating auto-completion snippets
+    // ( 0.5 ~ 5.0 ~ 60.0 ) Delay before regenerating auto-completion snippets
     "live_refresh_delay": 60.0
 }

@@ -556,43 +556,67 @@ def is_invalid_settings(settings):
 		if result:
 			return result
 
-	path_settings = \
-	[
-		( "include_directory", "F:\\SteamCMD\\steamapps\\common\\Half-Life\\czero\\addons\\amxmodx\\scripting\\include", "" ),
-		( "amxx_file_syntax", g_new_file_syntax, os.path.dirname( sublime.packages_path() ) )
-	]
+	path_prefix = ""
+	setting_name = "include_directory"
+	default_value = "F:\\SteamCMD\\steamapps\\common\\Half-Life\\czero\\addons\\amxmodx\\scripting\\include"
 
-	for setting_name, default_value, path_prefix in path_settings:
-		result = path_settings_checker( settings, setting_name, default_value, path_prefix )
+	checker = lambda file_path: os.path.exists( file_path )
+	result = path_settings_checker( settings, setting_name, default_value, path_prefix, checker )
 
-		if result:
-			return result
+	if result:
+		return result
+
+	path_prefix = os.path.dirname( sublime.packages_path() )
+	setting_name = "amxx_file_syntax"
+	default_value = g_new_file_syntax
+
+	checker = lambda file_path: os.path.exists( file_path ) or is_inside_sublime_package( file_path )
+	result = path_settings_checker( settings, setting_name, default_value, path_prefix, checker )
+
+	if result:
+		return result
 
 
-def general_settings_checker(settings, settings_name, general_error):
-	setting_value = settings.get( settings_name )
+def general_settings_checker(settings, setting_name, general_error):
+	setting_value = settings.get( setting_name )
 
 	if setting_value is None:
-		return general_error + "Missing `%s` value." % settings_name
+		return general_error + "Missing `%s` value." % setting_name
 
 
-def path_settings_checker(settings, settings_name, default_value, prefix_path=""):
-	setting_value = settings.get( settings_name )
+def path_settings_checker(settings, setting_name, default_value, prefix_path, checker):
+	setting_value = settings.get( setting_name )
 
 	if setting_value != default_value:
-		full_path = os.path.join( prefix_path, setting_value )
+		full_path = os.path.normpath( os.path.join( prefix_path, setting_value ) )
 
-		if not os.path.exists( full_path ):
+		if not checker( full_path ):
 			lines = \
 			[
-				"The setting `%s` is not configured correctly. The following path does not exists:\n\n" % settings_name,
+				"The setting `%s` is not configured correctly. The following path does not exists:\n\n" % setting_name,
 				"%s (%s)" % (setting_value, full_path),
 				"\n\nPlease, go to the following menu and fix the setting:\n\n"
 				"`AmxxEditor -> Configure AMXX-Autocompletion Settings`\n\n",
 				"`Preferences -> Packages Settings -> AmxxEditor -> Configure AMXX-Autocompletion Settings`",
 			]
 
-			return "".join( lines )
+			text = "".join( lines )
+			print( "\n" + text.replace( "\n\n", "\n" ) )
+			return text
+
+
+def is_inside_sublime_package(file_path):
+
+	try:
+		packages_start = file_path.find( "Packages" )
+		packages_relative_path = file_path[packages_start:].replace( "\\", "/" )
+
+		print( "is_inside_sublime_package, packages_relative_path: " + str( packages_relative_path ) )
+		sublime.load_binary_resource( packages_relative_path )
+		return True
+
+	except IOError:
+		return False
 
 
 def fix_path(settings, key) :
