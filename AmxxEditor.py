@@ -611,7 +611,7 @@ def is_inside_sublime_package(file_path):
 		packages_start = file_path.find( "Packages" )
 		packages_relative_path = file_path[packages_start:].replace( "\\", "/" )
 
-		print( "is_inside_sublime_package, packages_relative_path: " + str( packages_relative_path ) )
+		# print_debug( 1, "is_inside_sublime_package, packages_relative_path: " + str( packages_relative_path ) )
 		sublime.load_binary_resource( packages_relative_path )
 		return True
 
