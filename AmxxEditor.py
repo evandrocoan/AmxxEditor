@@ -549,19 +549,19 @@ def on_settings_modified():
     g_inteltip_style = g_inteltip_style.replace("\r", "") # fix win/linux newlines
 
     # cache setting
-    global g_enable_buildversion, g_debug_level, g_delay_time, g_include_dir, g_add_paremeters
+    global g_enable_buildversion, g_delay_time, g_include_dir, g_add_paremeters
 
     g_enable_inteltip       = settings.get('enable_inteltip', True)
     g_enable_buildversion   = settings.get('enable_buildversion', False)
     g_word_autocomplete     = settings.get('word_autocomplete', False)
     g_function_autocomplete = settings.get('function_autocomplete', False)
     g_new_file_syntax       = settings.get('amxx_file_syntax', g_new_file_syntax)
-    g_debug_level           = settings.get('debug_level', 0)
+    log.debug_level         = settings.get('debug_level', 1)
     g_delay_time            = settings.get('live_refresh_delay', 1.0)
     g_include_dir           = settings.get('include_directory')
     g_add_paremeters        = settings.get('add_function_parameters', False)
 
-    log(4, "( on_settings_modified ) g_debug_level: %d" % g_debug_level)
+    log(4, "( on_settings_modified ) debug_level: %d" % debug_level)
     log(4, "( on_settings_modified ) g_include_dir: " + g_include_dir)
     log(4, "( on_settings_modified ) g_add_paremeters: " + str( g_add_paremeters ))
 
