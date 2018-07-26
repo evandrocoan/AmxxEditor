@@ -566,7 +566,7 @@ def on_settings_modified():
     if isinstance( include_directory, list ):
 
         for path in include_directory:
-            g_include_dir.extend( os.path.realpath( path ) )
+            g_include_dir.add( os.path.realpath( path ) )
 
     else:
         g_include_dir.add( os.path.realpath( include_directory ) )
