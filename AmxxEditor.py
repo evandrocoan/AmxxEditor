@@ -65,16 +65,14 @@ pawnParse = PawnParse()
 
 
 def plugin_unloaded():
-#{
 	global g_is_package_loading
 	g_is_package_loading=True
 
 	settings = sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME)
 	settings.clear_on_change(CURRENT_PACKAGE_NAME)
-#}
+
 
 def plugin_loaded():
-#{
 	settings = sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME)
 
 	install_build_systens("AmxxEditor.sh")
@@ -91,35 +89,31 @@ def plugin_loaded():
 
 	on_settings_modified();
 	settings.add_on_change(CURRENT_PACKAGE_NAME, on_settings_modified)
-#}
+
 
 def unlock_is_package_loading():
-#{
 	global g_is_package_loading
 	g_is_package_loading = False
-#}
+
 
 def install_build_systens(target_file_name):
-#{
 	target_folder     = CURRENT_PACKAGE_NAME
 	target_file       = os.path.join( sublime.packages_path(), "User", target_folder, target_file_name )
 	input_file_string = sublime.load_resource( "Packages/%s/%s" % ( CURRENT_PACKAGE_NAME, target_file_name ) )
 
 	target_directory = os.path.join( sublime.packages_path(), "User", target_folder )
 	attempt_to_install_file( target_directory, target_file, input_file_string )
-#}
+
 
 def install_setting_file( target_file_name ):
-#{
 	target_file       = os.path.join( sublime.packages_path(), "User", target_file_name )
 	input_file_string = sublime.load_resource( "Packages/%s/%s" % ( CURRENT_PACKAGE_NAME, target_file_name ) )
 
 	target_directory = os.path.join( sublime.packages_path(), "User" )
 	attempt_to_install_file( target_directory, target_file, input_file_string )
-#}
+
 
 def attempt_to_install_file( target_directory, target_file, input_file_string ):
-#{
 	if not os.path.exists( target_directory ):
 		os.makedirs( target_directory )
 
@@ -132,16 +126,15 @@ def attempt_to_install_file( target_directory, target_file, input_file_string ):
 		text_file = open( target_file, "wb" )
 		text_file.write( bytes(input_file_string, 'UTF-8') )
 		text_file.close()
-#}
+
 
 def unload_handler() :
-#{
 	file_observer.stop()
 	process_thread.stop()
 
 	processingSetQueue.put(("", ""))
 	sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME).clear_on_change(CURRENT_PACKAGE_NAME)
-#}
+
 
 class NewAmxxIncludeCommand(sublime_plugin.WindowCommand):
 	def run(self):
@@ -154,7 +147,6 @@ class NewAmxxPluginCommand(sublime_plugin.WindowCommand):
 
 
 def new_file(file_type):
-#{
 	view = sublime.active_window().new_file()
 	view.set_name("untitled."+file_type)
 
@@ -163,16 +155,13 @@ def new_file(file_type):
 
 	view.run_command("insert_snippet", {"contents": plugin_template})
 	sublime.set_timeout_async( lambda: set_new_file_syntax( view ), 0 )
-#}
 
 def set_new_file_syntax( view ):
 	view.set_syntax_file(g_new_file_syntax)
 
 
 class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
-#{
 	def run(self):
-	#{
 		about = "Sublime AmxxEditor v"+ EDITOR_VERSION +" by Destro\n\n\n"
 
 		about += "CREDITs:\n"
@@ -188,8 +177,7 @@ class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
 		about += "\nhttps://amxmodx-es.com/showthread.php?tid=12316\n"
 
 		sublime.message_dialog(about)
-	#}
-#}
+
 
 class AmxxBuildVerCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
@@ -528,7 +516,6 @@ def is_amxmodx_file(view) :
 
 
 def on_settings_modified():
-#{
 	log(4, "on_settings_modified" )
 	global g_enable_inteltip
 	global g_new_file_syntax
@@ -539,13 +526,11 @@ def on_settings_modified():
 	invalid  = is_invalid_settings(settings)
 
 	if invalid:
-	#{
 		if not g_is_package_loading:
 			sublime.message_dialog("AmxxEditor:\n\n" + invalid)
 
 		g_enable_inteltip = 0
 		return
-	#}
 
 	# check package path
 	packages_path = os.path.join( sublime.packages_path(), CURRENT_PACKAGE_NAME )
@@ -582,7 +567,7 @@ def on_settings_modified():
 
 	file_observer.unschedule_all()
 	file_observer.schedule( file_event_handler, g_include_dir, True )
-#}
+
 
 def is_invalid_settings(settings):
 	general_error = "You are not set correctly settings for AmxxEditor.\n\n"
@@ -658,7 +643,6 @@ def is_inside_sublime_package(file_path):
 
 
 def fix_path(settings, key) :
-#{
 	org_path = settings.get(key)
 
 	if org_path is "${file_path}" :
@@ -669,7 +653,7 @@ def fix_path(settings, key) :
 		path += '/'
 
 	settings.set(key, path)
-#}
+
 
 def sort_nicely( words_set ):
 	"""
@@ -680,8 +664,10 @@ def sort_nicely( words_set ):
 
 	return sorted( words_set, key = alphanum_key )
 
+
 def add_to_queue_forward(view) :
 	sublime.set_timeout_async( lambda: add_to_queue( view ), float( g_delay_time ) * 1000.0 )
+
 
 def add_to_queue(view) :
 	"""
@@ -704,10 +690,12 @@ def add_to_queue(view) :
 			processingSetQueue_set.add( view_file_name )
 			processingSetQueue.put( ( view_file_name, view.substr( sublime.Region( 0, view.size() ) ) ) )
 
+
 def add_include_to_queue(file_name) :
 	if file_name not in processingSetQueue_set:
 		processingSetQueue_set.add( file_name )
 		processingSetQueue.put((file_name, None))
+
 
 class IncludeFileEventHandler(watchdog.events.FileSystemEventHandler) :
 	def __init__(self) :
@@ -722,9 +710,11 @@ class IncludeFileEventHandler(watchdog.events.FileSystemEventHandler) :
 	def on_deleted(self, event) :
 		sublime.set_timeout(lambda: on_deleted_main_thread(event.src_path), 0)
 
+
 def on_modified_main_thread(file_path) :
 	if not is_active(file_path) :
 		add_include_to_queue(file_path)
+
 
 def on_deleted_main_thread(file_path) :
 	if is_active(file_path) :
@@ -736,8 +726,10 @@ def on_deleted_main_thread(file_path) :
 
 	node.remove_all_children_and_funcs()
 
+
 def is_active(file_name) :
 	return sublime.active_window().active_view().file_name() == file_name
+
 
 class ProcessQueueThread(watchdog.utils.DaemonThread) :
 	def run(self) :
@@ -832,6 +824,7 @@ def get_file_name(view_file_name, base_file_name) :
 
 	return (file_name, os.path.exists(file_name))
 
+
 def get_or_add_node(file_name) :
 	"""
 		Here if `file_name` is a buffer id as a string, I just check if the buffer exists.
@@ -853,9 +846,9 @@ def get_or_add_node(file_name) :
 
 	return (node, False)
 
+
 # ============= NEW CODE ------------------------------------------------------------------------------------------------------------
 class Node :
-#{
 	def __init__(self, file_name) :
 		self.file_name = file_name
 
@@ -892,14 +885,13 @@ class Node :
 		self.funcs.clear()
 		self.func_words.clear()
 
+
 class TextReader:
-#{
 	def __init__(self, text):
 		self.text = text.splitlines()
 		self.position = -1
 
 	def readline(self) :
-	#{
 		self.position += 1
 
 		if self.position < len(self.text) :
@@ -910,11 +902,9 @@ class TextReader:
 				return retval
 		else :
 			return ''
-	#}
-#}
+
 
 class PawnParse :
-#{
 	def __init__(self) :
 		self.node = None
 		self.isTheCurrentFile = False
@@ -955,19 +945,15 @@ class PawnParse :
 		self.start_parse()
 
 		if self.constants_count != len(g_constants_list) :
-		#{
 			if self.save_const_timer :
 				self.save_const_timer.cancel()
 
 			self.save_const_timer = Timer(4.0, self.save_constants)
 			self.save_const_timer.start()
-		#}
 
 		log(8, "(analyzer) CODE PARSE End [%s]" % node.file_name)
-	#}
 
 	def save_constants(self) :
-	#{
 		self.save_const_timer = None
 		self.constants_count  = len(g_constants_list)
 		windows               = sublime.windows()
@@ -1001,10 +987,8 @@ class PawnParse :
 		f.close()
 
 		log(8, "(analyzer) call save_constants()")
-	#}
 
 	def read_line(self) :
-	#{
 		if self.restore_buffer :
 			line = self.restore_buffer
 			self.restore_buffer = None
@@ -1015,10 +999,8 @@ class PawnParse :
 			return line
 		else :
 			return None
-	#}
 
 	def read_string(self, buffer) :
-	#{
 		buffer = buffer.replace('\t', ' ').strip()
 		while '  ' in buffer :
 			buffer = buffer.replace('  ', ' ')
@@ -1052,10 +1034,8 @@ class PawnParse :
 
 		self.brace_level +=  result.count('{') - result.count('}')
 		return result
-	#}
 
 	def skip_function_block(self, buffer) :
-	#{
 		inChar    = False
 		inString  = False
 		num_brace = 0
@@ -1067,7 +1047,6 @@ class PawnParse :
 			buffer = self.read_line()
 
 		while buffer is not None :
-		#{
 			# log( 32, "skip_function_block:      " + buffer )
 
 			i               = 0
@@ -1076,7 +1055,6 @@ class PawnParse :
 			penultimateChar = ''
 
 			for c in buffer :
-			#{
 				i += 1
 
 				if not inString and not inChar and lastChar == '*' and c == '/' :
@@ -1143,7 +1121,6 @@ class PawnParse :
 				# we update the `num_brace` with the correct brace level.
 				#
 				if not inString and not inChar :
-				#{
 					# Flags when we enter and leave the `#if ... #else ... #endif` blocks
 					if penultimateChar == '#':
 
@@ -1208,11 +1185,9 @@ class PawnParse :
 
 							else:
 								self.else_defined_brace_level -= 1
-				#}
 
 				penultimateChar = lastChar
 				lastChar        = c
-			#}
 
 			# log( 32, "num_brace:                %d" % num_brace )
 			# log( 32, "if_define_brace_level:    %d" % self.if_define_brace_level )
@@ -1227,28 +1202,21 @@ class PawnParse :
 				return
 
 			buffer = self.read_line()
-		#}
-	#}
 
 	def is_valid_name(self, name) :
-	#{
 		if not name or not name[0].isalpha() and name[0] != '_' :
 			return False
 
 		return re.match('^[\w_]+$', name) is not None
-	#}
 
 	def add_constant(self, name) :
-	#{
 		fixname = re.search('(\\w*)', name)
 
 		if fixname :
 			name = fixname.group(1)
 			g_constants_list.add(name)
-	#}
 
 	def add_enum(self, buffer) :
-	#{
 		buffer = buffer.strip()
 		if buffer == '' :
 			return
@@ -1258,20 +1226,16 @@ class PawnParse :
 
 		self.add_general_autocomplete(buffer, 'enum', split[0])
 		log(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
-	#}
 
 	def add_general_autocomplete(self, name, info, autocomplete) :
-	#{
 		self.node.func_words.append( name )
 
 		if self.node.isFromBufferOnly or self.isTheCurrentFile:
 			self.node.funcs.append( ["{}\t {}".format( name, info ), autocomplete] )
 		else:
 			self.node.funcs.append( ["{} \t{} - {}".format( name, self.file_name, info ), autocomplete] )
-	#}
 
 	def add_function_autocomplete(self, name, info, autocomplete, param_count) :
-	#{
 		show_name = name + "(" + str( param_count ) + ")"
 		self.node.func_words.append( name )
 
@@ -1281,7 +1245,6 @@ class PawnParse :
 			self.node.funcs.append( ["{}\t {}".format( show_name, info ), autocomplete] )
 		else:
 			self.node.funcs.append( ["{} \t{} - {}".format( show_name, self.file_name, info ), autocomplete] )
-	#}
 
 	def add_word_autocomplete(self, name) :
 		"""
@@ -1299,9 +1262,7 @@ class PawnParse :
 		self.node.func_words.append( name )
 
 	def start_parse(self) :
-	#{
 		while True :
-		#{
 			buffer = self.read_line()
 			# log( 1, str( buffer ) )
 
@@ -1346,15 +1307,11 @@ class PawnParse :
 
 			if self.found_enum :
 				self.parse_enum(buffer)
-		#}
-	#}
 
 	def parse_define(self, buffer) :
-	#{
 		define = re.search('#define[\\s]+([^\\s]+)[\\s]+(.+)', buffer)
 
 		if define :
-		#{
 			buffer = ''
 			name   = define.group(1)
 			value  = define.group(2).strip()
@@ -1385,11 +1342,8 @@ class PawnParse :
 
 			self.add_constant( name )
 			log(8, "(analyzer) parse_define add: [%s]" % name)
-		#}
-	#}
 
 	def parse_const(self, buffer) :
-	#{
 		buffer = buffer[6:]
 
 		split 	= buffer.split('=', 1)
@@ -1401,19 +1355,15 @@ class PawnParse :
 
 		newline = value.find(';')
 		if (newline != -1) :
-		#{
 			self.restore_buffer = value[newline+1:].strip()
 			value = value[0:newline]
-		#}
 
 		self.add_constant(name)
 		self.add_general_autocomplete(name, 'const: ' + value, name)
 
 		log(8, "(analyzer) parse_const add: [%s]" % name)
-	#}
 
 	def parse_variable(self, buffer) :
-	#{
 		if buffer.startswith('new const ') :
 			buffer = buffer[10:]
 		else :
@@ -1432,23 +1382,18 @@ class PawnParse :
 		inString = False
 
 		while multiLines :
-		#{
 			multiLines = False
 
 			for c in buffer :
-			#{
 				i += 1
 
 				if (c == '"') :
-				#{
 					if (inString and lastChar != '^') :
 						inString = False
 					else :
 						inString = True
-				#}
 
 				if (inString == False) :
-				#{
 					if (c == '{') :
 						num_brace += 1
 						inBraces = True
@@ -1456,19 +1401,15 @@ class PawnParse :
 						num_brace -= 1
 						if (num_brace == 0) :
 							inBraces = False
-				#}
 
 				if skipSpaces :
-				#{
 					if c.isspace() :
 						continue
 					else :
 						skipSpaces = False
 						parseName = True
-				#}
 
 				if parseName :
-				#{
 					if (c == ':') :
 						varName = ''
 					elif (c == ' ' or c == '=' or c == ';' or c == ',') :
@@ -1485,41 +1426,30 @@ class PawnParse :
 						inBrackets = True
 					elif (inBrackets == False) :
 						varName += c
-				#}
 
 				if (inString == False and inBrackets == False and inBraces == False) :
-				#{
 					if not parseName and c == ';' :
 						self.restore_buffer = buffer[i:].strip()
 						return
 
 					if (c == ',') :
 						skipSpaces = True
-				#}
 
 				lastChar = c
-			#}
 
 			if (c != ',') :
-			#{
 				varName = varName.strip()
 				if varName != '' :
 					self.add_word_autocomplete( varName )
 					log(8, "(analyzer) parse_variable add: [%s]" % varName)
-			#}
 			else :
-			#{
 				multiLines = True
 				buffer = ' '
 
 				while buffer is not None and buffer.isspace() :
 					buffer = self.read_line()
-			#}
-		#}
-	#}
 
 	def parse_enum(self, buffer) :
-	#{
 		pos = buffer.find('}')
 		if pos != -1 :
 			buffer = buffer[0:pos]
@@ -1530,12 +1460,10 @@ class PawnParse :
 
 		ignore = False
 		if not self.found_enum :
-		#{
 			pos = self.enum_contents.find('{')
 			self.enum_contents = self.enum_contents[pos + 1:]
 
 			for c in self.enum_contents :
-			#{
 				if c == '=' or c == '#' :
 					ignore = True
 				elif c == '\n':
@@ -1552,36 +1480,28 @@ class PawnParse :
 
 				if not ignore :
 					buffer += c
-			#}
 
 			self.add_enum(buffer)
 			buffer = ''
-		#}
-	#}
 
 	def parse_function(self, buffer, type) :
-	#{
 		multi_line = False
 		temp = ''
 		full_func_str = None
 		open_paren_found = False
 
 		while buffer is not None :
-		#{
 
 			buffer = buffer.strip()
 
 			if not open_paren_found :
-			#{
 				parenpos = buffer.find('(')
 
 				if parenpos == -1 :
 					return
 
 				open_paren_found = True
-			#}
 			if open_paren_found :
-			#{
 				pos = buffer.find(')')
 
 				if pos != -1 :
@@ -1595,7 +1515,6 @@ class PawnParse :
 
 				multi_line = True
 				temp = '%s%s' % (temp, buffer)
-			#}
 
 			buffer = self.read_line()
 
@@ -1603,10 +1522,8 @@ class PawnParse :
 				return
 
 			buffer = self.read_string(buffer)
-		#}
 
 		if full_func_str is not None :
-		#{
 			error = self.parse_function_params(full_func_str, type)
 
 			if not error and type <= 2 :
@@ -1616,11 +1533,8 @@ class PawnParse :
 					self.is_to_skip_next_line = True
 
 			#print("skip_brace: error:[%d] type:[%d] found:[%d] skip:[%d] func:[%s]" % (error, type, self.is_to_skip_brace, self.is_to_skip_next_line, full_func_str))
-		#}
-	#}
 
 	def parse_function_params(self, func, type) :
-	#{
 		if type == 0 :
 			remaining = func
 		else :
@@ -1681,25 +1595,19 @@ class PawnParse :
 
 		log(8, "(analyzer) parse_params add: [%s]" % func)
 		return 0
-	#}
 
-#}
 
 def process_buffer(text, node) :
-#{
 	if g_function_autocomplete:
 		text_reader = TextReader(text)
 		pawnParse.start(text_reader, node, True)
-#}
+
 
 def process_include_file(node) :
-#{
 	with open(node.file_name) as file :
 		pawnParse.start(file, node)
-#}
+
 
 def simple_escape(html) :
-#{
 	return html.replace('&', '&amp;')
-#}
 
