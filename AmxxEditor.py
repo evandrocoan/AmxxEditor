@@ -47,14 +47,14 @@ g_inteltip_style = ""
 g_enable_inteltip = False
 g_enable_buildversion = False
 g_delay_time = 1.0
-g_include_dir = "."
+g_include_dir = set()
 g_add_paremeters = False
 g_new_file_syntax = "Packages/%s/%sPawn.sublime-syntax" % (CURRENT_PACKAGE_NAME, CURRENT_PACKAGE_NAME)
 g_word_autocomplete = False
 g_function_autocomplete = False
 
 processingSetQueue = OrderedSetQueue()
-processingSetQueue_set = set()
+processingSetQueueSet = set()
 nodes = dict()
 file_observer = watchdog.observers.Observer()
 process_thread = ProcessQueueThread()
@@ -549,7 +549,7 @@ def on_settings_modified():
     g_inteltip_style = g_inteltip_style.replace("\r", "") # fix win/linux newlines
 
     # cache setting
-    global g_enable_buildversion, g_delay_time, g_include_dir, g_add_paremeters
+    global g_enable_buildversion, g_delay_time, g_add_paremeters
 
     g_enable_inteltip       = settings.get('enable_inteltip', True)
     g_enable_buildversion   = settings.get('enable_buildversion', False)
@@ -558,15 +558,24 @@ def on_settings_modified():
     g_new_file_syntax       = settings.get('amxx_file_syntax', g_new_file_syntax)
     log.debug_level         = settings.get('debug_level', 1)
     g_delay_time            = settings.get('live_refresh_delay', 1.0)
-    g_include_dir           = settings.get('include_directory')
     g_add_paremeters        = settings.get('add_function_parameters', False)
 
-    log(4, "( on_settings_modified ) debug_level: %d" % debug_level)
-    log(4, "( on_settings_modified ) g_include_dir: " + g_include_dir)
-    log(4, "( on_settings_modified ) g_add_paremeters: " + str( g_add_paremeters ))
+    g_include_dir.clear()
+    include_directory = settings.get('include_directory', './include')
+
+    if isinstance( include_directory, list ):
+        g_include_dir.extend( include_directory )
+
+    else:
+        g_include_dir.add( include_directory )
 
     file_observer.unschedule_all()
-    file_observer.schedule( file_event_handler, g_include_dir, True )
+    log(4, "( on_settings_modified ) debug_level: %d", log.debug_level)
+    log(4, "( on_settings_modified ) g_include_dir: %s", g_include_dir)
+    log(4, "( on_settings_modified ) g_add_paremeters: %s", g_add_paremeters)
+
+    for directory in g_include_dir:
+        file_observer.schedule( file_event_handler, directory, True )
 
 
 def is_invalid_settings(settings):
@@ -674,26 +683,30 @@ def add_to_queue(view) :
         The view can only be accessed from the main thread, so run the regex
         now and process the results later
     """
-    log(4, "( add_to_queue ) view.file_name(): " + str( view.file_name() ))
+    log( 4, "( add_to_queue ) view.file_name(): %s", view.file_name() )
 
     # When the view is not saved, we need to use its buffer id, instead of its file name.
     view_file_name = view.file_name()
 
     if view_file_name is None :
-        name = str( view.buffer_id() )
+        view_file_name = str( view.buffer_id() )
 
-        if name not in processingSetQueue_set:
-            processingSetQueue_set.add( name )
-            processingSetQueue.put( ( name, view.substr( sublime.Region( 0, view.size() ) ) ) )
-    else :
-        if view_file_name not in processingSetQueue_set:
-            processingSetQueue_set.add( view_file_name )
-            processingSetQueue.put( ( view_file_name, view.substr( sublime.Region( 0, view.size() ) ) ) )
+    if view_file_name not in processingSetQueueSet:
+        processingSetQueueSet.add( view_file_name )
+        processingSetQueue.put( ( view_file_name, view.substr( sublime.Region( 0, view.size() ) ) ) )
+
+        include_directory = os.path.join( os.path.dirname( view_file_name ), "include" )
+
+        if include_directory not in g_include_dir:
+
+            if os.path.isdir( include_directory ):
+                g_include_dir.add( include_directory )
+                file_observer.schedule( file_event_handler, include_directory, True )
 
 
 def add_include_to_queue(file_name) :
-    if file_name not in processingSetQueue_set:
-        processingSetQueue_set.add( file_name )
+    if file_name not in processingSetQueueSet:
+        processingSetQueueSet.add( file_name )
         processingSetQueue.put((file_name, None))
 
 
@@ -737,7 +750,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
             (file_name, view_buffer) = processingSetQueue.get()
 
             try:
-                processingSetQueue_set.remove( file_name )
+                processingSetQueueSet.remove( file_name )
             except:
                 pass
 
@@ -786,9 +799,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
         process_include_file(current_node)
 
-
     def load_from_file(self, view_file_name, base_file_name, parent_node, base_node, base_includes) :
-
         (file_name, exists) = get_file_name(view_file_name, base_file_name)
 
         if not exists :
@@ -800,7 +811,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
         if parent_node == base_node :
             base_includes.add(node)
 
-        if not node_added or not exists:
+        if not node_added:
             return
 
         with open(file_name, 'r') as f :
@@ -814,15 +825,24 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
 
 def get_file_name(view_file_name, base_file_name) :
+    log(4, "g_include_dir: %s", g_include_dir)
+    path_exists = False
 
-    log(4, "get_file_name: " + g_include_dir)
-
+    # True, if `base_file_name` is a include file name, instead of full file path
     if local_re.search(base_file_name) == None:
-        file_name = os.path.join(g_include_dir, base_file_name + '.inc')
+
+        for directory in g_include_dir:
+            file_name = os.path.join(directory, base_file_name + '.inc')
+
+            if os.path.exists(file_name):
+                path_exists = True
+                break
+
     else:
         file_name = os.path.join(os.path.dirname(view_file_name), base_file_name)
+        path_exists = os.path.exists(file_name)
 
-    return (file_name, os.path.exists(file_name))
+    return (file_name, path_exists)
 
 
 def get_or_add_node(file_name) :
