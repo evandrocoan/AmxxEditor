@@ -1,7 +1,8 @@
 %YAML 1.2
 ---
-name: Pawn Console Result
+name: AmxxEditorConsole
 scope: source.sma
+hidden: true
 contexts:
   main:
     # Start cooment

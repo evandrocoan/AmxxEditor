@@ -977,7 +977,7 @@ class PawnParse :
         for const in g_constants_list :
             constants += "|" + const
 
-        syntax = "%YAML 1.2\n---\nscope: source.sma\ncontexts:\n  main:\n    - match: \\b(" \
+        syntax = "%YAML 1.2\n---\nscope: source.sma\nhidden: true\ncontexts:\n  main:\n    - match: \\b(" \
                 + constants + ")\\b\s*(?!\()\n      scope: constant.vars.pawn\n\n"
 
         file_name = os.path.join(sublime.packages_path(), CURRENT_PACKAGE_NAME, "AmxxEditorConsts.sublime-syntax")
