@@ -198,7 +198,7 @@ class AmxxEditor(sublime_plugin.EventListener):
 
 		region = view.sel()[0]
 		scope = view.scope_name(region.begin())
-		print_debug(4, "(inteltip) scope_name: [%s]" % scope)
+		log(4, "(inteltip) scope_name: [%s]" % scope)
 
 		if not "support.function" in scope and not "include_path.pawn" in scope or region.size() > 1 :
 			view.hide_popup()
@@ -270,7 +270,7 @@ class AmxxEditor(sublime_plugin.EventListener):
 					break
 
 		if found:
-			print_debug(4, "param2: [%s]" % simple_escape(found[1]))
+			log(4, "param2: [%s]" % simple_escape(found[1]))
 			filename = os.path.basename(found[2])
 
 
@@ -335,19 +335,19 @@ class AmxxEditor(sublime_plugin.EventListener):
 
 		view_size = view.size()
 
-		print_debug(4, "on_activated_async(2)")
-		print_debug(4, "( on_activated_async ) view.match_selector(0, 'source.sma'): " + str( view.match_selector(0, 'source.sma') ))
+		log(4, "on_activated_async(2)")
+		log(4, "( on_activated_async ) view.match_selector(0, 'source.sma'): " + str( view.match_selector(0, 'source.sma') ))
 
-		# print_debug(4, "( on_activated_async ) nodes: " + str( nodes ))
-		print_debug(4, "( on_activated_async ) view.substr(): \n" \
+		# log(4, "( on_activated_async ) nodes: " + str( nodes ))
+		log(4, "( on_activated_async ) view.substr(): \n" \
 				+ view.substr( sublime.Region( 0, view_size if view_size < 200 else 200 ) ))
 
 		if not is_amxmodx_file(view):
-			print_debug(4, "( on_activated_async ) returning on` if not is_amxmodx_file(view)")
+			log(4, "( on_activated_async ) returning on` if not is_amxmodx_file(view)")
 			return
 
 		if not view.file_name() in nodes :
-			print_debug(4, "( on_activated_async ) returning on` if not view.file_name() in nodes")
+			log(4, "( on_activated_async ) returning on` if not view.file_name() in nodes")
 			add_to_queue(view)
 
 	def on_modified_async(self, view) :
@@ -396,33 +396,33 @@ class AmxxEditor(sublime_plugin.EventListener):
 				# Just in case it is not processed yet
 				if not view_file_name in nodes:
 
-					print_debug(4, "( on_query_completions ) Adding buffer id " + view_file_name + " in nodes")
+					log(4, "( on_query_completions ) Adding buffer id " + view_file_name + " in nodes")
 					add_to_queue_forward( view )
 
 					# The queue is not processed yet, so there is nothing to show
 					if g_word_autocomplete:
-						print_debug( 16, "(new buffer) Word autocomplete")
+						log( 16, "(new buffer) Word autocomplete")
 						return None
 					else:
-						print_debug( 16, "(new buffer) Without word autocomplete")
+						log( 16, "(new buffer) Without word autocomplete")
 						return ( [], sublime.INHIBIT_WORD_COMPLETIONS )
 
 				if g_word_autocomplete:
-					print_debug( 16, "(Buffer) Word autocomplete + function")
+					log( 16, "(Buffer) Word autocomplete + function")
 					return self.generate_funcset( view_file_name, view, prefix, locations )
 				else:
-					print_debug( 16, "(Buffer) Without word autocomplete + function")
+					log( 16, "(Buffer) Without word autocomplete + function")
 					return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
 			else:
 
 				if g_word_autocomplete:
-					print_debug( 16, "(File) Word autocomplete + function")
+					log( 16, "(File) Word autocomplete + function")
 					return self.generate_funcset( view_file_name, view, prefix, locations )
 				else:
-					print_debug( 16, "(File) Without word autocomplete + function")
+					log( 16, "(File) Without word autocomplete + function")
 					return ( self.generate_funcset( view_file_name, view, prefix, locations ), sublime.INHIBIT_WORD_COMPLETIONS )
 
-		print_debug( 16, "No completions")
+		log( 16, "No completions")
 		return None
 
 	def generate_funcset( self, file_name, view, prefix, locations ) :
@@ -457,8 +457,8 @@ class AmxxEditor(sublime_plugin.EventListener):
 				if time.time() - start_time > 0.05:
 					break
 
-		# print_debug( 16, "( generate_funcset ) func_list size: %d" % len( func_list ) )
-		# print_debug( 16, "( generate_funcset ) func_list items: " + str( sort_nicely( func_list ) ) )
+		# log( 16, "( generate_funcset ) func_list size: %d" % len( func_list ) )
+		# log( 16, "( generate_funcset ) func_list items: " + str( sort_nicely( func_list ) ) )
 		return words_list + func_list
 
 	def generate_funcset_recur( self, node, visited, func_list, func_word_list ) :
@@ -491,7 +491,7 @@ def is_amxmodx_file(view) :
 
 def on_settings_modified():
 #{
-	print_debug(4, "on_settings_modified" )
+	log(4, "on_settings_modified" )
 	global g_enable_inteltip
 	global g_new_file_syntax
 	global g_word_autocomplete
@@ -538,9 +538,9 @@ def on_settings_modified():
 	g_include_dir 			= settings.get('include_directory')
 	g_add_paremeters		= settings.get('add_function_parameters', False)
 
-	print_debug(4, "( on_settings_modified ) g_debug_level: %d" % g_debug_level)
-	print_debug(4, "( on_settings_modified ) g_include_dir: " + g_include_dir)
-	print_debug(4, "( on_settings_modified ) g_add_paremeters: " + str( g_add_paremeters ))
+	log(4, "( on_settings_modified ) g_debug_level: %d" % g_debug_level)
+	log(4, "( on_settings_modified ) g_include_dir: " + g_include_dir)
+	log(4, "( on_settings_modified ) g_add_paremeters: " + str( g_add_paremeters ))
 
 	file_observer.unschedule_all()
 	file_observer.schedule( file_event_handler, g_include_dir, True )
@@ -611,7 +611,7 @@ def is_inside_sublime_package(file_path):
 		packages_start = file_path.find( "Packages" )
 		packages_relative_path = file_path[packages_start:].replace( "\\", "/" )
 
-		# print_debug( 1, "is_inside_sublime_package, packages_relative_path: " + str( packages_relative_path ) )
+		# log( 1, "is_inside_sublime_package, packages_relative_path: " + str( packages_relative_path ) )
 		sublime.load_binary_resource( packages_relative_path )
 		return True
 
@@ -650,7 +650,7 @@ def add_to_queue(view) :
 		The view can only be accessed from the main thread, so run the regex
 		now and process the results later
 	"""
-	print_debug(4, "( add_to_queue ) view.file_name(): " + str( view.file_name() ))
+	log(4, "( add_to_queue ) view.file_name(): " + str( view.file_name() ))
 
 	# When the view is not saved, we need to use its buffer id, instead of its file name.
 	view_file_name = view.file_name()
@@ -745,7 +745,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 		base_includes = set()
 
 		with open(file_name, 'r') as f :
-			print_debug(2, "(analyzer) Processing Include File %s" % file_name)
+			log(2, "(analyzer) Processing Include File %s" % file_name)
 			includes = includes_re.findall(f.read())
 
 		for include in includes:
@@ -762,7 +762,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 		(file_name, exists) = get_file_name(view_file_name, base_file_name)
 
 		if not exists :
-			print_debug(1, "(analyzer) Include File Not Found: %s" % base_file_name)
+			log(1, "(analyzer) Include File Not Found: %s" % base_file_name)
 
 		(node, node_added) = get_or_add_node(file_name)
 		parent_node.add_child(node)
@@ -774,7 +774,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 			return
 
 		with open(file_name, 'r') as f :
-			print_debug(2, "(analyzer) Processing Include File %s" % file_name)
+			log(2, "(analyzer) Processing Include File %s" % file_name)
 			includes = includes_re.findall(f.read())
 
 		for include in includes :
@@ -785,7 +785,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
 def get_file_name(view_file_name, base_file_name) :
 
-	print_debug(4, "get_file_name: " + g_include_dir)
+	log(4, "get_file_name: " + g_include_dir)
 
 	if local_re.search(base_file_name) == None:
 		file_name = os.path.join(g_include_dir, base_file_name + '.inc')
@@ -887,7 +887,7 @@ class PawnParse :
 		"""
 			When the buffer is not None, it is always the current file.
 		"""
-		print_debug(8, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
+		log(8, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
 
 		self.isTheCurrentFile   = isTheCurrentFile
 		self.file 				= pFile
@@ -925,7 +925,7 @@ class PawnParse :
 			self.save_const_timer.start()
 		#}
 
-		print_debug(8, "(analyzer) CODE PARSE End [%s]" % node.file_name)
+		log(8, "(analyzer) CODE PARSE End [%s]" % node.file_name)
 	#}
 
 	def save_constants(self) :
@@ -941,12 +941,12 @@ class PawnParse :
 		# we do not care to check whether that window has a project or not and there will always be
 		# constants to save.
 		for window in windows:
-			# print_debug(4, "(save_constants) window.id(): " + str( window.id() ) )
-			# print_debug(4, "(save_constants) window.folders(): " + str( window.folders() ) )
-			# print_debug(4, "(save_constants) window.project_file_name(): " + str( window.project_file_name() ) )
+			# log(4, "(save_constants) window.id(): " + str( window.id() ) )
+			# log(4, "(save_constants) window.folders(): " + str( window.folders() ) )
+			# log(4, "(save_constants) window.project_file_name(): " + str( window.project_file_name() ) )
 
 			if len( window.folders() ) > 0:
-				print_debug( 4, "(save_constants) Not saving this time." )
+				log( 4, "(save_constants) Not saving this time." )
 				return
 
 		constants = "___test"
@@ -962,7 +962,7 @@ class PawnParse :
 		f.write(syntax)
 		f.close()
 
-		print_debug(8, "(analyzer) call save_constants()")
+		log(8, "(analyzer) call save_constants()")
 	#}
 
 	def read_line(self) :
@@ -990,7 +990,7 @@ class PawnParse :
 		result = ''
 		i = 0
 
-		# print_debug( 1, str( buffer ) )
+		# log( 1, str( buffer ) )
 		buffer_length = len(buffer)
 
 		while i < buffer_length :
@@ -1030,7 +1030,7 @@ class PawnParse :
 
 		while buffer is not None :
 		#{
-			# print_debug( 32, "skip_function_block:      " + buffer )
+			# log( 32, "skip_function_block:      " + buffer )
 
 			i               = 0
 			pos             = 0
@@ -1176,13 +1176,13 @@ class PawnParse :
 				lastChar        = c
 			#}
 
-			# print_debug( 32, "num_brace:                %d" % num_brace )
-			# print_debug( 32, "if_define_brace_level:    %d" % self.if_define_brace_level )
-			# print_debug( 32, "else_defined_brace_level: %d" % self.else_defined_brace_level )
+			# log( 32, "num_brace:                %d" % num_brace )
+			# log( 32, "if_define_brace_level:    %d" % self.if_define_brace_level )
+			# log( 32, "else_defined_brace_level: %d" % self.else_defined_brace_level )
 
-			# print_debug( 32, "is_on_if_define:          " + str( self.is_on_if_define ) )
-			# print_debug( 32, "is_on_else_define:        " + str( self.is_on_else_define ) )
-			# print_debug( 32, "" )
+			# log( 32, "is_on_if_define:          " + str( self.is_on_if_define ) )
+			# log( 32, "is_on_else_define:        " + str( self.is_on_else_define ) )
+			# log( 32, "" )
 
 			if num_brace == 0 :
 				self.restore_buffer = buffer[pos:]
@@ -1219,7 +1219,7 @@ class PawnParse :
 		self.add_constant(split[0])
 
 		self.add_general_autocomplete(buffer, 'enum', split[0])
-		print_debug(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
+		log(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
 	#}
 
 	def add_general_autocomplete(self, name, info, autocomplete) :
@@ -1265,7 +1265,7 @@ class PawnParse :
 		while True :
 		#{
 			buffer = self.read_line()
-			# print_debug( 1, str( buffer ) )
+			# log( 1, str( buffer ) )
 
 			if buffer is None :
 				break
@@ -1346,7 +1346,7 @@ class PawnParse :
 				self.add_general_autocomplete( name, 'define: ' + value, name )
 
 			self.add_constant( name )
-			print_debug(8, "(analyzer) parse_define add: [%s]" % name)
+			log(8, "(analyzer) parse_define add: [%s]" % name)
 		#}
 	#}
 
@@ -1371,7 +1371,7 @@ class PawnParse :
 		self.add_constant(name)
 		self.add_general_autocomplete(name, 'const: ' + value, name)
 
-		print_debug(8, "(analyzer) parse_const add: [%s]" % name)
+		log(8, "(analyzer) parse_const add: [%s]" % name)
 	#}
 
 	def parse_variable(self, buffer) :
@@ -1438,7 +1438,7 @@ class PawnParse :
 
 						if (varName != '') :
 							self.add_word_autocomplete( varName )
-							print_debug(8, "(analyzer) parse_variable add: [%s]" % varName)
+							log(8, "(analyzer) parse_variable add: [%s]" % varName)
 
 						varName = ''
 						parseName = False
@@ -1467,7 +1467,7 @@ class PawnParse :
 				varName = varName.strip()
 				if varName != '' :
 					self.add_word_autocomplete( varName )
-					print_debug(8, "(analyzer) parse_variable add: [%s]" % varName)
+					log(8, "(analyzer) parse_variable add: [%s]" % varName)
 			#}
 			else :
 			#{
@@ -1592,7 +1592,7 @@ class PawnParse :
 		split = remaining.split('(', 1)
 
 		if len(split) < 2 :
-			print_debug(4, "(analyzer) parse_params return1: [%s]" % split)
+			log(4, "(analyzer) parse_params return1: [%s]" % split)
 			return 1
 
 		remaining = split[1]
@@ -1610,7 +1610,7 @@ class PawnParse :
 			return 0
 
 		if not self.is_valid_name(funcname) :
-			print_debug(4, "(analyzer) parse_params invalid name: [%s]" % funcname)
+			log(4, "(analyzer) parse_params invalid name: [%s]" % funcname)
 			return 1
 
 		remaining = remaining.strip()
@@ -1641,7 +1641,7 @@ class PawnParse :
 		self.add_function_autocomplete(funcname, FUNC_TYPES[type].lower(), autocomplete, len( params ))
 		self.node.doct.add((funcname, func[func.find("(")+1:-1], self.node.file_name, type, returntype))
 
-		print_debug(8, "(analyzer) parse_params add: [%s]" % func)
+		log(8, "(analyzer) parse_params add: [%s]" % func)
 		return 0
 	#}
 
@@ -1689,22 +1689,6 @@ includes_re = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
 local_re = re.compile('\\.(sma|inc)$')
 pawnParse = PawnParse()
 
-# limits to prevent bogging down the system
-MIN_WORD_SIZE = 3
-MAX_WORD_SIZE = 50
-
-MAX_VIEWS = 20
-MAX_WORDS_PER_VIEW = 100
-MAX_FIX_TIME_SECS_PER_VIEW = 0.01
-
-# Debugging
-if 'LOG_FILE_NAME' in globals():
-	del LOG_FILE_NAME
-
-# LOG_FILE_NAME = os.path.abspath('AmxxEditor.log')
-startTime = datetime.datetime.now()
-print_debug_lastTime = startTime.microsecond
-
 # Enable editor debug messages: (bitwise)
 #
 # 0  - Disabled debugging.
@@ -1717,49 +1701,9 @@ print_debug_lastTime = startTime.microsecond
 # 63 - All debugging levels at the same time.
 g_debug_level = 0
 
-if 'LOG_FILE_NAME' in globals():
+from debug_tools import getLogger
 
-	# Clear the log file contents
-	open(LOG_FILE_NAME, 'w').close()
-	print( "Logging the AmxxEditor debug to the file " + LOG_FILE_NAME )
-
-	# Setup the logger
-	logging.basicConfig( filename=LOG_FILE_NAME, format='%(asctime)s %(message)s', level=logging.DEBUG )
-
-	def print_debug(level, msg) :
-	#{
-		global print_debug_lastTime
-		currentTime = datetime.datetime.now().microsecond
-
-		# You can access global variables without the global keyword.
-		if g_debug_level & level != 0:
-
-			logging.debug( "[AmxxEditor] " \
-					+ str( currentTime ) \
-					+ "%7d " % ( currentTime - print_debug_lastTime ) \
-					+ msg )
-
-			print_debug_lastTime = currentTime
-	#}
-else:
-
-	def print_debug(level, msg) :
-	#{
-		global print_debug_lastTime
-		currentTime = datetime.datetime.now().microsecond
-
-		# You can access global variables without the global keyword.
-		if g_debug_level & level != 0:
-
-			print( "[AmxxEditor] " \
-					+ "%02d" % datetime.datetime.now().hour + ":" \
-					+ "%02d" % datetime.datetime.now().minute + ":" \
-					+ "%02d" % datetime.datetime.now().second + ":" \
-					+ str( currentTime ) \
-					+ "%7d " % ( currentTime - print_debug_lastTime ) \
-					+ msg )
-
-			print_debug_lastTime = currentTime
-	#}
+# Debugger settings: 0 - disabled, 127 - enabled
+log = getLogger( 1, __name__ )
 
 
