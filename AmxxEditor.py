@@ -23,8 +23,46 @@ from watchdog.utils.bricks import OrderedSetQueue
 from os.path import basename
 import logging
 
+# Enable editor debug messages: (bitwise)
+#
+# 0  - Disabled debugging.
+# 1  - Errors messages.
+# 2  - Outputs when it starts a file parsing.
+# 4  - General messages.
+# 8  - Analyzer parser.
+# 16 - Autocomplete debugging.
+# 32 - Function parsing debugging.
+# 63 - All debugging levels at the same time.
+from debug_tools import getLogger
+log = getLogger( 1, __name__ )
+
 CURRENT_PACKAGE_NAME = __package__
 g_is_package_loading = True
+
+EDITOR_VERSION = "3.0_zz"
+FUNC_TYPES = [ "Function", "Public", "Stock", "Forward", "Native" ]
+
+g_constants_list = set()
+g_inteltip_style = ""
+g_enable_inteltip = False
+g_enable_buildversion = False
+g_delay_time = 1.0
+g_include_dir = "."
+g_add_paremeters = False
+g_new_file_syntax = "Packages/%s/%sPawn.sublime-syntax" % (CURRENT_PACKAGE_NAME, CURRENT_PACKAGE_NAME)
+g_word_autocomplete = False
+g_function_autocomplete = False
+
+processingSetQueue = OrderedSetQueue()
+processingSetQueue_set = set()
+nodes = dict()
+file_observer = watchdog.observers.Observer()
+process_thread = ProcessQueueThread()
+file_event_handler = IncludeFileEventHandler()
+includes_re = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
+local_re = re.compile('\\.(sma|inc)$')
+pawnParse = PawnParse()
+
 
 def plugin_unloaded():
 #{
@@ -1664,46 +1702,4 @@ def simple_escape(html) :
 #{
 	return html.replace('&', '&amp;')
 #}
-
-EDITOR_VERSION = "3.0_zz"
-FUNC_TYPES = [ "Function", "Public", "Stock", "Forward", "Native" ]
-
-g_constants_list = set()
-g_inteltip_style = ""
-g_enable_inteltip = False
-g_enable_buildversion = False
-g_delay_time = 1.0
-g_include_dir = "."
-g_add_paremeters = False
-g_new_file_syntax = "Packages/%s/%sPawn.sublime-syntax" % (CURRENT_PACKAGE_NAME, CURRENT_PACKAGE_NAME)
-g_word_autocomplete = False
-g_function_autocomplete = False
-
-processingSetQueue = OrderedSetQueue()
-processingSetQueue_set = set()
-nodes = dict()
-file_observer = watchdog.observers.Observer()
-process_thread = ProcessQueueThread()
-file_event_handler = IncludeFileEventHandler()
-includes_re = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
-local_re = re.compile('\\.(sma|inc)$')
-pawnParse = PawnParse()
-
-# Enable editor debug messages: (bitwise)
-#
-# 0  - Disabled debugging.
-# 1  - Errors messages.
-# 2  - Outputs when it starts a file parsing.
-# 4  - General messages.
-# 8  - Analyzer parser.
-# 16 - Autocomplete debugging.
-# 32 - Function parsing debugging.
-# 63 - All debugging levels at the same time.
-g_debug_level = 0
-
-from debug_tools import getLogger
-
-# Debugger settings: 0 - disabled, 127 - enabled
-log = getLogger( 1, __name__ )
-
 
