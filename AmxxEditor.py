@@ -564,10 +564,12 @@ def on_settings_modified():
     include_directory = settings.get('include_directory', './include')
 
     if isinstance( include_directory, list ):
-        g_include_dir.extend( include_directory )
+
+        for path in include_directory:
+            g_include_dir.extend( os.path.realpath( path ) )
 
     else:
-        g_include_dir.add( include_directory )
+        g_include_dir.add( os.path.realpath( include_directory ) )
 
     file_observer.unschedule_all()
     log(4, "( on_settings_modified ) debug_level: %d", log.debug_level)
@@ -695,7 +697,7 @@ def add_to_queue(view) :
         processingSetQueueSet.add( view_file_name )
         processingSetQueue.put( ( view_file_name, view.substr( sublime.Region( 0, view.size() ) ) ) )
 
-        include_directory = os.path.join( os.path.dirname( view_file_name ), "include" )
+        include_directory = os.path.realpath( os.path.join( os.path.dirname( view_file_name ), "include" ) )
 
         if include_directory not in g_include_dir:
 
