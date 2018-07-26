@@ -18,5 +18,5 @@
     ],
 
     "selector": "source.AmxxEditor, source.AMXX, source.sma",
-    "file_regex": "^.*[\\/\\\\]+(.+)\\(([0-9]+ ?.*)\\) : (.*)",
+    "file_regex": "^(.+)\\(([0-9]+ ?.*)\\) : (.*)",
 }
