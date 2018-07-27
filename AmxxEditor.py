@@ -57,11 +57,8 @@ processingSetQueue = OrderedSetQueue()
 processingSetQueueSet = set()
 nodes = dict()
 file_observer = watchdog.observers.Observer()
-process_thread = ProcessQueueThread()
-file_event_handler = IncludeFileEventHandler()
 includes_re = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
 local_re = re.compile('\\.(sma|inc)$')
-pawnParse = PawnParse()
 
 
 def plugin_unloaded():
@@ -1632,4 +1629,9 @@ def process_include_file(node) :
 
 def simple_escape(html) :
     return html.replace('&', '&amp;')
+
+
+pawnParse = PawnParse()
+process_thread = ProcessQueueThread()
+file_event_handler = IncludeFileEventHandler()
 
