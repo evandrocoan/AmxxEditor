@@ -1,5 +1,40 @@
-# Sublime AMXX-Editor by Destro
-# Sublime AmxxEditor by addons_zz @ 2018
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+#
+# Licensing
+#
+# Copyright (C) 2013-2016 ppalex7 <https://github.com/ppalex7/SourcePawnCompletions>
+# Copyright (C) 2016-2017 AMXX-Editor by Destro <https://forums.alliedmods.net/showthread.php?t=284385>
+# Copyright (C) 2017-2018 Evandro Coan <https://github.com/evandrocoan/AmxxEditor>
+#
+#  Redistributions of source code must retain the above
+#  copyright notice, this list of conditions and the
+#  following disclaimer.
+#
+#  Redistributions in binary form must reproduce the above
+#  copyright notice, this list of conditions and the following
+#  disclaimer in the documentation and/or other materials
+#  provided with the distribution.
+#
+#  Neither the name Evandro Coan nor the names of any
+#  contributors may be used to endorse or promote products
+#  derived from this software without specific prior written
+#  permission.
+#
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; either version 3 of the License, or ( at
+#  your option ) any later version.
+#
+#  This program is distributed in the hope that it will be useful, but
+#  WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+#  General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 import os
 import re
@@ -15,6 +50,7 @@ from queue import *
 from threading import Timer, Thread
 
 sys.path.append(os.path.dirname(__file__))
+from enum import Enum
 import watchdog.events
 import watchdog.observers
 import watchdog.utils
@@ -40,8 +76,15 @@ CURRENT_PACKAGE_NAME = __package__
 g_is_package_loading = True
 
 EDITOR_VERSION = "3.0_zz"
-FUNC_TYPES = [ "Function", "Public", "Stock", "Forward", "Native" ]
 
+class FUNC_TYPES(Enum):
+    function = 0
+    public   = 1
+    stock    = 2
+    forward  = 3
+    native   = 4
+
+# print( FUNC_TYPES(0) )
 g_constants_list = set()
 g_inteltip_style = ""
 g_enable_inteltip = False
@@ -287,47 +330,53 @@ class AmxxEditor(sublime_plugin.EventListener):
         self.generate_doctset_recur(node, doctset, visited)
 
         for func in doctset :
-            if search_func == func[0] :
+            if search_func == func.function_name :
                 found = func
-                if found[3] != 1 :
+                if found.function_type != FUNC_TYPES.public :
                     break
 
         if found:
-            log(4, "param2: [%s]" % simple_escape(found[1]))
-            filename = os.path.basename(found[2])
+            log(4, "param2: [%s]" % simple_escape(found.parameters))
+            filename = os.path.basename(found.file_name)
 
+            if found.function_type :
 
-            if found[3] :
-                if found[4] :
-                    link_local = found[2] + '#' + FUNC_TYPES[found[3]] + ' ' + found[4] + ':' + found[0]
+                if found.return_type :
+                    link_local = found.file_name + '#' + FUNC_TYPES(found.function_type).name + ' ' + found.return_type + ':' + found.function_name
+
                 else :
-                    link_local = found[2] + '#' + FUNC_TYPES[found[3]] + ' ' + found[0]
+                    link_local = found.file_name + '#' + FUNC_TYPES(found.function_type).name + ' ' + found.function_name
 
-                link_web = filename.rsplit('.', 1)[0] + '#' + found[0]
+                link_web = filename.rsplit('.', 1)[0] + '#' + found.function_name
+
             else :
 
-                link_local = found[2] + '#' + '^' + found[0]
+                link_local = found.file_name + '#' + '^' + found.function_name
                 link_web = ''
 
+            log( 4, "link_local: %s", link_local )
             html  = '<style>'+ g_inteltip_style +'</style>'
             html += '<div class="top">'                         ############################## TOP
 
-            html += '<a class="file" href="'+link_local+'">'+os.path.basename(found[2])+'</a>'
+            html += '<a class="file" href="'+link_local+'\\(">'+os.path.basename(found.file_name)+'</a>'
             if link_web:
                 html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
 
             html += '</div><div class="bottom">'        ############################## BOTTOM
 
-            html += '<span class="func_type">'+FUNC_TYPES[found[3]]+':</span> <span class="func_name">'+found[0]+'</span>'
+            html += '<span class="func_type">'+FUNC_TYPES(found.function_type).name \
+                    +':</span> <span class="func_name">'+found.function_name+'</span>'
+
             html += '<br>'
-            html += '<span class="params">Params:</span> <span class="params_definition">('+ simple_escape(found[1]) +')</span>'
+            html += '<span class="params">Params:</span> <span class="params_definition">('+ simple_escape(found.parameters) +')</span>'
             html += '<br>'
 
-            if found[4] :
-                html += '<span class="return">Return:</span> <span class="return_type">'+found[4]+'</span>'
+            if found.return_type :
+                html += '<span class="return">Return:</span> <span class="return_type">'+found.return_type+'</span>'
 
             html += '</div>'                                    ############################## END
 
+            # log( 1, "html: %s", html )
             view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
             view.add_regions("inteltip", [ word_region ], "inteltip.pawn")
 
@@ -811,7 +860,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
         if parent_node == base_node :
             base_includes.add(node)
 
-        if not node_added:
+        if not node_added :
             return
 
         with open(file_name, 'r') as f :
@@ -868,6 +917,18 @@ def get_or_add_node(file_name) :
 
 
 # ============= NEW CODE ------------------------------------------------------------------------------------------------------------
+class TooltipDocumentation(object):
+    def __init__(self, function_name, parameters, file_name, function_type, return_type):
+        """
+            For `function_type` see FUNC_TYPES.
+        """
+        self.function_name = function_name
+        self.parameters = parameters
+        self.file_name = file_name
+        self.function_type = function_type
+        self.return_type = return_type
+
+
 class Node :
     def __init__(self, file_name) :
         self.file_name = file_name
@@ -1554,8 +1615,8 @@ class PawnParse :
 
             #print("skip_brace: error:[%d] type:[%d] found:[%d] skip:[%d] func:[%s]" % (error, type, self.is_to_skip_brace, self.is_to_skip_next_line, full_func_str))
 
-    def parse_function_params(self, func, type) :
-        if type == 0 :
+    def parse_function_params(self, func, function_type) :
+        if function_type == 0 :
             remaining = func
         else :
             split = func.split(' ', 1)
@@ -1610,8 +1671,8 @@ class PawnParse :
         else:
             autocomplete = funcname + "()"
 
-        self.add_function_autocomplete(funcname, FUNC_TYPES[type].lower(), autocomplete, len( params ))
-        self.node.doct.add((funcname, func[func.find("(")+1:-1], self.node.file_name, type, returntype))
+        self.add_function_autocomplete(funcname, FUNC_TYPES(function_type).name, autocomplete, len( params ))
+        self.node.doct.add(TooltipDocumentation(funcname, func[func.find("(")+1:-1], self.node.file_name, function_type, returntype))
 
         log(8, "(analyzer) parse_params add: [%s]" % func)
         return 0
