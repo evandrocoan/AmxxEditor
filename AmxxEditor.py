@@ -830,7 +830,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
     def process_existing_include(self, file_name) :
         current_node = nodes.get(file_name)
-        if current_node is None :
+        if current_node is None or not os.path.exists( file_name ):
             return
 
         base_includes = set()
@@ -1366,6 +1366,7 @@ class PawnParse :
                 current_line = self.read_line()
                 if current_line is not None and current_line.startswith('stock ') :
                     self.skip_function_block(current_line)
+
             elif current_line.startswith('#define ') :
                 current_line = self.parse_define(current_line)
             elif current_line.startswith('const ') :
@@ -1375,10 +1376,31 @@ class PawnParse :
                 self.enum_contents = ''
             elif current_line.startswith('new ') :
                 self.parse_variable(current_line)
+
             elif current_line.startswith('public ') :
                 self.parse_function(current_line, 1)
+
             elif current_line.startswith('stock ') :
-                self.parse_function(current_line, 2)
+                """
+                    new STOCK_TEST1[] = "something";
+                    const STOCK_TEST2[] = "something";
+                    stock STOCK_TEST3[] = "something";
+                    stock const STOCK_TEST4[] = "something";
+                """
+
+                if current_line.find(" const "):
+                    current_line = current_line[6:]
+                    self.parse_const(current_line)
+
+                else:
+
+                    if current_line.find("="):
+                        current_line = "new " + current_line[6:]
+                        self.parse_variable(current_line)
+
+                    else:
+                        self.parse_function(current_line, 2)
+
             elif current_line.startswith('forward ') :
                 self.parse_function(current_line, 3)
             elif current_line.startswith('native ') :
