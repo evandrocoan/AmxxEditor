@@ -803,6 +803,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
         if not exists :
             log(1, "(analyzer) Include File Not Found: %s" % base_file_name)
+            return
 
         (node, node_added) = get_or_add_node(file_name)
         parent_node.add_child(node)
