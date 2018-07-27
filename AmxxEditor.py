@@ -543,8 +543,8 @@ class AmxxEditor(sublime_plugin.EventListener):
         for child in node.children :
             self.generate_funcset_recur( child, visited, func_list, func_word_list )
 
-        func_list.extend( node.funcs )
-        func_word_list.extend( node.func_words )
+        func_list.extend( node.funcs_list )
+        func_word_list.extend( node.words_list )
 
     def generate_doctset_recur(self, node, doctset, visited) :
         if node in visited :
@@ -938,8 +938,9 @@ class Node :
         self.parents = set()
 
         # They are list to keep ordering
-        self.funcs = []
-        self.func_words = []
+        self.funcs_list = []
+        self.words_list = []
+        self.words_set = set()
 
         try:
             float(file_name)
@@ -963,8 +964,8 @@ class Node :
             self.remove_child(node)
 
         self.doct.clear()
-        self.funcs.clear()
-        self.func_words.clear()
+        self.funcs_list.clear()
+        self.words_list.clear()
 
 
 class TextReader:
@@ -1020,8 +1021,9 @@ class PawnParse :
         self.is_on_else_define = []
 
         self.node.doct.clear()
-        self.node.funcs.clear()
-        self.node.func_words.clear()
+        self.node.funcs_list.clear()
+        self.node.words_list.clear()
+        self.node.words_set.clear()
 
         self.start_parse()
 
@@ -1309,23 +1311,28 @@ class PawnParse :
         log(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (current_line, split[0]))
 
     def add_general_autocomplete(self, name, info, autocomplete) :
-        self.node.func_words.append( name )
+
+        if name not in self.node.words_set:
+            self.node.words_set.add( name )
+            self.node.words_list.append( name )
 
         if self.node.isFromBufferOnly or self.isTheCurrentFile:
-            self.node.funcs.append( ["{}\t {}".format( name, info ), autocomplete] )
+            self.node.funcs_list.append( ["{}\t {}".format( name, info ), autocomplete] )
         else:
-            self.node.funcs.append( ["{} \t{} - {}".format( name, self.file_name, info ), autocomplete] )
+            self.node.funcs_list.append( ["{} \t{} - {}".format( name, self.file_name, info ), autocomplete] )
 
     def add_function_autocomplete(self, name, info, autocomplete, param_count) :
         show_name = name + "(" + str( param_count ) + ")"
-        self.node.func_words.append( name )
+        self.node.words_set.add( name )
+        self.node.words_list.append( name )
 
-        # We do not check whether `if name in func_words` because we can have several functions
+        # We do not check whether `if name in words` because we can have several functions
         # with the same name but different parameters
         if self.node.isFromBufferOnly or self.isTheCurrentFile:
-            self.node.funcs.append( ["{}\t {}".format( show_name, info ), autocomplete] )
+            self.node.funcs_list.append( ["{}\t {}".format( show_name, info ), autocomplete] )
+
         else:
-            self.node.funcs.append( ["{} \t{} - {}".format( show_name, self.file_name, info ), autocomplete] )
+            self.node.funcs_list.append( ["{} \t{} - {}".format( show_name, self.file_name, info ), autocomplete] )
 
     def add_word_autocomplete(self, name) :
         """
@@ -1333,16 +1340,18 @@ class PawnParse :
             need the file name as the auto completion for words from other files/sources.
         """
 
-        if name not in self.node.func_words:
+        if name not in self.node.words_list:
+            self.node.words_set.add( name )
+            self.node.words_list.append( name )
 
             if self.isTheCurrentFile:
-                self.node.funcs.append( [name, name] )
-            else:
-                self.node.funcs.append( ["{}\t - {}".format( name, self.file_name ), name] )
+                self.node.funcs_list.append( [name, name] )
 
-        self.node.func_words.append( name )
+            else:
+                self.node.funcs_list.append( ["{}\t {}".format( name, self.file_name ), name] )
 
     def start_parse(self) :
+
         while True :
             current_line = self.read_line()
             # log( 1, str( current_line ) )
