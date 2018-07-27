@@ -1081,61 +1081,61 @@ class PawnParse :
         else :
             return None
 
-    def read_string(self, buffer) :
-        buffer = buffer.replace('\t', ' ').strip()
-        while '  ' in buffer :
-            buffer = buffer.replace('  ', ' ')
+    def read_string(self, current_line) :
+        current_line = current_line.replace('\t', ' ').strip()
+        while '  ' in current_line :
+            current_line = current_line.replace('  ', ' ')
 
-        buffer = buffer.lstrip()
+        current_line = current_line.lstrip()
 
         result = ''
         i = 0
 
-        # log( 1, str( buffer ) )
-        buffer_length = len(buffer)
+        # log( 1, str( current_line ) )
+        buffer_length = len(current_line)
 
         while i < buffer_length :
-            if buffer[i] == '/' and i + 1 < len(buffer):
-                if buffer[i + 1] == '/' :
+            if current_line[i] == '/' and i + 1 < len(current_line):
+                if current_line[i + 1] == '/' :
                     self.brace_level +=  result.count('{') - result.count('}')
                     return result
-                elif buffer[i + 1] == '*' :
+                elif current_line[i + 1] == '*' :
                     self.found_comment = True
                     i += 1
                 elif not self.found_comment :
                     result += '/'
             elif self.found_comment :
-                if buffer[i] == '*' and i + 1 < len(buffer) and buffer[i + 1] == '/' :
+                if current_line[i] == '*' and i + 1 < len(current_line) and current_line[i + 1] == '/' :
                     self.found_comment = False
                     i += 1
-            elif not (i > 0 and buffer[i] == ' ' and buffer[i - 1] == ' '):
-                result += buffer[i]
+            elif not (i > 0 and current_line[i] == ' ' and current_line[i - 1] == ' '):
+                result += current_line[i]
 
             i += 1
 
         self.brace_level +=  result.count('{') - result.count('}')
         return result
 
-    def skip_function_block(self, buffer) :
+    def skip_function_block(self, current_line) :
         inChar    = False
         inString  = False
         num_brace = 0
 
-        buffer                = buffer + ' '
+        current_line                = current_line + ' '
         self.is_to_skip_brace = False
 
-        while buffer is not None and buffer.isspace() :
-            buffer = self.read_line()
+        while current_line is not None and current_line.isspace() :
+            current_line = self.read_line()
 
-        while buffer is not None :
-            # log( 32, "skip_function_block:      " + buffer )
+        while current_line is not None :
+            # log( 32, "skip_function_block:      " + current_line )
 
             i               = 0
             pos             = 0
             lastChar        = ''
             penultimateChar = ''
 
-            for c in buffer :
+            for c in current_line :
                 i += 1
 
                 if not inString and not inChar and lastChar == '*' and c == '/' :
@@ -1279,10 +1279,10 @@ class PawnParse :
             # log( 32, "" )
 
             if num_brace == 0 :
-                self.restore_buffer = buffer[pos:]
+                self.restore_buffer = current_line[pos:]
                 return
 
-            buffer = self.read_line()
+            current_line = self.read_line()
 
     def is_valid_name(self, name) :
         if not name or not name[0].isalpha() and name[0] != '_' :
@@ -1297,16 +1297,16 @@ class PawnParse :
             name = fixname.group(1)
             g_constants_list.add(name)
 
-    def add_enum(self, buffer) :
-        buffer = buffer.strip()
-        if buffer == '' :
+    def add_enum(self, current_line) :
+        current_line = current_line.strip()
+        if current_line == '' :
             return
 
-        split = buffer.split('[')
+        split = current_line.split('[')
         self.add_constant(split[0])
 
-        self.add_general_autocomplete(buffer, 'enum', split[0])
-        log(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (buffer, split[0]))
+        self.add_general_autocomplete(current_line, 'enum', split[0])
+        log(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (current_line, split[0]))
 
     def add_general_autocomplete(self, name, info, autocomplete) :
         self.node.func_words.append( name )
@@ -1329,7 +1329,7 @@ class PawnParse :
 
     def add_word_autocomplete(self, name) :
         """
-            Used to add a word to the auto completion of the current buffer. Therefore, it does not
+            Used to add a word to the auto completion of the current current_line. Therefore, it does not
             need the file name as the auto completion for words from other files/sources.
         """
 
@@ -1344,56 +1344,56 @@ class PawnParse :
 
     def start_parse(self) :
         while True :
-            buffer = self.read_line()
-            # log( 1, str( buffer ) )
+            current_line = self.read_line()
+            # log( 1, str( current_line ) )
 
-            if buffer is None :
+            if current_line is None :
                 break
 
-            buffer = self.read_string(buffer)
+            current_line = self.read_string(current_line)
 
-            if len(buffer) <= 0 :
+            if len(current_line) <= 0 :
                 continue
 
             #if "sma" in self.node.file_name :
-            #   print("read: skip:[%d] brace_level:[%d] buff:[%s]" % (self.is_to_skip_next_line, self.brace_level, buffer))
+            #   print("read: skip:[%d] brace_level:[%d] buff:[%s]" % (self.is_to_skip_next_line, self.brace_level, current_line))
 
             if self.is_to_skip_next_line :
                 self.is_to_skip_next_line = False
                 continue
 
-            if buffer.startswith('#pragma deprecated') :
-                buffer = self.read_line()
-                if buffer is not None and buffer.startswith('stock ') :
-                    self.skip_function_block(buffer)
-            elif buffer.startswith('#define ') :
-                buffer = self.parse_define(buffer)
-            elif buffer.startswith('const ') :
-                buffer = self.parse_const(buffer)
-            elif buffer.startswith('enum ') :
+            if current_line.startswith('#pragma deprecated') :
+                current_line = self.read_line()
+                if current_line is not None and current_line.startswith('stock ') :
+                    self.skip_function_block(current_line)
+            elif current_line.startswith('#define ') :
+                current_line = self.parse_define(current_line)
+            elif current_line.startswith('const ') :
+                current_line = self.parse_const(current_line)
+            elif current_line.startswith('enum ') :
                 self.found_enum = True
                 self.enum_contents = ''
-            elif buffer.startswith('new ') :
-                self.parse_variable(buffer)
-            elif buffer.startswith('public ') :
-                self.parse_function(buffer, 1)
-            elif buffer.startswith('stock ') :
-                self.parse_function(buffer, 2)
-            elif buffer.startswith('forward ') :
-                self.parse_function(buffer, 3)
-            elif buffer.startswith('native ') :
-                self.parse_function(buffer, 4)
-            elif not self.found_enum and not buffer[0] == '#' :
-                self.parse_function(buffer, 0)
+            elif current_line.startswith('new ') :
+                self.parse_variable(current_line)
+            elif current_line.startswith('public ') :
+                self.parse_function(current_line, 1)
+            elif current_line.startswith('stock ') :
+                self.parse_function(current_line, 2)
+            elif current_line.startswith('forward ') :
+                self.parse_function(current_line, 3)
+            elif current_line.startswith('native ') :
+                self.parse_function(current_line, 4)
+            elif not self.found_enum and not current_line[0] == '#' :
+                self.parse_function(current_line, 0)
 
             if self.found_enum :
-                self.parse_enum(buffer)
+                self.parse_enum(current_line)
 
-    def parse_define(self, buffer) :
-        define = re.search('#define[\\s]+([^\\s]+)[\\s]+(.+)', buffer)
+    def parse_define(self, current_line) :
+        define = re.search('#define[\\s]+([^\\s]+)[\\s]+(.+)', current_line)
 
         if define :
-            buffer = ''
+            current_line = ''
             name   = define.group(1)
             value  = define.group(2).strip()
 
@@ -1424,10 +1424,10 @@ class PawnParse :
             self.add_constant( name )
             log(8, "(analyzer) parse_define add: [%s]" % name)
 
-    def parse_const(self, buffer) :
-        buffer = buffer[6:]
+    def parse_const(self, current_line) :
+        current_line = current_line[6:]
 
-        split   = buffer.split('=', 1)
+        split   = current_line.split('=', 1)
         if len(split) < 2 :
             return
 
@@ -1444,11 +1444,11 @@ class PawnParse :
 
         log(8, "(analyzer) parse_const add: [%s]" % name)
 
-    def parse_variable(self, buffer) :
-        if buffer.startswith('new const ') :
-            buffer = buffer[10:]
+    def parse_variable(self, current_line) :
+        if current_line.startswith('new const ') :
+            current_line = current_line[10:]
         else :
-            buffer = buffer[4:]
+            current_line = current_line[4:]
 
         varName = ""
         lastChar = ''
@@ -1465,7 +1465,7 @@ class PawnParse :
         while multiLines :
             multiLines = False
 
-            for c in buffer :
+            for c in current_line :
                 i += 1
 
                 if (c == '"') :
@@ -1510,7 +1510,7 @@ class PawnParse :
 
                 if (inString == False and inBrackets == False and inBraces == False) :
                     if not parseName and c == ';' :
-                        self.restore_buffer = buffer[i:].strip()
+                        self.restore_buffer = current_line[i:].strip()
                         return
 
                     if (c == ',') :
@@ -1525,19 +1525,19 @@ class PawnParse :
                     log(8, "(analyzer) parse_variable add: [%s]" % varName)
             else :
                 multiLines = True
-                buffer = ' '
+                current_line = ' '
 
-                while buffer is not None and buffer.isspace() :
-                    buffer = self.read_line()
+                while current_line is not None and current_line.isspace() :
+                    current_line = self.read_line()
 
-    def parse_enum(self, buffer) :
-        pos = buffer.find('}')
+    def parse_enum(self, current_line) :
+        pos = current_line.find('}')
         if pos != -1 :
-            buffer = buffer[0:pos]
+            current_line = current_line[0:pos]
             self.found_enum = False
 
-        self.enum_contents = '%s\n%s' % (self.enum_contents, buffer)
-        buffer = ''
+        self.enum_contents = '%s\n%s' % (self.enum_contents, current_line)
+        current_line = ''
 
         ignore = False
         if not self.found_enum :
@@ -1550,44 +1550,44 @@ class PawnParse :
                 elif c == '\n':
                     ignore = False
                 elif c == ':' :
-                    buffer = ''
+                    current_line = ''
                     continue
                 elif c == ',' :
-                    self.add_enum(buffer)
-                    buffer = ''
+                    self.add_enum(current_line)
+                    current_line = ''
 
                     ignore = False
                     continue
 
                 if not ignore :
-                    buffer += c
+                    current_line += c
 
-            self.add_enum(buffer)
-            buffer = ''
+            self.add_enum(current_line)
+            current_line = ''
 
-    def parse_function(self, buffer, type) :
+    def parse_function(self, current_line, type) :
         multi_line = False
         temp = ''
         full_func_str = None
         open_paren_found = False
 
-        while buffer is not None :
+        while current_line is not None :
 
-            buffer = buffer.strip()
+            current_line = current_line.strip()
 
             if not open_paren_found :
-                parenpos = buffer.find('(')
+                parenpos = current_line.find('(')
 
                 if parenpos == -1 :
                     return
 
                 open_paren_found = True
             if open_paren_found :
-                pos = buffer.find(')')
+                pos = current_line.find(')')
 
                 if pos != -1 :
-                    full_func_str = buffer[0:pos + 1]
-                    buffer = buffer[pos+1:]
+                    full_func_str = current_line[0:pos + 1]
+                    current_line = current_line[pos+1:]
 
                     if (multi_line) :
                         full_func_str = '%s%s' % (temp, full_func_str)
@@ -1595,20 +1595,20 @@ class PawnParse :
                     break
 
                 multi_line = True
-                temp = '%s%s' % (temp, buffer)
+                temp = '%s%s' % (temp, current_line)
 
-            buffer = self.read_line()
+            current_line = self.read_line()
 
-            if buffer is None :
+            if current_line is None :
                 return
 
-            buffer = self.read_string(buffer)
+            current_line = self.read_string(current_line)
 
         if full_func_str is not None :
             error = self.parse_function_params(full_func_str, type)
 
             if not error and type <= 2 :
-                self.skip_function_block(buffer)
+                self.skip_function_block(current_line)
 
                 if not self.is_to_skip_brace :
                     self.is_to_skip_next_line = True
