@@ -93,16 +93,10 @@ IF "%PLUGIN_BASE_FILE_NAME%"=="" echo You must to save the plugin before to comp
 :compile_the_plugin
 
 :: Build the compiler include folder path
-setlocal enabledelayedexpansion enableextensions
-
-:: See: http://stackoverflow.com/questions/659647/how-to-get-folder-path-from-file-path-with-cmd
+:: https://stackoverflow.com/questions/15567809/batch-extract-path-and-filename-from-a-variable
 :: set AMXX_COMPILER_PATH=C:\Somewhere\Somewhere\SomeFile.txt
-call :path_from_file_name AMXX_COMPILER_FOLDER !AMXX_COMPILER_PATH!
-
-:: Batch script make setlocal variable accessed by other batch files
-:: https://stackoverflow.com/questions/15494688/batch-script-make-setlocal-variable-accessed-by-other-batch-files
-endlocal & (
-  set "AMXX_COMPILER_FOLDER=%AMXX_COMPILER_FOLDER%"
+FOR /F "delims=" %%i IN ("%AMXX_COMPILER_PATH%") DO (
+set "AMXX_COMPILER_FOLDER=%%~pi"
 )
 
 :: Build the compiler include folder path
@@ -155,19 +149,6 @@ if defined folders_list[%currentIndex%] (
             "!folders_list[%currentIndex%]!"^|find /v "%PLUGIN_BASE_FILE_NAME%"' ) do echo %%a, to the folder !folders_list[%currentIndex%]!
 
     goto :SymLoop
-)
-
-
-::
-:: Subroutines/Function calls
-::
-goto :end
-
-:: This one must to be on the `enabledelayedexpansion` range
-:path_from_file_name <resultVar> <pathVar>
-(
-    set "%~1=%~dp2"
-    exit /b
 )
 
 
