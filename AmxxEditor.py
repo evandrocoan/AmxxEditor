@@ -1380,7 +1380,7 @@ class PawnParse(object):
                 current_line = self.parse_define(current_line)
             elif current_line.startswith('const ') :
                 current_line = self.parse_const(current_line)
-            elif current_line.startswith('enum ') :
+            elif current_line.startswith('enum'):
                 self.found_enum = True
                 self.enum_contents = ''
             elif current_line.startswith('new ') :
