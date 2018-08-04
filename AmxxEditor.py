@@ -499,15 +499,15 @@ class AmxxEditor(sublime_plugin.EventListener):
 
     def generate_funcset( self, file_name, view, prefix, locations ) :
         words_list = []
-        func_list = []
-        func_word_list = []
+        funcs_list = []
+        funcs_word_list = []
 
         if file_name in nodes:
             node    = nodes[file_name]
             visited = set()
 
             if not view.match_selector(locations[0], 'string') :
-                self.generate_funcset_recur( node, visited, func_list, func_word_list )
+                self.generate_funcset_recur( node, visited, funcs_list, funcs_word_list )
 
         if g_word_autocomplete:
             start_time = time.time()
@@ -523,17 +523,17 @@ class AmxxEditor(sublime_plugin.EventListener):
                 # Remove the annoying `(` on the string
                 word = word.replace('$', '\\$').split('(')[0]
 
-                if word not in func_word_list:
+                if word not in funcs_word_list:
                     words_list.append( ( word, word ) )
 
                 if time.time() - start_time > 0.05:
                     break
 
-        # log( 16, "( generate_funcset ) func_list size: %d" % len( func_list ) )
-        # log( 16, "( generate_funcset ) func_list items: " + str( sort_nicely( func_list ) ) )
-        return words_list + func_list
+        # log( 16, "( generate_funcset ) funcs_list size: %d" % len( funcs_list ) )
+        # log( 16, "( generate_funcset ) funcs_list items: " + str( sort_nicely( funcs_list ) ) )
+        return words_list + funcs_list
 
-    def generate_funcset_recur( self, node, visited, func_list, func_word_list ) :
+    def generate_funcset_recur( self, node, visited, funcs_list, funcs_word_list ) :
 
         if node in visited :
             return
@@ -541,10 +541,10 @@ class AmxxEditor(sublime_plugin.EventListener):
         visited.add( node )
 
         for child in node.children :
-            self.generate_funcset_recur( child, visited, func_list, func_word_list )
+            self.generate_funcset_recur( child, visited, funcs_list, funcs_word_list )
 
-        func_list.extend( node.funcs_list )
-        func_word_list.extend( node.words_list )
+        funcs_list.extend( node.funcs_list )
+        funcs_word_list.extend( node.words_list )
 
     def generate_doctset_recur(self, node, doctset, visited) :
         if node in visited :
@@ -929,7 +929,7 @@ class TooltipDocumentation(object):
         self.return_type = return_type
 
 
-class Node :
+class Node(object):
     def __init__(self, file_name) :
         self.file_name = file_name
 
@@ -968,7 +968,7 @@ class Node :
         self.words_list.clear()
 
 
-class TextReader:
+class TextReader(object):
     def __init__(self, text):
         self.text = text.splitlines()
         self.position = -1
@@ -986,7 +986,7 @@ class TextReader:
             return ''
 
 
-class PawnParse :
+class PawnParse(object):
     def __init__(self) :
         self.node = None
         self.isTheCurrentFile = False
