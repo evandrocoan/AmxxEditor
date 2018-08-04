@@ -96,7 +96,7 @@ IF "%PLUGIN_BASE_FILE_NAME%"=="" echo You must to save the plugin before to comp
 :: https://stackoverflow.com/questions/15567809/batch-extract-path-and-filename-from-a-variable
 :: set AMXX_COMPILER_PATH=C:\Somewhere\Somewhere\SomeFile.txt
 FOR /F "delims=" %%i IN ("%AMXX_COMPILER_PATH%") DO (
-set "AMXX_COMPILER_FOLDER=%%~pi"
+set "AMXX_COMPILER_FOLDER=%%~di%%~pi"
 )
 
 :: Build the compiler include folder path
