@@ -2,7 +2,7 @@
 /* Used with global_get()
  * https://forums.alliedmods.net/showthread.php?p=2608150#post2608150
  */
-enum
+enum// comment
 {
     vvv_start_int = 0,
     vvv_cdAudioTrack,
