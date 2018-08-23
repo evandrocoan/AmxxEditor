@@ -43,7 +43,7 @@ from debug_tools import getLogger
 
 try:
     # To run this file, run on the Sublime Text console:
-    # import imp; import AmxxEditor.tests.manual_tests; imp.reload( AmxxEditor.tests.manual_tests )
+    # import imp; import AmxxEditor.tests.stock_functions_include; imp.reload( AmxxEditor.tests.stock_functions_include )
     import sublime_plugin
 
 except (ImportError):
@@ -61,10 +61,10 @@ except (ImportError):
 from AmxxEditor.AmxxEditor import PawnParse
 from AmxxEditor.AmxxEditor import Node
 
-log = getLogger( __name__, 127 )
+log = getLogger( __name__.split('.')[-1], 127 )
 
 current_directory = os.path.dirname(__file__)
-file_name = os.path.join( current_directory, 'testing', 'allman_style_enum.sma' )
+file_name = os.path.join( current_directory, 'testing', 'stock_functions_include.inc' )
 log( 1, "file_name: %s", file_name )
 
 node = Node(file_name)
