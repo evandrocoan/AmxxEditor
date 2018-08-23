@@ -4,26 +4,34 @@ environment:
     PACKAGE: "AmxxEditor"
     SUBLIME_TEXT_VERSION : "3"
 
+# The build phase is set to "MSBuild" mode (default), but no Visual Studio project or solution files
+# were found in the root directory. If you are not building Visual Studio project switch build mode
+# to "Script" and provide your custom build command.
+build: off
+
 
 # https://www.appveyor.com/docs/appveyor-yml/
-install:
-    - ps: $env:PYTHON="C:\\Python33"
-    - ps: $env:PATH="$env:PYTHON;$env:PYTHON\\Scripts;$env:PATH"
+before_test:
+    - ps: $env:PYTHON="C:\Python33"
+    - ps: $env:PATH="$env:PYTHON;$env:PYTHON\Scripts;$env:PATH"
+    - echo %PATH%
+    - python --version
+    - dir
     - ps: appveyor DownloadFile "https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/appveyor.ps1"
     - ps: .\appveyor.ps1 "bootstrap" -verbose
-    - ps: python -m pip install --upgrade pip
-    - ps: pip install coverage codacy-coverage
-    - ps: python --version
-    - ps: echo $env:PATH
+
+
+test_script:
+    - ps: .\appveyor.ps1 "install_package_control" -verbose
+    - ps: .\appveyor.ps1 "run_tests" -coverage -verbose
 
 
 on_finish:
-    - ps: .\appveyor.ps1 "install_package_control" -verbose
-    - ps: .\appveyor.ps1 "run_tests" -coverage -verbose
-    - ps: pip install codecov
-    - ps: python --version
-    - ps: echo $env:PATH
-    - ps: codecov
-    - ps: coverage xml -o coverage.xml
-    - ps: python-codacy-coverage
+    # Cannot install codecov! Command executed with exception: DEPRECATION: Python 3.3 supported has
+    # been deprecated and support for it will be dropped in the future. Please upgrade your Python.
+    # - ps: pip install coverage codacy-coverage
+    # - ps: pip install codecov
+    # - ps: codecov
+    # - ps: coverage xml -o coverage.xml
+    # - ps: python-codacy-coverage
 

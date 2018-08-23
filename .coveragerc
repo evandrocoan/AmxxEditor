@@ -1,0 +1,6 @@
+[run]
+omit =
+    */home/travis/virtualenv/*
+    */watchdog/*
+    */enum/*
+    */install_main_menu.py
