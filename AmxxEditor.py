@@ -102,6 +102,7 @@ nodes = dict()
 file_observer = watchdog.observers.Observer()
 includes_re = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
 local_re = re.compile('\\.(sma|inc)$')
+function_re = re.compile(r'^[\w_\d: ]*[\w_\d]\(')
 
 
 def plugin_unloaded():
@@ -1397,13 +1398,16 @@ class PawnParse(object):
                     stock const STOCK_TEST4[] = "something";
                 """
 
-                if current_line.find(" const "):
+                if current_line.find(" const ") > -1:
                     current_line = current_line[6:]
                     self.parse_const(current_line)
 
                 else:
+                    matches = function_re.search(current_line)
+                    log( 8, 'current_line: %s', current_line )
+                    log( 8, 'matches: %s', matches )
 
-                    if current_line.find("="):
+                    if matches == None:
                         current_line = "new " + current_line[6:]
                         self.parse_variable(current_line)
 
@@ -1457,6 +1461,7 @@ class PawnParse(object):
 
     def parse_const(self, current_line) :
         current_line = current_line[6:]
+        log(8, "(analyzer) current_line: [%s]" % current_line)
 
         split   = current_line.split('=', 1)
         if len(split) < 2 :

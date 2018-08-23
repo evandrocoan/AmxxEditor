@@ -3,3 +3,7 @@ stock te_create_screen_aligned_beam_ring(id, origin[3], axis[3], spriteid, start
 {
 }
 
+stock bool:is_str_num(const sString[])
+{
+}
+
