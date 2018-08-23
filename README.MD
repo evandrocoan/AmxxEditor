@@ -1,5 +1,14 @@
 # Sublime AmxxEditor
 
+[![Build Status](https://travis-ci.org/evandrocoan/AmxxEditor.svg?branch=master)](https://travis-ci.org/evandrocoan/AmxxEditor)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/evandrocoan/AmxxEditor?branch=master&svg=true)](https://ci.appveyor.com/project/evandrocoan/AmxxEditor/branch/master)
+[![codecov](https://codecov.io/gh/evandrocoan/AmxxEditor/branch/master/graph/badge.svg)](https://codecov.io/gh/evandrocoan/AmxxEditor)
+[![Coverage Status](https://coveralls.io/repos/github/evandrocoan/AmxxEditor/badge.svg?branch=master)](https://coveralls.io/github/evandrocoan/AmxxEditor?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9191d17b91814f8caf17c9e537a22904)](https://www.codacy.com/app/evandrocoan/AmxxEditor?utm_source=github.com&utm_medium=referral&utm_content=evandrocoan/AmxxEditor&utm_campaign=badger)
+[![Latest Release](https://img.shields.io/github/tag/evandrocoan/AmxxEditor.svg?label=version)](https://github.com/evandrocoan/AmxxEditor/releases)
+<a href="https://packagecontrol.io/packages/AmxxEditor"><img src="https://packagecontrol.herokuapp.com/downloads/AmxxEditor.svg"></a>
+
+
 This was initially a mirror from the Sublime AMXX-Editor available on:
 
 1. [[Editor] Sublime AMXX-Editor v2.2](https://forums.alliedmods.net/showthread.php?t=284385)

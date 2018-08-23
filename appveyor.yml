@@ -1,0 +1,29 @@
+
+environment:
+    # The package name
+    PACKAGE: "AmxxEditor"
+    SUBLIME_TEXT_VERSION : "3"
+
+
+# https://www.appveyor.com/docs/appveyor-yml/
+install:
+    - ps: $env:PYTHON="C:\\Python33"
+    - ps: $env:PATH="$env:PYTHON;$env:PYTHON\\Scripts;$env:PATH"
+    - ps: appveyor DownloadFile "https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/appveyor.ps1"
+    - ps: .\appveyor.ps1 "bootstrap" -verbose
+    - ps: python -m pip install --upgrade pip
+    - ps: pip install coverage codacy-coverage
+    - ps: python --version
+    - ps: echo $env:PATH
+
+
+on_finish:
+    - ps: .\appveyor.ps1 "install_package_control" -verbose
+    - ps: .\appveyor.ps1 "run_tests" -coverage -verbose
+    - ps: pip install codecov
+    - ps: python --version
+    - ps: echo $env:PATH
+    - ps: codecov
+    - ps: coverage xml -o coverage.xml
+    - ps: python-codacy-coverage
+
