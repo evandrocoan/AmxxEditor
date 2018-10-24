@@ -613,10 +613,12 @@ def on_settings_modified():
     if isinstance( include_directory, list ):
 
         for path in include_directory:
-            g_include_dir.add( os.path.realpath( path ) )
+            real_path = os.path.realpath( path )
+            if os.path.isdir( real_path ): g_include_dir.add( real_path )
 
     else:
-        g_include_dir.add( os.path.realpath( include_directory ) )
+        real_path = os.path.realpath( include_directory )
+        if os.path.isdir( real_path ): g_include_dir.add( real_path )
 
     file_observer.unschedule_all()
     log(4, "( on_settings_modified ) debug_level: %d", log.debug_level)
