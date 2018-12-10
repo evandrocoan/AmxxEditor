@@ -50,7 +50,7 @@ from queue import *
 from threading import Timer, Thread
 
 sys.path.append(os.path.dirname(__file__))
-from enum import Enum
+from enum34 import Enum
 import watchdog.events
 import watchdog.observers
 import watchdog.utils
