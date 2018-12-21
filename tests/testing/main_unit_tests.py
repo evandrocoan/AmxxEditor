@@ -95,6 +95,22 @@ class MainUnitTests(unittest.TestCase):
         self.assertEqual( repr("['te_create_screen_aligned_beam_ring', 'is_str_num']"), words_list )
         self.assertEqual( repr("[['te_create_screen_aligned_beam_ring(15) \tstock_functions_include.inc - stock', 'te_create_screen_aligned_beam_ring(${1:id}, ${2:origin[3]}, ${3:axis[3]}, ${4:spriteid}, ${5:startframe = 1}, ${6:framerate = 10}, ${7:life = 10}, ${8:width = 10}, ${9:noise = 0}, ${10:r = 0}, ${11:g = 0}, ${12:b = 255}, ${13:a = 75}, ${14:speed = 30}, ${15:bool:reliable = true})'], ['is_str_num(1) \tstock_functions_include.inc - stock', 'is_str_num(${1:const sString[]})']]" ), func_list )
 
+    def test_stock_completion(self):
+        file_name = get_relative_path( 'stock_functions_completion.inc', __file__ )
+        # log( 1, "file_name: %s", file_name )
+
+        node = Node(file_name)
+        pawnParse = PawnParse()
+
+        with open( node.file_name ) as file:
+            pawnParse.start(file, node)
+
+        func_list = '"%s"' % str( node.funcs_list )
+        words_list = '"%s"' % str( node.words_list )
+
+        self.assertEqual( repr("[['xs_vec_equal(2) \tstock_functions_completion.inc - stock', 'xs_vec_equal(${1:const Float:vec1[]}, ${2:const Float:vec2[]})'], ['xs_vec_add(3) \tstock_functions_completion.inc - stock', 'xs_vec_add(${1:const Float:in1[]}, ${2:const Float:in2[]}, ${3:Float:out[]})']]"), func_list )
+        self.assertEqual( repr("['xs_vec_equal', 'xs_vec_add']"), words_list )
+
     def test_all_man_style_enum(self):
         file_name = get_relative_path( 'allman_style_enum.sma', __file__ )
         # log( 1, "file_name: %s", file_name )

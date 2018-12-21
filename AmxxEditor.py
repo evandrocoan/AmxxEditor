@@ -1400,9 +1400,12 @@ class PawnParse(object):
                     const STOCK_TEST2[] = "something";
                     stock STOCK_TEST3[] = "something";
                     stock const STOCK_TEST4[] = "something";
+
+                    stock bool:xs_vec_equal(const Float:vec1[], const Float:vec2[]) { }
+                    stock xs_vec_add(const Float:in1[], const Float:in2[], Float:out[]) { }
                 """
 
-                if current_line.find(" const ") > -1:
+                if current_line.split('(')[0].find(" const ") > -1:
                     current_line = current_line[6:]
                     self.parse_const(current_line)
 
