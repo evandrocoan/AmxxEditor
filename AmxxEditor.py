@@ -70,12 +70,13 @@ import logging
 # 32 - Function parsing debugging.
 # 63 - All debugging levels at the same time.
 from debug_tools import getLogger
-log = getLogger( 1, __name__ )
 
-CURRENT_PACKAGE_NAME = __package__
-g_is_package_loading = True
+log = getLogger( 1, __name__ )
+# log = getLogger( 1, __name__, file="amxxeditor.txt", mode='w' )
 
 EDITOR_VERSION = "3.0_zz"
+CURRENT_PACKAGE_NAME = __package__
+g_is_package_loading = True
 
 class FUNC_TYPES(Enum):
     function = 0
@@ -111,6 +112,7 @@ def plugin_unloaded():
 
     settings = sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME)
     settings.clear_on_change(CURRENT_PACKAGE_NAME)
+    log.delete()
 
 
 def plugin_loaded():
