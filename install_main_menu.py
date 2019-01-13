@@ -51,6 +51,7 @@ import sublime
 import sublime_plugin
 
 from debug_tools import getLogger
+from debug_tools.third_part import load_package_file_as_binary
 
 # Debugger settings: 0 - disabled, 127 - enabled
 log = getLogger( 1, __name__ )
@@ -118,11 +119,7 @@ def add_main_menu():
     base_file = os.path.join( PACKAGE_ROOT_DIRECTORY, MENU_FILE_NAME + ".hide" )
     destine_file = os.path.join( USER_MENU_FILES_DIRECTORY, MENU_FILE_NAME )
 
-    packages_start = base_file.find( "Packages" )
-    packages_relative_path = base_file[packages_start:].replace( "\\", "/" )
-
-    log( 1, "load_data_file, packages_relative_path: " + str( packages_relative_path ) )
-    resource_bytes = sublime.load_binary_resource( packages_relative_path )
+    resource_bytes = load_package_file_as_binary( base_file )
     text = resource_bytes.decode('utf-8')
 
     with open( destine_file, "w", newline='\n', encoding='utf-8' ) as file:

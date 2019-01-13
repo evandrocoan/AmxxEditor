@@ -40,21 +40,14 @@ import os
 
 import pprint
 from debug_tools import getLogger
+from debug_tools.utilities import assert_path
 
 try:
     # To run this file, run on the Sublime Text console:
     # import imp; import AmxxEditor.tests.stock_functions_include; imp.reload( AmxxEditor.tests.stock_functions_include )
-    import sublime_plugin
+    import sublime_api
 
 except (ImportError):
-    import sys
-
-    def assert_path(module):
-
-        if module not in sys.path:
-            sys.path.append( module )
-
-    # Import the debug tools
     assert_path( os.path.join( os.path.dirname( os.path.dirname( os.path.dirname( os.path.realpath( __file__ ) ) ) ) ) )
 
 # Import and reload
