@@ -73,6 +73,7 @@ To be used as a submodule at My Sublime Text Settings: https://github.com/evandr
 search for **`AmxxEditor`** and press <kbd>Enter</kbd>
 
 See also:
+
 1. [ITE - Integrated Toolset Environment](https://github.com/evandrocoan/ITE)
 1. [Package control docs](https://packagecontrol.io/docs/usage) for details.
 
