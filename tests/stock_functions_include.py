@@ -40,7 +40,7 @@ import os
 
 import pprint
 from debug_tools import getLogger
-from debug_tools.utilities import assert_path
+from debug_tools.third_part import assert_path
 
 try:
     # To run this file, run on the Sublime Text console:
@@ -48,7 +48,7 @@ try:
     import sublime_api
 
 except (ImportError):
-    assert_path( os.path.join( os.path.dirname( os.path.dirname( os.path.dirname( os.path.realpath( __file__ ) ) ) ) ) )
+    assert_path( os.path.dirname( os.path.dirname( os.path.dirname( os.path.realpath( __file__ ) ) ) ) )
 
 # Import and reload
 from AmxxEditor.AmxxEditor import PawnParse
