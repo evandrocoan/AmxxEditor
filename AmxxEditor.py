@@ -446,8 +446,9 @@ class AmxxEditor(sublime_plugin.EventListener):
         if self.delay_queue is not None :
             self.delay_queue.cancel()
 
-        self.delay_queue = Timer( float( g_delay_time ), add_to_queue_forward, [ view ] )
-        self.delay_queue.start()
+        if g_delay_time > 0.3:
+            self.delay_queue = Timer( float( g_delay_time ), add_to_queue_forward, [ view ] )
+            self.delay_queue.start()
 
     def on_query_completions(self, view, prefix, locations):
         """
@@ -728,7 +729,8 @@ def sort_nicely( words_set ):
 
 
 def add_to_queue_forward(view) :
-    sublime.set_timeout_async( lambda: add_to_queue( view ), float( g_delay_time ) * 1000.0 )
+    if g_delay_time > 0.3:
+        sublime.set_timeout_async( lambda: add_to_queue( view ), float( g_delay_time ) * 1000.0 )
 
 
 def add_to_queue(view) :
