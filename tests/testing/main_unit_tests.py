@@ -141,8 +141,8 @@ class MainUnitTests(unittest.TestCase):
         func_list = '"%s"' % str( node.funcs_list )
         words_list = '"%s"' % str( node.words_list )
 
-        self.assertEqual( repr("['rg_fire_bullets3']"), words_list )
-        self.assertEqual( repr("[['rg_fire_bullets3(1) \tnative_functions_completion.inc - native', 'rg_fire_bullets3(${1:const inflictor})']]"), func_list )
+        self.assertEqual( repr("['rg_fire_bullets3', 'fmt']"), words_list )
+        self.assertEqual( repr("[['rg_fire_bullets3(1) \tnative_functions_completion.inc - native', 'rg_fire_bullets3(${1:const inflictor})'], ['fmt(2) \tnative_functions_completion.inc - native', 'fmt(${1:const format[]}, ${2:any:...})']]"), func_list )
 
 
 # https://stackoverflow.com/questions/15971735/running-single-test-from-unittest-testcase-via-command-line/

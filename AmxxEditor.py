@@ -105,6 +105,7 @@ includes_re = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
 local_re = re.compile('\\.(sma|inc)$')
 function_re = re.compile(r'^[\w_\d: ]*[\w_\d]\(')
 function_return_re = re.compile(r'(.+:\[.*\]|.+:)\s*(.+)')
+function_return_array_re = re.compile(r'(\[.*\])(.+)')
 
 
 def plugin_unloaded():
@@ -1680,13 +1681,19 @@ class PawnParse(object):
 
         # Float:rg_fire_bullets3(...
         # Float:[3] rg_fire_bullets3(...
-        split_funcname_and_return = function_return_re.search(funcname_and_return)
+        match = function_return_re.search(funcname_and_return)
+        if match :
+            funcname = match.group(2).strip()
+            returntype = match.group(1).strip()
 
-        if split_funcname_and_return :
-            funcname = split_funcname_and_return.group(2).strip()
-            returntype = split_funcname_and_return.group(1).strip()
         else :
-            funcname = funcname_and_return.strip()
+            match = function_return_array_re.search(funcname_and_return)
+            if match :
+                funcname = match.group(2).strip()
+                returntype = match.group(1).strip()
+
+            else :
+                funcname = funcname_and_return.strip()
 
         if funcname.startswith("operator") :
             return 0
