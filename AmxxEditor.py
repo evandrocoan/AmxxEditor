@@ -104,6 +104,7 @@ file_observer = watchdog.observers.Observer()
 includes_re = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
 local_re = re.compile('\\.(sma|inc)$')
 function_re = re.compile(r'^[\w_\d: ]*[\w_\d]\(')
+function_return_re = re.compile(r'(.+:\[.*\]|.+:)\s*(.+)')
 
 
 def plugin_unloaded():
@@ -1658,7 +1659,7 @@ class PawnParse(object):
                 if not self.is_to_skip_brace :
                     self.is_to_skip_next_line = True
 
-            #print("skip_brace: error:[%d] type:[%d] found:[%d] skip:[%d] func:[%s]" % (error, type, self.is_to_skip_brace, self.is_to_skip_next_line, full_func_str))
+            log(8, "skip_brace: error:[%d] type:[%d] found:[%d] skip:[%d] func:[%s]" % (error, type, self.is_to_skip_brace, self.is_to_skip_next_line, full_func_str))
 
     def parse_function_params(self, func, function_type) :
         if function_type == 0 :
@@ -1676,13 +1677,16 @@ class PawnParse(object):
         remaining = split[1]
         returntype = ''
         funcname_and_return = split[0].strip()
-        split_funcname_and_return = funcname_and_return.split(':')
 
-        if len(split_funcname_and_return) > 1 :
-            funcname = split_funcname_and_return[1].strip()
-            returntype = split_funcname_and_return[0].strip()
+        # Float:rg_fire_bullets3(...
+        # Float:[3] rg_fire_bullets3(...
+        split_funcname_and_return = function_return_re.search(funcname_and_return)
+
+        if split_funcname_and_return :
+            funcname = split_funcname_and_return.group(2).strip()
+            returntype = split_funcname_and_return.group(1).strip()
         else :
-            funcname = split_funcname_and_return[0].strip()
+            funcname = funcname_and_return.strip()
 
         if funcname.startswith("operator") :
             return 0

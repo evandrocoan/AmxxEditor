@@ -52,6 +52,7 @@ from AmxxEditor.AmxxEditor import Node
 
 # Import and reload the debugger
 sublime_plugin.reload_plugin( "AmxxEditor.AmxxEditor" )
+sublime_plugin.reload_plugin( "AmxxEditor.tests.testing.main_unit_tests" )
 
 from debug_tools import getLogger
 log = getLogger( __name__.split('.')[-1], 127 )
@@ -127,11 +128,27 @@ class MainUnitTests(unittest.TestCase):
         self.assertEqual( repr("['vvv_start_int', 'vvv_cdAudioTrack', 'vvv_end_pchar', 'ggg_start_int', 'ggg_cdAudioTrack', 'ggg_end_pchar']"), words_list )
         self.assertEqual( repr("[['vvv_start_int \tallman_style_enum.sma - enum', 'vvv_start_int'], ['vvv_cdAudioTrack \tallman_style_enum.sma - enum', 'vvv_cdAudioTrack'], ['vvv_end_pchar \tallman_style_enum.sma - enum', 'vvv_end_pchar'], ['ggg_start_int \tallman_style_enum.sma - enum', 'ggg_start_int'], ['ggg_cdAudioTrack \tallman_style_enum.sma - enum', 'ggg_cdAudioTrack'], ['ggg_end_pchar \tallman_style_enum.sma - enum', 'ggg_end_pchar']]" ), func_list )
 
+    def test_native_function_return_array(self):
+        file_name = get_relative_path( 'native_functions_completion.inc', __file__ )
+        # log( 1, "file_name: %s", file_name )
+
+        node = Node(file_name)
+        pawnParse = PawnParse()
+
+        with open( node.file_name ) as file:
+            pawnParse.start(file, node)
+
+        func_list = '"%s"' % str( node.funcs_list )
+        words_list = '"%s"' % str( node.words_list )
+
+        self.assertEqual( repr("['rg_fire_bullets3']"), words_list )
+        self.assertEqual( repr("['rg_fire_bullets3']"), func_list )
+
 
 # https://stackoverflow.com/questions/15971735/running-single-test-from-unittest-testcase-via-command-line/
 def load_tests(loader, standard_tests, pattern):
     suite = unittest.TestSuite()
-    suite.addTest( MainUnitTests( 'test_stock_completion' ) )
+    suite.addTest( MainUnitTests( 'test_native_function_return_array' ) )
     return suite
 
 # Skip Custom load_tests()
