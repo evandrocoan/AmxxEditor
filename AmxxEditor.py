@@ -327,18 +327,13 @@ class AmxxEditor(sublime_plugin.EventListener):
         word_region = view.word(region)
         location    = word_region.end() + 1
         search_func = view.substr(word_region)
-        doctset     = set()
+        doctset     = dict()
         visited     = set()
         found       = None
         node        = nodes[file_name]
 
         self.generate_doctset_recur(node, doctset, visited)
-
-        for func in doctset :
-            if search_func == func.function_name :
-                found = func
-                if found.function_type != FUNC_TYPES.public :
-                    break
+        found = doctset.get(search_func)
 
         if found:
             log(4, "param2: [%s]" % simple_escape(found.parameters))
@@ -942,7 +937,7 @@ class Node(object):
     def __init__(self, file_name) :
         self.file_name = file_name
 
-        self.doct = set()
+        self.doct = dict()
         self.children = set()
         self.parents = set()
 
@@ -1728,7 +1723,7 @@ class PawnParse(object):
             autocomplete = funcname + "()"
 
         self.add_function_autocomplete(funcname, FUNC_TYPES(function_type).name, autocomplete, len( params ))
-        self.node.doct.add(TooltipDocumentation(funcname, func[func.find("(")+1:-1], self.node.file_name, function_type, returntype))
+        self.node.doct[funcname] = TooltipDocumentation(funcname, func[func.find("(")+1:-1], self.node.file_name, function_type, returntype)
 
         log(8, "(analyzer) parse_params add: [%s]" % func)
         return 0
