@@ -89,6 +89,7 @@ class FUNC_TYPES(Enum):
 g_constants_list = set()
 g_inteltip_style = ""
 g_enable_inteltip = False
+g_enable_inteltip_calls = False
 g_enable_buildversion = False
 g_delay_time = 1.0
 g_include_dir = set()
@@ -325,7 +326,6 @@ class AmxxEditor(sublime_plugin.EventListener):
             return
 
         word_region = view.word(region)
-        location    = word_region.end() + 1
         search_func = view.substr(word_region)
         doctset     = dict()
         visited     = set()
@@ -334,6 +334,21 @@ class AmxxEditor(sublime_plugin.EventListener):
 
         self.generate_doctset_recur(node, doctset, visited)
         found = doctset.get(search_func)
+        location = word_region.end() + 1
+
+        if g_enable_inteltip_calls and not found:
+            scope = view.scope_name(region.begin())
+
+            if "function.call.paren" in scope:
+                counter = 100
+
+                while counter > 0 and not found:
+                    counter -= 1
+                    begin = word_region.begin() - 1;
+                    word_region = view.word(begin)
+                    search_func = view.substr(word_region)
+                    found = doctset.get(search_func)
+
 
         if found:
             log(4, "param2: [%s]" % simple_escape(found.parameters))
@@ -565,6 +580,7 @@ def is_amxmodx_file(view) :
 def on_settings_modified():
     log(4, "on_settings_modified" )
     global g_enable_inteltip
+    global g_enable_inteltip_calls
     global g_new_file_syntax
     global g_word_autocomplete
     global g_function_autocomplete
@@ -576,7 +592,8 @@ def on_settings_modified():
         if not g_is_package_loading:
             sublime.message_dialog("AmxxEditor:\n\n" + invalid)
 
-        g_enable_inteltip = 0
+        g_enable_inteltip = False
+        g_enable_inteltip_calls = False
         return
 
     # check package path
@@ -599,6 +616,7 @@ def on_settings_modified():
     global g_enable_buildversion, g_delay_time, g_add_paremeters
 
     g_enable_inteltip       = settings.get('enable_inteltip', True)
+    g_enable_inteltip_calls = settings.get('g_enable_inteltip_calls', True)
     g_enable_buildversion   = settings.get('enable_buildversion', False)
     g_word_autocomplete     = settings.get('word_autocomplete', False)
     g_function_autocomplete = settings.get('function_autocomplete', False)
