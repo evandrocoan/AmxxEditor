@@ -70,6 +70,7 @@ import logging
 # 32 - Function parsing debugging.
 # 63 - All debugging levels at the same time.
 from debug_tools import getLogger
+from debug_tools.utilities import wrap_text
 
 log = getLogger( 1, __name__ )
 # log = getLogger( 1, __name__, file="amxxeditor.txt", mode='w' )
@@ -107,6 +108,7 @@ local_re = re.compile('\\.(sma|inc)$')
 function_re = re.compile(r'^[\w_\d: ]*[\w_\d]\(')
 function_return_re = re.compile(r'(.+:\[.*\]|.+:)\s*(.+)')
 function_return_array_re = re.compile(r'(\[.*\])(.+)')
+new_line_regex = re.compile(r'\n')
 
 
 def plugin_unloaded():
@@ -352,6 +354,9 @@ class AmxxEditor(sublime_plugin.EventListener):
                     if "function.call" not in scope:
                         break
 
+                    elif "function.call.paren" in scope:
+                        continue
+
                     else:
                         found = doctset.get(search_func)
 
@@ -395,6 +400,10 @@ class AmxxEditor(sublime_plugin.EventListener):
                 html += '<span class="return">Return:</span> <span class="return_type">'+found.return_type+'</span>'
 
             html += '</div>'                                    ############################## END
+
+            html += '<div class="file" style="margin-top: 7px;">'
+            html += new_line_regex.sub( "<br />", wrap_text( found.doc_comment, wrap=100 ) )
+            html += '</div>'
 
             # log( 1, "html: %s", html )
             view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
@@ -945,7 +954,7 @@ def get_or_add_node(file_name) :
 
 # ============= NEW CODE ------------------------------------------------------------------------------------------------------------
 class TooltipDocumentation(object):
-    def __init__(self, function_name, parameters, file_name, function_type, return_type):
+    def __init__(self, function_name, parameters, file_name, function_type, return_type, doc_comment):
         """
             For `function_type` see FUNC_TYPES.
         """
@@ -954,6 +963,7 @@ class TooltipDocumentation(object):
         self.file_name = file_name
         self.function_type = function_type
         self.return_type = return_type
+        self.doc_comment = wrap_text( doc_comment, trim_spaces=" ", trim_plus="*" )
 
 
 class Node(object):
@@ -1044,6 +1054,7 @@ class PawnParse(object):
         self.if_define_level   = 0
         self.else_define_level = 0
 
+        self.doc_comment       = ""
         self.is_on_if_define   = []
         self.is_on_else_define = []
 
@@ -1118,6 +1129,7 @@ class PawnParse(object):
         current_line = current_line.lstrip()
 
         result = ''
+        doc_comment = ''
         i = 0
 
         # log( 1, str( current_line ) )
@@ -1126,10 +1138,12 @@ class PawnParse(object):
         while i < buffer_length :
             if current_line[i] == '/' and i + 1 < len(current_line):
                 if current_line[i + 1] == '/' :
-                    self.brace_level +=  result.count('{') - result.count('}')
+                    self.addDocComment( doc_comment )
+                    self.brace_level += result.count('{') - result.count('}')
                     return result
                 elif current_line[i + 1] == '*' :
                     self.found_comment = True
+                    self.doc_comment = ""
                     i += 1
                 elif not self.found_comment :
                     result += '/'
@@ -1137,13 +1151,20 @@ class PawnParse(object):
                 if current_line[i] == '*' and i + 1 < len(current_line) and current_line[i + 1] == '/' :
                     self.found_comment = False
                     i += 1
+                else:
+                    doc_comment += current_line[i]
             elif not (i > 0 and current_line[i] == ' ' and current_line[i - 1] == ' '):
                 result += current_line[i]
 
             i += 1
 
         self.brace_level +=  result.count('{') - result.count('}')
+        self.addDocComment( doc_comment )
         return result
+
+    def addDocComment(self, comment_line) :
+        if comment_line and self.found_comment:
+            self.doc_comment += comment_line + "\n"
 
     def skip_function_block(self, current_line) :
         inChar    = False
@@ -1746,7 +1767,14 @@ class PawnParse(object):
             autocomplete = funcname + "()"
 
         self.add_function_autocomplete(funcname, FUNC_TYPES(function_type).name, autocomplete, len( params ))
-        self.node.doct[funcname] = TooltipDocumentation(funcname, func[func.find("(")+1:-1], self.node.file_name, function_type, returntype)
+        self.node.doct[funcname] = TooltipDocumentation(
+            funcname,
+            func[func.find("(")+1:-1],
+            self.node.file_name,
+            function_type,
+            returntype,
+            self.doc_comment
+        )
 
         log(8, "(analyzer) parse_params add: [%s]" % func)
         return 0
