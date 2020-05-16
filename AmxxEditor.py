@@ -275,7 +275,9 @@ class AmxxEditor(sublime_plugin.EventListener):
         scope = view.scope_name(region.begin())
         log(4, "(inteltip) scope_name: [%s]" % scope)
 
-        if not "support.function" in scope and not "include_path.pawn" in scope or region.size() > 1 :
+        if ( not "support.function" in scope and not "include_path.pawn" in scope ) \
+                or region.size() > 1 \
+                or "support.function.definition" in scope:
             view.hide_popup()
             view.add_regions("inteltip", [ ])
             return
