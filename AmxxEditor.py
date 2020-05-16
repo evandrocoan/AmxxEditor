@@ -630,7 +630,7 @@ def on_settings_modified():
     global g_enable_buildversion, g_delay_time, g_add_paremeters
 
     g_enable_inteltip       = settings.get('enable_inteltip', True)
-    g_enable_inteltip_calls = settings.get('g_enable_inteltip_calls', True)
+    g_enable_inteltip_calls = settings.get('enable_inteltip_calls', True)
     g_enable_buildversion   = settings.get('enable_buildversion', False)
     g_word_autocomplete     = settings.get('word_autocomplete', False)
     g_function_autocomplete = settings.get('function_autocomplete', False)
