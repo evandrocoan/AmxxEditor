@@ -334,7 +334,7 @@ class AmxxEditor(sublime_plugin.EventListener):
 
         self.generate_doctset_recur(node, doctset, visited)
         found = doctset.get(search_func)
-        location = word_region.end() + 1
+        location = word_region.end()
 
         if g_enable_inteltip_calls and not found:
             scope = view.scope_name(region.begin())
@@ -347,8 +347,13 @@ class AmxxEditor(sublime_plugin.EventListener):
                     begin = word_region.begin() - 1;
                     word_region = view.word(begin)
                     search_func = view.substr(word_region)
-                    found = doctset.get(search_func)
+                    scope = view.scope_name(word_region.begin())
 
+                    if "function.call" not in scope:
+                        break
+
+                    else:
+                        found = doctset.get(search_func)
 
         if found:
             log(4, "param2: [%s]" % simple_escape(found.parameters))
