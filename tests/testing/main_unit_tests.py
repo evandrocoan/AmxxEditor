@@ -141,14 +141,53 @@ class MainUnitTests(unittest.TestCase):
         func_list = '"%s"' % str( node.funcs_list )
         words_list = '"%s"' % str( node.words_list )
 
-        self.assertEqual( repr("['rg_fire_bullets3', 'fmt']"), words_list )
         self.assertEqual( repr("[['rg_fire_bullets3(1) \tnative_functions_completion.inc - native', 'rg_fire_bullets3(${1:const inflictor})'], ['fmt(2) \tnative_functions_completion.inc - native', 'fmt(${1:const format[]}, ${2:any:...})']]"), func_list )
+
+        self.assertEqual( repr("['rg_fire_bullets3', 'fmt']"), words_list )
+
+    def test_doc_strings(self):
+        file_name = get_relative_path( 'doc_string.inc', __file__ )
+        # log( 1, "file_name: %s", file_name )
+
+        node = Node(file_name)
+        pawnParse = PawnParse()
+
+        with open( node.file_name ) as file:
+            pawnParse.start(file, node)
+
+        func_list = dict((func, item) for func, item in node.funcs_list)
+        doc_list = dict((func, item.doc_comment) for func, item in node.doct.items())
+
+        self.assertEqual( doc_list, {
+            'rg_fire_bullets3':
+                    'single line doc string. single line doc string. single line doc string. single line doc string. single line doc string.\nsingle line doc string. single line doc string. single line doc string. single line doc string. single line doc string.\nsingle line doc string. single line doc string. single line doc string. single line doc string. single line doc string.\nsingle line doc string. single line doc string. single line doc string. single line doc string. single line doc string.\nsingle line doc string. single line doc string. single line doc string. single line doc string. single line doc string.',
+            'rg_fire_bullets2':
+                    'single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string. single line doc string.',
+            'rg_fire_bullets1':
+                    'single line doc string. single line doc string. single line doc string. single line doc string. single line doc string.',
+            'fmt4': '',
+            'fmt3': 'single line doc string 1.\nsingle line doc string 2.',
+            'fmt2':
+                    'single line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.',
+            'fmt1':
+                    'single line doc string.\nsingle line doc string.\nsingle line doc string.\nsingle line doc string.'},
+        )
+
+        self.assertEqual( func_list, {
+            'rg_fire_bullets3(1) \tdoc_string.inc - native': 'rg_fire_bullets3(${1:const inflictor})',
+            'rg_fire_bullets1(1) \tdoc_string.inc - native': 'rg_fire_bullets1(${1:const inflictor})',
+            'rg_fire_bullets2(1) \tdoc_string.inc - native': 'rg_fire_bullets2(${1:const inflictor})',
+            'fmt4(2) \tdoc_string.inc - native': 'fmt4(${1:const format[]}, ${2:any:...})',
+            'fmt3(2) \tdoc_string.inc - native': 'fmt3(${1:const format[]}, ${2:any:...})',
+            'fmt2(2) \tdoc_string.inc - native': 'fmt2(${1:const format[]}, ${2:any:...})',
+            'fmt1(2) \tdoc_string.inc - native': 'fmt1(${1:const format[]}, ${2:any:...})',
+        } )
 
 
 # https://stackoverflow.com/questions/15971735/running-single-test-from-unittest-testcase-via-command-line/
 def load_tests(loader, standard_tests, pattern):
     suite = unittest.TestSuite()
-    suite.addTest( MainUnitTests( 'test_native_function_return_array' ) )
+    suite.addTest( MainUnitTests( 'test_doc_strings' ) )
     return suite
 
 # Skip Custom load_tests()

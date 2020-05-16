@@ -1138,7 +1138,7 @@ class PawnParse(object):
         while i < buffer_length :
             if current_line[i] == '/' and i + 1 < len(current_line):
                 if current_line[i + 1] == '/' :
-                    self.addDocComment( doc_comment )
+                    self.addDocComment( current_line[i+2:], force=True )
                     self.brace_level += result.count('{') - result.count('}')
                     return result
                 elif current_line[i + 1] == '*' :
@@ -1163,9 +1163,12 @@ class PawnParse(object):
         self.addDocComment( doc_comment )
         return result
 
-    def addDocComment(self, comment_line) :
-        if comment_line and self.found_comment:
+    def addDocComment(self, comment_line, force=False) :
+        if comment_line and self.found_comment or force:
             self.doc_comment += comment_line + "\n"
+
+    def clearDocComment(self) :
+        self.doc_comment = ''
 
     def skip_function_block(self, current_line) :
         inChar    = False
@@ -1424,19 +1427,25 @@ class PawnParse(object):
                 current_line = self.read_line()
                 if current_line is not None and current_line.startswith('stock ') :
                     self.skip_function_block(current_line)
+                    self.clearDocComment()
 
             elif current_line.startswith('#define ') :
                 current_line = self.parse_define(current_line)
+                self.clearDocComment()
             elif current_line.startswith('const ') :
                 current_line = self.parse_const(current_line)
+                self.clearDocComment()
             elif current_line.startswith('enum ') or current_line == 'enum':
                 self.found_enum = True
                 self.enum_contents = ''
+                self.clearDocComment()
             elif current_line.startswith('new ') :
                 self.parse_variable(current_line)
+                self.clearDocComment()
 
             elif current_line.startswith('public ') :
                 self.parse_function(current_line, 1)
+                self.clearDocComment()
 
             elif current_line.startswith('stock ') :
                 """
@@ -1464,16 +1473,21 @@ class PawnParse(object):
 
                     else:
                         self.parse_function(current_line, 2)
+                self.clearDocComment()
 
             elif current_line.startswith('forward ') :
                 self.parse_function(current_line, 3)
+                self.clearDocComment()
             elif current_line.startswith('native ') :
                 self.parse_function(current_line, 4)
+                self.clearDocComment()
             elif not self.found_enum and not current_line[0] == '#' :
                 self.parse_function(current_line, 0)
+                self.clearDocComment()
 
             if self.found_enum :
                 self.parse_enum(current_line)
+                self.clearDocComment()
 
     def parse_define(self, current_line) :
         define = re.search('#define[\\s]+([^\\s]+)[\\s]+(.+)', current_line)
