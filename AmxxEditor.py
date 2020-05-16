@@ -109,6 +109,7 @@ function_re = re.compile(r'^[\w_\d: ]*[\w_\d]\(')
 function_return_re = re.compile(r'(.+:\[.*\]|.+:)\s*(.+)')
 function_return_array_re = re.compile(r'(\[.*\])(.+)')
 new_line_regex = re.compile(r'\n')
+space_clean_regex = re.compile(r'\t|  ')
 
 
 def plugin_unloaded():
@@ -1122,12 +1123,7 @@ class PawnParse(object):
             return None
 
     def read_string(self, current_line) :
-        current_line = current_line.replace('\t', ' ').strip()
-        while '  ' in current_line :
-            current_line = current_line.replace('  ', ' ')
-
-        current_line = current_line.lstrip()
-
+        current_line = space_clean_regex.sub( " ", current_line.strip( " \t" ) )
         result = ''
         doc_comment = ''
         i = 0
