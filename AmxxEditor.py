@@ -1038,6 +1038,7 @@ class PawnParse(object):
             When the buffer is not None, it is always the current file.
         """
         log(8, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
+        self.is_parsing_function = False
 
         self.isTheCurrentFile   = isTheCurrentFile
         self.file               = pFile
@@ -1136,12 +1137,12 @@ class PawnParse(object):
         while i < buffer_length :
             if current_line[i] == '/' and i + 1 < len(current_line):
                 if current_line[i + 1] == '/' :
-                    self.addDocComment( current_line[i+2:], force=True )
+                    self.addDocComment( current_line.lstrip( '/' ), force=True )
                     self.brace_level += result.count('{') - result.count('}')
                     return result
                 elif current_line[i + 1] == '*' :
                     self.found_comment = True
-                    self.doc_comment = ""
+                    self.clearDocComment()
                     i += 1
                 elif not self.found_comment :
                     result += '/'
@@ -1162,11 +1163,13 @@ class PawnParse(object):
         return result
 
     def addDocComment(self, comment_line, force=False) :
-        if comment_line and self.found_comment or force:
+        if ( comment_line and self.found_comment and not self.is_parsing_function ) \
+                or ( force and not self.is_parsing_function ):
             self.doc_comment += comment_line + "\n"
 
     def clearDocComment(self) :
-        self.doc_comment = ''
+        if not self.is_parsing_function:
+            self.doc_comment = ''
 
     def skip_function_block(self, current_line) :
         inChar    = False
@@ -1665,6 +1668,7 @@ class PawnParse(object):
             current_line = ''
 
     def parse_function(self, current_line, type) :
+        self.is_parsing_function = True
         multi_line = False
         temp = ''
         full_func_str = None
@@ -1678,6 +1682,7 @@ class PawnParse(object):
                 parenpos = current_line.find('(')
 
                 if parenpos == -1 :
+                    self.is_parsing_function = False
                     return
 
                 open_paren_found = True
@@ -1699,12 +1704,17 @@ class PawnParse(object):
             current_line = self.read_line()
 
             if current_line is None :
+                self.is_parsing_function = False
                 return
 
             current_line = self.read_string(current_line)
 
         if full_func_str is not None :
             error = self.parse_function_params(full_func_str, type)
+            self.is_parsing_function = False
+
+            # log('error', error, 'full_func_str', full_func_str, 'doc_comment', repr(self.doc_comment))
+            self.clearDocComment()
 
             if not error and type <= 2 :
                 self.skip_function_block(current_line)
@@ -1713,6 +1723,9 @@ class PawnParse(object):
                     self.is_to_skip_next_line = True
 
             log(8, "skip_brace: error:[%d] type:[%d] found:[%d] skip:[%d] func:[%s]" % (error, type, self.is_to_skip_brace, self.is_to_skip_next_line, full_func_str))
+
+        self.is_parsing_function = False
+        self.clearDocComment()
 
     def parse_function_params(self, func, function_type) :
         if function_type == 0 :
