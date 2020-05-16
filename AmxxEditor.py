@@ -1149,6 +1149,7 @@ class PawnParse(object):
                     result += '/'
             elif self.found_comment :
                 if current_line[i] == '*' and i + 1 < len(current_line) and current_line[i + 1] == '/' :
+                    self.addDocComment( doc_comment )
                     self.found_comment = False
                     i += 1
                 else:
