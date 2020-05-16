@@ -381,24 +381,24 @@ class AmxxEditor(sublime_plugin.EventListener):
                 link_web = ''
 
             log( 4, "link_local: %s", link_local )
-            html  = '<style>'+ g_inteltip_style +'</style>'
+            html  = '<style>'+ g_inteltip_style + '</style>'
             html += '<div class="top">'                         ############################## TOP
 
-            html += '<a class="file" href="'+link_local+'\\(">'+os.path.basename(found.file_name)+'</a>'
+            html += '<a class="file" href="' + link_local + '\\(">' + os.path.basename(found.file_name) + '</a>'
             if link_web:
-                html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
+                html += ' | <a class="file" href="' + link_web + '">WebAPI</a>'
 
             html += '</div><div class="bottom">'        ############################## BOTTOM
 
-            html += '<span class="func_type">'+FUNC_TYPES(found.function_type).name \
-                    +':</span> <span class="func_name">'+found.function_name+'</span>'
+            html += '<span class="func_type">' + FUNC_TYPES(found.function_type).name \
+                    +':</span> <span class="func_name">' + found.function_name + '</span>'
 
             html += '<br>'
-            html += '<span class="params">Params:</span> <span class="params_definition">('+ simple_escape(found.parameters) +')</span>'
+            html += '<span class="params">Params:</span> <span class="params_definition">(' + simple_escape(found.parameters) + ')</span>'
             html += '<br>'
 
             if found.return_type :
-                html += '<span class="return">Return:</span> <span class="return_type">'+found.return_type+'</span>'
+                html += '<span class="return">Return:</span> <span class="return_type">' + found.return_type + '</span>'
 
             html += '</div>'                                    ############################## END
 
@@ -1171,7 +1171,7 @@ class PawnParse(object):
         inString  = False
         num_brace = 0
 
-        current_line                = current_line + ' '
+        current_line = current_line + ' '
         self.is_to_skip_brace = False
 
         while current_line is not None and current_line.isspace() :
