@@ -38,14 +38,8 @@
 
 
 import os
-
 import sys
 import unittest
-
-import io
-import pstats
-import cProfile
-
 import sublime_plugin
 
 from AmxxEditor.AmxxEditor import PawnParse

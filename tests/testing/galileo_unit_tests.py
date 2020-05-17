@@ -38,7 +38,6 @@
 
 
 import os
-
 import unittest
 import sublime_plugin
 
