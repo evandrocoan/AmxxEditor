@@ -215,8 +215,20 @@ def new_file(file_type):
     view.run_command("insert_snippet", {"contents": plugin_template})
     sublime.set_timeout_async( lambda: set_new_file_syntax( view ), 0 )
 
+
 def set_new_file_syntax( view ):
     view.set_syntax_file(g_new_file_syntax)
+
+
+# https://stackoverflow.com/questions/2865250/python-textwrap-forcing-hard-breaks
+def hard_wrap(text, width, indent='    '):
+    for line in StringIO(text):
+        indent_width = width - len(indent)
+        yield line[:width]
+        line = line[width:]
+        while line:
+            yield '\n' + indent + line[:indent_width]
+            line = line[indent_width:]
 
 
 class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
@@ -329,7 +341,9 @@ class AmxxEditor(sublime_plugin.EventListener):
         html += '</div><div class="bottom">'
 
         html += '<span class="func_type">Location:</span><br>'
-        html += '<span class="func_name">'+file_name+'</span>'
+        html += '<span class="func_name">'
+        html += new_line_regex.sub( "<br />", "".join(hard_wrap(file_name, 80, '')) )
+        html += '</span>'
         html += '</div>'
 
         view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
