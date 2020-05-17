@@ -295,7 +295,7 @@ class AmxxEditor(sublime_plugin.EventListener):
 
         region = view.sel()[0]
         scope = view.scope_name(region.begin())
-        log(4, "(inteltip) scope_name: [%s]" % scope)
+        # log(1, "scope_name: [%s]" % scope)
 
         if ( not "support.function" in scope and not "include_path.pawn" in scope ) \
                 or region.size() > 1 \
@@ -465,19 +465,18 @@ class AmxxEditor(sublime_plugin.EventListener):
 
         view_size = view.size()
 
-        log(4, "on_activated_async(2)")
-        log(4, "( on_activated_async ) view.match_selector(0, 'source.sma'): " + str( view.match_selector(0, 'source.sma') ))
+        log(4, "")
+        log(4, "view.match_selector(0, 'source.sma'): " + str( view.match_selector(0, 'source.sma') ))
 
-        # log(4, "( on_activated_async ) nodes: " + str( nodes ))
-        log(4, "( on_activated_async ) view.substr(): \n" \
-                + view.substr( sublime.Region( 0, view_size if view_size < 200 else 200 ) ))
+        # log(4, "nodes:", nodes)
+        log(4, "view.substr(): \n", view.substr( sublime.Region( 0, view_size if view_size < 200 else 200 ) ))
 
         if not is_amxmodx_file(view):
-            log(4, "( on_activated_async ) returning on` if not is_amxmodx_file(view)")
+            log(4, "returning on` if not is_amxmodx_file(view)")
             return
 
         if not view.file_name() in nodes :
-            log(4, "( on_activated_async ) returning on` if not view.file_name() in nodes")
+            log(4, "returning on` if not view.file_name() in nodes")
             add_to_queue(view)
 
     def on_modified_async(self, view) :
@@ -527,7 +526,7 @@ class AmxxEditor(sublime_plugin.EventListener):
                 # Just in case it is not processed yet
                 if not view_file_name in nodes:
 
-                    log(4, "( on_query_completions ) Adding buffer id " + view_file_name + " in nodes")
+                    log(4, "Adding buffer id", view_file_name, " in nodes")
                     add_to_queue_forward( view )
 
                     # The queue is not processed yet, so there is nothing to show
@@ -659,7 +658,7 @@ def on_settings_modified():
 
 
 def _on_settings_modified():
-    log(4, "on_settings_modified" )
+    log(4, "")
     global g_enable_inteltip
     global g_enable_inteltip_calls
     global g_enable_inteltip_color
@@ -942,7 +941,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
         base_includes = set()
 
         with open(file_name, 'r') as f :
-            log(2, "(analyzer) Processing Include File %s" % file_name)
+            log(2, "Processing Include File %s" % file_name)
             includes = includes_regex.findall(f.read())
 
         for include in includes:
@@ -957,7 +956,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
         (file_name, exists) = get_file_name(view_file_name, base_file_name)
 
         if not exists :
-            log(1, "(analyzer) Include File Not Found: %s" % base_file_name)
+            log(1, "Include File Not Found: %s" % base_file_name)
             return
 
         (node, node_added) = get_or_add_node(file_name)
@@ -970,7 +969,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
             return
 
         with open(file_name, 'r') as f :
-            log(2, "(analyzer) Processing Include File %s" % file_name)
+            log(2, "Processing Include File %s" % file_name)
             includes = includes_regex.findall(f.read())
 
         for include in includes :
@@ -1105,7 +1104,7 @@ class PawnParse(object):
         """
             When the buffer is not None, it is always the current file.
         """
-        log(8, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
+        log(8, "CODE PARSE Start [%s]" % node.file_name)
         self.is_parsing_function = False
 
         if hasattr( file, "readline" ):
@@ -1148,7 +1147,7 @@ class PawnParse(object):
             self.save_const_timer = threading.Timer(4.0, self.save_constants)
             self.save_const_timer.start()
 
-        log(8, "(analyzer) CODE PARSE End [%s]" % node.file_name)
+        log(8, "CODE PARSE End [%s]" % node.file_name)
 
     def save_constants(self) :
         self.save_const_timer = None
@@ -1162,12 +1161,12 @@ class PawnParse(object):
         # we do not care to check whether that window has a project or not and there will always be
         # constants to save.
         for window in windows:
-            # log(4, "(save_constants) window.id(): " + str( window.id() ) )
-            # log(4, "(save_constants) window.folders(): " + str( window.folders() ) )
-            # log(4, "(save_constants) window.project_file_name(): " + str( window.project_file_name() ) )
+            # log(4, "window.id(): " + str( window.id() ) )
+            # log(4, "window.folders(): " + str( window.folders() ) )
+            # log(4, "window.project_file_name(): " + str( window.project_file_name() ) )
 
             if len( window.folders() ) > 0:
-                log( 4, "(save_constants) Not saving this time." )
+                log( 4, "Not saving this time." )
                 return
 
         constants = "___test"
@@ -1183,7 +1182,7 @@ class PawnParse(object):
         f.write(syntax)
         f.close()
 
-        log(8, "(analyzer) call save_constants()")
+        log(8, "end")
 
     def restoreBuffer(self, line):
         self._restore_buffer.append( line )
@@ -1444,7 +1443,7 @@ class PawnParse(object):
         self.add_constant(split[0])
 
         self.add_general_autocomplete(current_line, 'enum', split[0])
-        log(8, "(analyzer) parse_enum add: [%s] -> [%s]" % (current_line, split[0]))
+        log(8, "add: [%s] -> [%s]" % (current_line, split[0]))
 
     def add_general_autocomplete(self, name, info, autocomplete) :
 
@@ -1571,7 +1570,7 @@ class PawnParse(object):
                     break
 
         define = parse_define_regex.search(full_line)
-        # log(1, 'full_line', full_line, define)
+        # log(1, full_line, define)
 
         if define :
             current_line = ''
@@ -1608,12 +1607,12 @@ class PawnParse(object):
                 self.node.doct[name] = TooltipDocumentation( name, params_raw, self.node.file_name, 5, "", self.doc_comment )
 
             self.add_constant( name )
-            # log(1, "(analyzer) parse_define add: [%s]" % name)
+            # log(1, "add: [%s]" % name)
 
     @clear_doc_comment
     def parse_const(self, current_line) :
         current_line = current_line[6:]
-        log(8, "(analyzer) current_line: [%s]" % current_line)
+        log(8, "[%s]" % current_line)
 
         split   = current_line.split('=', 1)
         if len(split) < 2 :
@@ -1630,7 +1629,7 @@ class PawnParse(object):
         self.add_constant(name)
         self.add_general_autocomplete(name, 'const: ' + value, name)
 
-        log(8, "(analyzer) parse_const add: [%s]" % name)
+        log(8, "add: [%s]" % name)
 
     @clear_doc_comment
     def parse_variable(self, current_line) :
@@ -1687,7 +1686,7 @@ class PawnParse(object):
 
                         if (varName != '') :
                             self.add_word_autocomplete( varName )
-                            log(8, "(analyzer) parse_variable add: [%s]" % varName)
+                            log(8, "add: [%s]" % varName)
 
                         varName = ''
                         parseName = False
@@ -1711,7 +1710,7 @@ class PawnParse(object):
                 varName = varName.strip()
                 if varName != '' :
                     self.add_word_autocomplete( varName )
-                    log(8, "(analyzer) parse_variable add: [%s]" % varName)
+                    log(8, "add: [%s]" % varName)
             else :
                 multiLines = True
                 current_line = ' '
@@ -1851,7 +1850,7 @@ class PawnParse(object):
         split = remaining.split('(', 1)
 
         if len(split) < 2 :
-            log(4, "(analyzer) parse_params return1: [%s]" % split)
+            log(4, "return1: [%s]" % split)
             return 1
 
         remaining = split[1]
@@ -1878,7 +1877,7 @@ class PawnParse(object):
             return 0
 
         if not self.is_valid_name(funcname) :
-            log(4, "(analyzer) parse_params invalid name: [%s]" % funcname)
+            log(4, "invalid name: [%s]" % funcname)
             return 1
 
         remaining = remaining.strip()
@@ -1916,7 +1915,7 @@ class PawnParse(object):
             self.doc_comment
         )
 
-        log(8, "(analyzer) parse_params add: [%s]" % func)
+        log(8, "add: [%s]" % func)
         return 0
 
 
