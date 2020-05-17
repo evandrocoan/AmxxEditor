@@ -1492,7 +1492,7 @@ class PawnParse(object):
                 self.parse_function(current_line, 3)
             elif current_line.startswith('native ') :
                 self.parse_function(current_line, 4)
-            elif not self.found_enum and not current_line[0] == '#' :
+            elif not self.found_enum and not current_line[0] == '#' and function_regex.search(current_line) :
                 self.parse_function(current_line, 0)
 
             if self.found_enum :
