@@ -200,11 +200,11 @@ contexts:
     - match: \s*([A-Za-z_][\w_]*)[\s|\\n]*(\()
       captures:
         1: support.function.call.pawn
-        2: function.parens.pawn
+        2: function.parens.pawn support.function.call.paren.pawn
       push:
         - meta_content_scope: support.function.call.paren.pawn
         - match: \)
-          scope: function.parens.pawn
+          scope: function.parens.pawn support.function.call.paren.pawn
           pop: true
         - include: main
 
