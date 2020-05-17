@@ -49,7 +49,6 @@ import sublime_plugin
 
 from AmxxEditor.AmxxEditor import PawnParse
 from AmxxEditor.AmxxEditor import Node
-from AmxxEditor.AmxxEditor import TextReader
 
 # Import and reload the debugger
 sublime_plugin.reload_plugin( "AmxxEditor.AmxxEditor" )
@@ -89,7 +88,7 @@ class MainUnitTests(unittest.TestCase):
         pawnParse = PawnParse()
 
         with open( node.file_name ) as file:
-            pawnParse.start(TextReader(file.read()), node)
+            pawnParse.start(file, node)
 
         self.assertEqual( [
             'te_create_screen_aligned_beam_ring',
@@ -110,7 +109,7 @@ class MainUnitTests(unittest.TestCase):
         pawnParse = PawnParse()
 
         with open( node.file_name ) as file:
-            pawnParse.start(TextReader(file.read()), node)
+            pawnParse.start(file, node)
 
         self.assertEqual( [
             'xs_vec_equal',
@@ -132,7 +131,7 @@ class MainUnitTests(unittest.TestCase):
         pawnParse = PawnParse()
 
         with open( node.file_name ) as file:
-            pawnParse.start(TextReader(file.read()), node)
+            pawnParse.start(file, node)
 
         self.assertEqual( [
             'vvv_start_int',
@@ -160,7 +159,7 @@ class MainUnitTests(unittest.TestCase):
         pawnParse = PawnParse()
 
         with open( node.file_name ) as file:
-            pawnParse.start(TextReader(file.read()), node)
+            pawnParse.start(file, node)
 
         self.assertEqual( [
             'rg_fire_bullets3',
@@ -180,7 +179,7 @@ class MainUnitTests(unittest.TestCase):
         pawnParse = PawnParse()
 
         with open( node.file_name ) as file:
-            pawnParse.start(TextReader(file.read()), node)
+            pawnParse.start(file, node)
 
         func_list = dict((func, item) for func, item in node.funcs_list)
         doc_list = dict((func, item.doc_comment) for func, item in node.doct.items())
@@ -199,13 +198,13 @@ class MainUnitTests(unittest.TestCase):
             'fmt1':
                     'single fmt1 line doc string.\nsingle fmt1 line doc string.\nsingle fmt1 line doc string.\nsingle fmt1 line doc string.',
             'REMOVE_CODE_COLOR_TAGS':
-                    "\nRemove the colored strings codes '^4 for green', '^1 for yellow', '^3 for team' and\n'^2 for unknown'.\n\n@param string[]    a string pointer to be formatted.",
+                    "\nRemove the colored strings codes '^4 for green', '^1 for yellow', '^3 for team' and\n'^2 for unknown'.\n\n@param string[] a string pointer to be formatted.",
             'startNominationMenuVariables': '\nThe startNominationMenuVariables() macro definition.',
             'nomination_menu': '\nGather all maps that match the nomination.',
             'nomination_menuHook':
                     '\nUsed to allow the menu nomination_menu(1) to have parameters within a default value.\nIt is because public functions are not allow to have a default value and we need this function\nbe public to allow it to be called from a set_task().',
             'GET_MAP_NAME_LEFT':
-                    '\nSplit the map name from a string.\n\n@param textLine  a string containing a map name at the first part\n@param mapName  a string to save the map extracted',
+                    '\nSplit the map name from a string.\n\n@param textLine a string containing a map name at the first part\n@param mapName a string to save the map extracted',
         }, doc_list )
 
         self.assertEqual( {
@@ -223,6 +222,7 @@ class MainUnitTests(unittest.TestCase):
                     'startNominationMenuVariables(${1:param1})',
             "GET_MAP_NAME_LEFT(2) \tdoc_string.inc - define: { str_token( %2,                   %3, MAX_MAPNAME_LENGHT - 1, __g_getMapNameRightToken, MAX_MAPNAME_LENGHT - 1, ' ' ); }":
                     'GET_MAP_NAME_LEFT(${1:param1}, ${2:param2})',
+            'PLUGIN_NAME\t doc_string.inc': 'PLUGIN_NAME',
         }, func_list )
 
 
@@ -233,5 +233,5 @@ def load_tests(loader, standard_tests, pattern):
     return suite
 
 # Skip Custom load_tests()
-load_tests = None
+# load_tests = None
 

@@ -1,4 +1,9 @@
 
+/**
+ * Variable.
+ */
+new const PLUGIN_NAME[] = "Galileo";
+
 /* single rg_fire_bullets1 line doc string. single rg_fire_bullets1 line doc string. single rg_fire_bullets1 line doc string. single rg_fire_bullets1 line doc string. single rg_fire_bullets1 line doc string. */
 native Float:[3] rg_fire_bullets1(const inflictor);
 

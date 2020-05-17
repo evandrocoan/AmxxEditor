@@ -45,6 +45,9 @@ import webbrowser
 import datetime
 import time
 import urllib.request
+
+from io import StringIO
+from functools import wraps
 from collections import defaultdict, OrderedDict, deque
 from queue import *
 from threading import Timer, Thread
@@ -110,7 +113,7 @@ function_regex = re.compile(r'(?:\s*\[.*\]\s*)?[\w_\d: ]*[\w_\d]\(')
 function_return_regex = re.compile(r'(.+:\[.*\]|.+:)\s*(.+)')
 function_return_array_regex = re.compile(r'(\[.*\])(.+)')
 new_line_regex = re.compile(r'\n')
-space_clean_regex = re.compile(r'\t|  ')
+space_clean_regex = re.compile(r'\t+|  +')
 amxx_build_ver_regex = re.compile("(.*\"(?:v)?\\d{1,2}\\.\\d{1,2}\\.(?:\\d{1,2}-)?)(\\d+)(b(?:eta)?)?\"")
 sort_nicely_regex = re.compile('([0-9]+)')
 is_valid_name_regex = re.compile('^[\\w_]+$')
@@ -1015,22 +1018,23 @@ class Node(object):
         self.words_list.clear()
 
 
-class TextReader(object):
-    def __init__(self, text):
-        self.text = text.splitlines()
-        self.position = -1
+def set_is_parsing_function(func):
+    @wraps(func)
+    def wrapping(self, *args, **kwargs):
+        self.is_parsing_function = True
+        result = func(self, *args, **kwargs)
+        self.is_parsing_function = False
+        return result
+    return wrapping
 
-    def readline(self) :
-        self.position += 1
 
-        try:
-            retval = self.text[self.position]
-            if retval == '' :
-                return '\n'
-            else :
-                return retval
-        except IndexError :
-            return None
+def clear_doc_comment(func):
+    @wraps(func)
+    def wrapping(self, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        self.clearDocComment()
+        return result
+    return wrapping
 
 
 class PawnParse(object):
@@ -1040,15 +1044,19 @@ class PawnParse(object):
         self.save_const_timer = None
         self.constants_count = 0
 
-    def start( self, pFile, node, isTheCurrentFile=False ) :
+    def start( self, file, node, isTheCurrentFile=False ) :
         """
             When the buffer is not None, it is always the current file.
         """
         log(8, "(analyzer) CODE PARSE Start [%s]" % node.file_name)
         self.is_parsing_function = False
 
+        if hasattr( file, "readline" ):
+            self.file = file
+        else:
+            self.file = StringIO(file)
+
         self.isTheCurrentFile   = isTheCurrentFile
-        self.file               = pFile
         self.file_name          = os.path.basename(node.file_name)
         self.node               = node
         self.found_comment      = False
@@ -1056,7 +1064,7 @@ class PawnParse(object):
         self.is_to_skip_brace   = False
         self.enum_contents      = ''
         self.brace_level        = 0
-        self.restore_buffer     = deque()
+        self._restore_buffer    = deque()
 
         self.is_to_skip_next_line     = False
         self.if_define_brace_level    = 0
@@ -1120,54 +1128,63 @@ class PawnParse(object):
 
         log(8, "(analyzer) call save_constants()")
 
+    def restoreBuffer(self, line):
+        self._restore_buffer.append( line )
+        # log(repr(line))
+        # assert line
+
     def read_line(self, peek=0) :
         if peek:
             peek -= 1
-            if peek < len( self.restore_buffer ):
-                line = self.restore_buffer[peek]
+            if peek < len( self._restore_buffer ):
+                line = self._restore_buffer[peek]
+                if line == "": line = "\n"
             else:
                 line = self.file.readline()
-                self.restore_buffer.append( line )
-        elif len( self.restore_buffer ):
-            line = self.restore_buffer.popleft()
+                self.restoreBuffer( line )
+        elif len( self._restore_buffer ):
+            line = self._restore_buffer.popleft()
+            if line == "": line = "\n"
         else:
             line = self.file.readline()
 
-        # log(1, 'line    ', line)
+        # log(1, repr(line))
+        if line == "":
+            return None
         return line
 
     def read_string(self, current_line) :
         current_line = space_clean_regex.sub( " ", current_line.strip( " \t" ) )
         result = ''
         doc_comment = ''
-        i = 0
+        sindex = 0
 
         # log( 1, repr( current_line ) )
         buffer_length = len(current_line)
 
-        while i < buffer_length :
-            if current_line[i] == '/' and i + 1 < len(current_line):
-                if current_line[i + 1] == '/' :
+        while sindex < buffer_length :
+            if current_line[sindex] == '/' and sindex + 1 < len(current_line):
+                if current_line[sindex + 1] == '/' :
                     self.addDocComment( current_line.lstrip( '/' ), force=True )
                     self.brace_level += result.count('{') - result.count('}')
                     return result
-                elif current_line[i + 1] == '*' :
+                elif current_line[sindex + 1] == '*' :
                     self.found_comment = True
                     self.clearDocComment()
-                    i += 1
+                    sindex += 1
                 elif not self.found_comment :
                     result += '/'
             elif self.found_comment :
-                if current_line[i] == '*' and i + 1 < len(current_line) and current_line[i + 1] == '/' :
+                if current_line[sindex] == '*' and sindex + 1 < len(current_line) and current_line[sindex + 1] == '/' :
                     self.addDocComment( doc_comment )
                     self.found_comment = False
-                    i += 1
+                    sindex += 1
                 else:
-                    doc_comment += current_line[i]
-            elif not (i > 0 and current_line[i] == ' ' and current_line[i - 1] == ' '):
-                result += current_line[i]
+                    doc_comment += current_line[sindex]
+            elif not (sindex > 0 and current_line[sindex] == ' ' and current_line[sindex - 1] == ' '):
+                result += current_line[sindex]
 
-            i += 1
+            sindex += 1
 
         self.brace_level +=  result.count('{') - result.count('}')
         self.addDocComment( doc_comment )
@@ -1176,7 +1193,7 @@ class PawnParse(object):
     def addDocComment(self, comment_line, force=False) :
         if ( comment_line and self.found_comment and not self.is_parsing_function ) \
                 or ( force and not self.is_parsing_function ):
-            self.doc_comment += comment_line + "\n"
+            self.doc_comment += comment_line
 
     def clearDocComment(self) :
         if not self.is_parsing_function:
@@ -1194,13 +1211,13 @@ class PawnParse(object):
         while current_line is not None :
             # log( 1, repr(current_line) )
 
-            i               = 0
-            pos             = 0
-            lastChar        = ''
+            pos = 0
+            sindex = 0
+            lastChar = ''
             penultimateChar = ''
 
             for c in current_line :
-                i += 1
+                sindex += 1
 
                 if not inString and not inChar and lastChar == '*' and c == '/' :
                     self.found_comment = False
@@ -1320,7 +1337,7 @@ class PawnParse(object):
                                 self.else_defined_brace_level += 1
 
                     elif c == '}':
-                        pos        = i
+                        pos = sindex
                         num_brace -= 1
 
                         if len( self.is_on_if_define ) > 0:
@@ -1343,7 +1360,7 @@ class PawnParse(object):
             # log( 1, "" )
 
             if num_brace == 0 :
-                self.restore_buffer.append(current_line[pos:])
+                self.restoreBuffer(current_line[pos:])
                 return
 
             current_line = self.read_line()
@@ -1421,8 +1438,7 @@ class PawnParse(object):
             if current_line is None :
                 break
 
-            current_line = self.read_string(current_line)
-
+            current_line = self.read_string(current_line).rstrip('\n')
             if len(current_line) <= 0 :
                 continue
 
@@ -1435,21 +1451,16 @@ class PawnParse(object):
 
             if current_line.startswith('#define ') :
                 self.parse_define(current_line)
-                self.clearDocComment()
             elif current_line.startswith('const ') :
                 self.parse_const(current_line)
-                self.clearDocComment()
             elif current_line.startswith('enum ') or current_line == 'enum':
                 self.found_enum = True
                 self.enum_contents = ''
-                self.clearDocComment()
             elif current_line.startswith('new ') :
                 self.parse_variable(current_line)
-                self.clearDocComment()
 
             elif current_line.startswith('public ') :
                 self.parse_function(current_line, 1)
-                self.clearDocComment()
 
             elif current_line.startswith('stock ') :
                 """
@@ -1476,24 +1487,20 @@ class PawnParse(object):
 
                     else:
                         self.parse_function(current_line, 2)
-                self.clearDocComment()
 
             elif current_line.startswith('forward ') :
                 self.parse_function(current_line, 3)
-                self.clearDocComment()
             elif current_line.startswith('native ') :
                 self.parse_function(current_line, 4)
-                self.clearDocComment()
             elif not self.found_enum and not current_line[0] == '#' :
                 self.parse_function(current_line, 0)
-                self.clearDocComment()
 
             if self.found_enum :
                 self.parse_enum(current_line)
-                self.clearDocComment()
 
+    @clear_doc_comment
     def parse_define(self, current_line) :
-        full_line = current_line.strip('\\ ') + ' '
+        full_line = current_line.strip('\\ \n') + ' '
         has_next = has_define_next_line_regex.match(current_line)
 
         if has_next:
@@ -1501,7 +1508,7 @@ class PawnParse(object):
                 next_line = self.read_line()
                 if next_line is None : break
 
-                full_line += next_line.strip('\\ ') + ' '
+                full_line += next_line.strip('\\ \n') + ' '
                 has_next = has_define_next_line_regex.match(next_line)
                 if not has_next:
                     break
@@ -1546,6 +1553,7 @@ class PawnParse(object):
             self.add_constant( name )
             # log(1, "(analyzer) parse_define add: [%s]" % name)
 
+    @clear_doc_comment
     def parse_const(self, current_line) :
         current_line = current_line[6:]
         log(8, "(analyzer) current_line: [%s]" % current_line)
@@ -1559,7 +1567,7 @@ class PawnParse(object):
 
         newline = value.find(';')
         if (newline != -1) :
-            self.restore_buffer.append( value[newline+1:].strip() )
+            self.restoreBuffer( value[newline+1:].strip() )
             value = value[0:newline]
 
         self.add_constant(name)
@@ -1567,6 +1575,7 @@ class PawnParse(object):
 
         log(8, "(analyzer) parse_const add: [%s]" % name)
 
+    @clear_doc_comment
     def parse_variable(self, current_line) :
         if current_line.startswith('new const ') :
             current_line = current_line[10:]
@@ -1575,7 +1584,7 @@ class PawnParse(object):
 
         varName = ""
         lastChar = ''
-        i = 0
+        sindex = 0
         pos = 0
         num_brace = 0
         multiLines = True
@@ -1589,7 +1598,7 @@ class PawnParse(object):
             multiLines = False
 
             for c in current_line :
-                i += 1
+                sindex += 1
 
                 if (c == '"') :
                     if (inString and lastChar != '^') :
@@ -1633,7 +1642,7 @@ class PawnParse(object):
 
                 if (inString == False and inBrackets == False and inBraces == False) :
                     if not parseName and c == ';' :
-                        self.restore_buffer.append( current_line[i:].strip() )
+                        self.restoreBuffer( current_line[sindex:].strip() )
                         return
 
                     if (c == ',') :
@@ -1653,6 +1662,7 @@ class PawnParse(object):
                 while current_line is not None and current_line.isspace() :
                     current_line = self.read_line()
 
+    @clear_doc_comment
     def parse_enum(self, current_line) :
         pos = current_line.find('}')
         if pos != -1 :
@@ -1688,8 +1698,9 @@ class PawnParse(object):
             self.add_enum(current_line)
             current_line = ''
 
+    @clear_doc_comment
+    @set_is_parsing_function
     def parse_function(self, current_line, ftype) :
-        self.is_parsing_function = True
         multi_line = False
         temp = ''
         full_func_str = None
@@ -1705,17 +1716,13 @@ class PawnParse(object):
 
             elif open_paren_found == 0:
                 next_line = self.read_line()
-                self.restore_buffer.append( next_line )
+                self.restoreBuffer( next_line )
 
                 if next_line is None :
-                    self.is_parsing_function = False
-                    self.clearDocComment()
                     return
 
                 next_line = self.read_string(next_line)
                 if not next_line or next_line[0] != '(':
-                    self.is_parsing_function = False
-                    self.clearDocComment()
                     return
 
             if open_paren_found:
@@ -1740,8 +1747,6 @@ class PawnParse(object):
             current_line = self.read_line()
 
             if current_line is None :
-                self.is_parsing_function = False
-                self.clearDocComment()
                 return
 
             current_line = self.read_string(current_line)
@@ -1760,24 +1765,15 @@ class PawnParse(object):
                     peek_index += 1
 
                     if next_line is None :
-                        self.is_parsing_function = False
-                        self.clearDocComment()
                         return
                     next_line = self.read_string(next_line)
 
                     if '(' in next_line:
-                        self.is_parsing_function = False
-                        self.clearDocComment()
                         return
                 else:
-                    self.is_parsing_function = False
-                    self.clearDocComment()
                     return
 
             error = self.parse_function_params(full_func_str, ftype)
-
-            self.is_parsing_function = False
-            self.clearDocComment()
 
             if not error and ftype <= 2 :
                 self.skip_function_block(current_line)
@@ -1787,8 +1783,6 @@ class PawnParse(object):
 
             # log(1, "skip_brace: error:[%d] ftype:[%d] found:[%d] skip:[%d] func:[%s]" % (error, ftype, self.is_to_skip_brace, self.is_to_skip_next_line, full_func_str))
 
-        self.is_parsing_function = False
-        self.clearDocComment()
 
     def parse_function_params(self, func, function_type) :
         if function_type == 0 :
@@ -1839,16 +1833,16 @@ class PawnParse(object):
             params = remaining.strip()[:-1].split(',')
 
         if g_add_paremeters:
-            i = 1
+            sindex = 1
             autocomplete = funcname + '('
 
             for param in params:
 
-                if i > 1:
+                if sindex > 1:
                     autocomplete += ', '
 
-                autocomplete += '${%d:%s}' % (i, param.strip())
-                i += 1
+                autocomplete += '${%d:%s}' % (sindex, param.strip())
+                sindex += 1
 
             autocomplete += ')'
 
@@ -1871,13 +1865,12 @@ class PawnParse(object):
 
 def process_buffer(text, node) :
     if g_function_autocomplete:
-        text_reader = TextReader(text)
-        pawnParse.start(text_reader, node, True)
+        pawnParse.start(text, node, True)
 
 
 def process_include_file(node) :
     with open(node.file_name) as file :
-        pawnParse.start(TextReader(file.read()), node)
+        pawnParse.start(file, node)
 
 
 def simple_escape(html) :
