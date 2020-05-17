@@ -1023,13 +1023,13 @@ class TextReader(object):
     def readline(self) :
         self.position += 1
 
-        if self.position < len(self.text) :
+        try:
             retval = self.text[self.position]
             if retval == '' :
                 return '\n'
             else :
                 return retval
-        else :
+        except IndexError :
             return None
 
 
