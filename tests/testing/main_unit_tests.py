@@ -91,11 +91,16 @@ class MainUnitTests(unittest.TestCase):
         with open( node.file_name ) as file:
             pawnParse.start(TextReader(file.read()), node)
 
-        func_list = '"%s"' % str( node.funcs_list )
-        words_list = '"%s"' % str( node.words_list )
+        self.assertEqual( [
+            'te_create_screen_aligned_beam_ring',
+            'is_str_num',
+        ], node.words_list )
 
-        self.assertEqual( repr("['te_create_screen_aligned_beam_ring', 'is_str_num']"), words_list )
-        self.assertEqual( repr("[['te_create_screen_aligned_beam_ring(15) \tstock_functions_include.inc - stock', 'te_create_screen_aligned_beam_ring(${1:id}, ${2:origin[3]}, ${3:axis[3]}, ${4:spriteid}, ${5:startframe = 1}, ${6:framerate = 10}, ${7:life = 10}, ${8:width = 10}, ${9:noise = 0}, ${10:r = 0}, ${11:g = 0}, ${12:b = 255}, ${13:a = 75}, ${14:speed = 30}, ${15:bool:reliable = true})'], ['is_str_num(1) \tstock_functions_include.inc - stock', 'is_str_num(${1:const sString[]})']]" ), func_list )
+        self.assertEqual( [
+            ['te_create_screen_aligned_beam_ring(15) \tstock_functions_include.inc - stock',
+                'te_create_screen_aligned_beam_ring(${1:id}, ${2:origin[3]}, ${3:axis[3]}, ${4:spriteid}, ${5:startframe = 1}, ${6:framerate = 10}, ${7:life = 10}, ${8:width = 10}, ${9:noise = 0}, ${10:r = 0}, ${11:g = 0}, ${12:b = 255}, ${13:a = 75}, ${14:speed = 30}, ${15:bool:reliable = true})'],
+            ['is_str_num(1) \tstock_functions_include.inc - stock', 'is_str_num(${1:const sString[]})']
+        ], node.funcs_list )
 
     def test_stock_completion(self):
         file_name = get_relative_path( 'stock_functions_completion.inc', __file__ )
@@ -107,11 +112,17 @@ class MainUnitTests(unittest.TestCase):
         with open( node.file_name ) as file:
             pawnParse.start(TextReader(file.read()), node)
 
-        func_list = '"%s"' % str( node.funcs_list )
-        words_list = '"%s"' % str( node.words_list )
+        self.assertEqual( [
+            'xs_vec_equal',
+            'xs_vec_add',
+        ], node.words_list )
 
-        self.assertEqual( repr("[['xs_vec_equal(2) \tstock_functions_completion.inc - stock', 'xs_vec_equal(${1:const Float:vec1[]}, ${2:const Float:vec2[]})'], ['xs_vec_add(3) \tstock_functions_completion.inc - stock', 'xs_vec_add(${1:const Float:in1[]}, ${2:const Float:in2[]}, ${3:Float:out[]})']]"), func_list )
-        self.assertEqual( repr("['xs_vec_equal', 'xs_vec_add']"), words_list )
+        self.assertEqual( [
+            ['xs_vec_equal(2) \tstock_functions_completion.inc - stock',
+                'xs_vec_equal(${1:const Float:vec1[]}, ${2:const Float:vec2[]})'],
+            ['xs_vec_add(3) \tstock_functions_completion.inc - stock',
+                'xs_vec_add(${1:const Float:in1[]}, ${2:const Float:in2[]}, ${3:Float:out[]})']
+        ], node.funcs_list )
 
     def test_all_man_style_enum(self):
         file_name = get_relative_path( 'allman_style_enum.sma', __file__ )
@@ -123,11 +134,23 @@ class MainUnitTests(unittest.TestCase):
         with open( node.file_name ) as file:
             pawnParse.start(TextReader(file.read()), node)
 
-        func_list = '"%s"' % str( node.funcs_list )
-        words_list = '"%s"' % str( node.words_list )
+        self.assertEqual( [
+            'vvv_start_int',
+            'vvv_cdAudioTrack',
+            'vvv_end_pchar',
+            'ggg_start_int',
+            'ggg_cdAudioTrack',
+            'ggg_end_pchar'
+        ], node.words_list )
 
-        self.assertEqual( repr("['vvv_start_int', 'vvv_cdAudioTrack', 'vvv_end_pchar', 'ggg_start_int', 'ggg_cdAudioTrack', 'ggg_end_pchar']"), words_list )
-        self.assertEqual( repr("[['vvv_start_int \tallman_style_enum.sma - enum', 'vvv_start_int'], ['vvv_cdAudioTrack \tallman_style_enum.sma - enum', 'vvv_cdAudioTrack'], ['vvv_end_pchar \tallman_style_enum.sma - enum', 'vvv_end_pchar'], ['ggg_start_int \tallman_style_enum.sma - enum', 'ggg_start_int'], ['ggg_cdAudioTrack \tallman_style_enum.sma - enum', 'ggg_cdAudioTrack'], ['ggg_end_pchar \tallman_style_enum.sma - enum', 'ggg_end_pchar']]" ), func_list )
+        self.assertEqual( [
+            ['vvv_start_int \tallman_style_enum.sma - enum', 'vvv_start_int'],
+            ['vvv_cdAudioTrack \tallman_style_enum.sma - enum', 'vvv_cdAudioTrack'],
+            ['vvv_end_pchar \tallman_style_enum.sma - enum', 'vvv_end_pchar'],
+            ['ggg_start_int \tallman_style_enum.sma - enum', 'ggg_start_int'],
+            ['ggg_cdAudioTrack \tallman_style_enum.sma - enum', 'ggg_cdAudioTrack'],
+            ['ggg_end_pchar \tallman_style_enum.sma - enum', 'ggg_end_pchar'],
+        ], node.funcs_list )
 
     def test_native_function_return_array(self):
         file_name = get_relative_path( 'native_functions_completion.inc', __file__ )
@@ -139,12 +162,15 @@ class MainUnitTests(unittest.TestCase):
         with open( node.file_name ) as file:
             pawnParse.start(TextReader(file.read()), node)
 
-        func_list = '"%s"' % str( node.funcs_list )
-        words_list = '"%s"' % str( node.words_list )
+        self.assertEqual( [
+            'rg_fire_bullets3',
+            'fmt',
+        ], node.words_list )
 
-        self.assertEqual( repr("[['rg_fire_bullets3(1) \tnative_functions_completion.inc - native', 'rg_fire_bullets3(${1:const inflictor})'], ['fmt(2) \tnative_functions_completion.inc - native', 'fmt(${1:const format[]}, ${2:any:...})']]"), func_list )
-
-        self.assertEqual( repr("['rg_fire_bullets3', 'fmt']"), words_list )
+        self.assertEqual( [
+            ['rg_fire_bullets3(1) \tnative_functions_completion.inc - native', 'rg_fire_bullets3(${1:const inflictor})'],
+            ['fmt(2) \tnative_functions_completion.inc - native', 'fmt(${1:const format[]}, ${2:any:...})']
+        ], node.funcs_list )
 
     def test_doc_strings(self):
         file_name = get_relative_path( 'doc_string.inc', __file__ )
