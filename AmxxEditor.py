@@ -313,7 +313,7 @@ class AmxxEditor(sublime_plugin.EventListener):
         self.selection_modified(region, view, sublime.HIDE_ON_MOUSE_MOVE_AWAY, point)
 
     def on_selection_modified(self, view) :
-        if not is_amxmodx_file(view) or not g_enable_inteltip :
+        if not is_amxmodx_file(view) or not g_enable_inteltip or not g_enable_inteltip_calls:
             return
         if view.is_popup_visible():
             # don't let the popup blink
@@ -329,7 +329,6 @@ class AmxxEditor(sublime_plugin.EventListener):
         if ( not "support.function" in scope and not "include_path.pawn" in scope ) \
                 or region.size() > 1 \
                 or "support.function.definition" in scope:
-            view.hide_popup()
             view.add_regions("inteltip", [ ])
             return
 
@@ -392,7 +391,7 @@ class AmxxEditor(sublime_plugin.EventListener):
         found = doctset.get(search_func)
         location = location or word_region.end()
 
-        if g_enable_inteltip_calls and not found:
+        if not found:
             scope = view.scope_name(region.begin())
 
             if "function.call.paren" in scope:
@@ -489,7 +488,6 @@ class AmxxEditor(sublime_plugin.EventListener):
             webbrowser.open_new_tab("http://www.amxmodx.org/api/"+file+"/"+search)
 
     def on_activated_async(self, view) :
-
         view_size = view.size()
 
         log(4, "")
