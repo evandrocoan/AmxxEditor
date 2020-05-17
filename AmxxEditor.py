@@ -1188,11 +1188,11 @@ class PawnParse(object):
         num_brace = 0
         self.is_to_skip_brace = False
 
-        while current_line is not None and current_line.isspace() :
+        while current_line is not None and ( current_line.isspace() or not len(current_line) ) :
             current_line = self.read_line()
 
         while current_line is not None :
-            # log( 1, "skip_function_block:     ", repr(current_line) )
+            # log( 1, repr(current_line) )
 
             i               = 0
             pos             = 0
@@ -1434,10 +1434,10 @@ class PawnParse(object):
                 continue
 
             if current_line.startswith('#define ') :
-                current_line = self.parse_define(current_line)
+                self.parse_define(current_line)
                 self.clearDocComment()
             elif current_line.startswith('const ') :
-                current_line = self.parse_const(current_line)
+                self.parse_const(current_line)
                 self.clearDocComment()
             elif current_line.startswith('enum ') or current_line == 'enum':
                 self.found_enum = True
@@ -1493,22 +1493,18 @@ class PawnParse(object):
                 self.clearDocComment()
 
     def parse_define(self, current_line) :
-        define = parse_define_regex.search(current_line)
-
-        if not define :
-            return
-
         full_line = current_line.strip('\\ ') + ' '
-        peek_index = 1
+        has_next = has_define_next_line_regex.match(current_line)
 
-        while True:
-            next_line = self.read_line(peek=peek_index)
-            peek_index += 1
-            if next_line is None : break
+        if has_next:
+            while True:
+                next_line = self.read_line()
+                if next_line is None : break
 
-            full_line += next_line.strip('\\ ') + ' '
-            has_next = has_define_next_line_regex.match(next_line)
-            if not has_next: break
+                full_line += next_line.strip('\\ ') + ' '
+                has_next = has_define_next_line_regex.match(next_line)
+                if not has_next:
+                    break
 
         define = parse_define_regex.search(full_line)
         # log(1, 'full_line', full_line, define)
@@ -1698,7 +1694,7 @@ class PawnParse(object):
         temp = ''
         full_func_str = None
         open_paren_found = 0
-        # log('current_line', repr(current_line), 'doc_comment', repr(self.doc_comment)[:10])
+        # log(repr(current_line), 'doc_comment', repr(self.doc_comment)[:10])
 
         while current_line is not None :
             current_line = current_line.strip()

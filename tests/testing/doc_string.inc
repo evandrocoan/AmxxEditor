@@ -152,6 +152,18 @@ stock [MAX_FMT_LENGTH]fmt4(const format[], any:...) {
 }
 
 /**
+ * Split the map name from a string.
+ *
+ * @param textLine   a string containing a map name at the first part
+ * @param mapName    a string to save the map extracted
+ */
+#define GET_MAP_NAME_LEFT(%2,%3) \
+{ \
+    str_token( %2,                   %3, MAX_MAPNAME_LENGHT - 1, \
+               __g_getMapNameRightToken, MAX_MAPNAME_LENGHT - 1, ' ' ); \
+}
+
+/**
  * The startNominationMenuVariables() macro definition.
  */
 #define startNominationMenuVariables(%1) \

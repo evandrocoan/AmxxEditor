@@ -178,6 +178,8 @@ class MainUnitTests(unittest.TestCase):
             'nomination_menu': '\nGather all maps that match the nomination.',
             'nomination_menuHook':
                     '\nUsed to allow the menu nomination_menu(1) to have parameters within a default value.\nIt is because public functions are not allow to have a default value and we need this function\nbe public to allow it to be called from a set_task().',
+            'GET_MAP_NAME_LEFT':
+                    '\nSplit the map name from a string.\n\n@param textLine  a string containing a map name at the first part\n@param mapName  a string to save the map extracted',
         }, doc_list )
 
         self.assertEqual( {
@@ -188,14 +190,13 @@ class MainUnitTests(unittest.TestCase):
             'fmt3(2) \tdoc_string.inc - native': 'fmt3(${1:const format[]}, ${2:any:...})',
             'fmt2(2) \tdoc_string.inc - native': 'fmt2(${1:const format[]}, ${2:any:...})',
             'fmt1(2) \tdoc_string.inc - native': 'fmt1(${1:const format[]}, ${2:any:...})',
-            'isRecentMapNomBlocked\t doc_string.inc': 'isRecentMapNomBlocked',
-            'isWhiteListNomBlock\t doc_string.inc': 'isWhiteListNomBlock',
-            'mapIndex\t doc_string.inc': 'mapIndex',
             'nomination_menu(1) \tdoc_string.inc - stock': 'nomination_menu(${1:player_id})',
             'nomination_menuHook(1) \tdoc_string.inc - public': 'nomination_menuHook(${1:player_id})',
             'REMOVE_CODE_COLOR_TAGS(1) \tdoc_string.inc - define: { replace_all( %1, MAX_COLOR_MESSAGE - 1, "^4", "" ); replace_all( %1, MAX_COLOR_MESSAGE - 1, "^3", "" ); replace_all( %1, MAX_COLOR_MESSAGE - 1, "^2", "" ); replace_all( %1, MAX_COLOR_MESSAGE - 1, "^1", "" ); }': 'REMOVE_CODE_COLOR_TAGS(${1:param1})',
             'startNominationMenuVariables(1) \tdoc_string.inc - define: new      mapIndex; new bool:isRecentMapNomBlocked; new bool:isWhiteListNomBlock; getRecentMapsAndWhiteList( %1, isRecentMapNomBlocked, isWhiteListNomBlock )':
                     'startNominationMenuVariables(${1:param1})',
+            "GET_MAP_NAME_LEFT(2) \tdoc_string.inc - define: { str_token( %2,                   %3, MAX_MAPNAME_LENGHT - 1, __g_getMapNameRightToken, MAX_MAPNAME_LENGHT - 1, ' ' ); }":
+                    'GET_MAP_NAME_LEFT(${1:param1}, ${2:param2})',
         }, func_list )
 
 
