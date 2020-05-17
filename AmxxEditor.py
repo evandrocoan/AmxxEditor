@@ -385,7 +385,7 @@ class AmxxEditor(sublime_plugin.EventListener):
         doctset     = dict()
         visited     = set()
         found       = None
-        node        = nodes[file_name]
+        node        = nodes.get(file_name, Node(view.file_name()))
 
         self.generate_doctset_recur(node, doctset, visited)
         found = doctset.get(search_func)
