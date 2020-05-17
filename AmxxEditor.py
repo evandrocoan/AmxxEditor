@@ -99,10 +99,10 @@ g_word_autocomplete = False
 g_function_autocomplete = False
 g_enable_inteltip_color = "inteltip.pawn"
 
-processingSetQueue = OrderedSetQueue()
-processingSetQueueSet = set()
-nodes = dict()
-file_observer = watchdog.observers.Observer()
+g_processing_set_queue = OrderedSetQueue()
+g_processing_set_queue_set = set()
+g_nodes = dict()
+g_file_observer = watchdog.observers.Observer()
 includes_regex = re.compile('^[\\s]*#include[\\s]+[<"]([^>"]+)[>"]', re.MULTILINE)
 local_regex = re.compile('\\.(sma|inc)$')
 function_regex = re.compile(r'(?:\s*\[.*\]\s*)?[\w_\d: ]*[\w_\d]\(')
@@ -199,10 +199,10 @@ def attempt_to_install_file( target_directory, target_file, input_file_string ):
 
 
 def unload_handler() :
-    file_observer.stop()
+    g_file_observer.stop()
     process_thread.stop()
 
-    processingSetQueue.put(("", ""))
+    g_processing_set_queue.put(("", ""))
     sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME).clear_on_change(CURRENT_PACKAGE_NAME)
 
 
@@ -288,7 +288,7 @@ class AmxxEditor(sublime_plugin.EventListener):
     def __init__(self) :
         process_thread.start()
         self.delay_queue = None
-        file_observer.start()
+        g_file_observer.start()
 
     def on_window_command(self, window, cmd, args) :
         if cmd != "build" :
@@ -385,7 +385,7 @@ class AmxxEditor(sublime_plugin.EventListener):
         doctset     = dict()
         visited     = set()
         found       = None
-        node        = nodes.get(file_name, Node(view.file_name()))
+        node        = g_nodes.get(file_name, Node(view.file_name()))
 
         self.generate_doctset_recur(node, doctset, visited)
         found = doctset.get(search_func)
@@ -493,15 +493,15 @@ class AmxxEditor(sublime_plugin.EventListener):
         log(4, "")
         log(4, "view.match_selector(0, 'source.sma'): " + str( view.match_selector(0, 'source.sma') ))
 
-        # log(4, "nodes:", nodes)
+        # log(4, "g_nodes:", g_nodes)
         log(4, "view.substr(): \n", view.substr( sublime.Region( 0, view_size if view_size < 200 else 200 ) ))
 
         if not is_amxmodx_file(view):
             log(4, "returning on` if not is_amxmodx_file(view)")
             return
 
-        if not view.file_name() in nodes :
-            log(4, "returning on` if not view.file_name() in nodes")
+        if not view.file_name() in g_nodes :
+            log(4, "returning on` if not view.file_name() in g_nodes")
             add_to_queue(view)
 
     def on_modified_async(self, view) :
@@ -549,9 +549,9 @@ class AmxxEditor(sublime_plugin.EventListener):
                 view_file_name = str( view.buffer_id() )
 
                 # Just in case it is not processed yet
-                if not view_file_name in nodes:
+                if not view_file_name in g_nodes:
 
-                    log(4, "Adding buffer id", view_file_name, " in nodes")
+                    log(4, "Adding buffer id", view_file_name, " in g_nodes")
                     add_to_queue_forward( view )
 
                     # The queue is not processed yet, so there is nothing to show
@@ -585,8 +585,8 @@ class AmxxEditor(sublime_plugin.EventListener):
         funcs_list = []
         funcs_word_list = []
 
-        if file_name in nodes:
-            node    = nodes[file_name]
+        if file_name in g_nodes:
+            node    = g_nodes[file_name]
             visited = set()
 
             if not view.match_selector(locations[0], 'string') :
@@ -746,13 +746,13 @@ def _on_settings_modified():
         real_path = os.path.realpath( include_directory )
         if os.path.isdir( real_path ): g_include_dir.add( real_path )
 
-    file_observer.unschedule_all()
+    g_file_observer.unschedule_all()
     log(4, "debug_level: %d", log.debug_level)
     log(4, "g_include_dir: %s", g_include_dir)
     log(4, "g_add_paremeters: %s", g_add_paremeters)
 
     for directory in g_include_dir:
-        file_observer.schedule( file_event_handler, directory, True )
+        g_file_observer.schedule( file_event_handler, directory, True )
 
 
 def is_invalid_settings(settings):
@@ -869,9 +869,9 @@ def add_to_queue(view) :
     if view_file_name is None :
         view_file_name = str( view.buffer_id() )
 
-    if view_file_name not in processingSetQueueSet:
-        processingSetQueueSet.add( view_file_name )
-        processingSetQueue.put( ( view_file_name, view.substr( sublime.Region( 0, view.size() ) ) ) )
+    if view_file_name not in g_processing_set_queue_set:
+        g_processing_set_queue_set.add( view_file_name )
+        g_processing_set_queue.put( ( view_file_name, view.substr( sublime.Region( 0, view.size() ) ) ) )
 
         include_directory = os.path.realpath( os.path.join( os.path.dirname( view_file_name ), "include" ) )
 
@@ -879,13 +879,13 @@ def add_to_queue(view) :
 
             if os.path.isdir( include_directory ):
                 g_include_dir.add( include_directory )
-                file_observer.schedule( file_event_handler, include_directory, True )
+                g_file_observer.schedule( file_event_handler, include_directory, True )
 
 
 def add_include_to_queue(file_name) :
-    if file_name not in processingSetQueueSet:
-        processingSetQueueSet.add( file_name )
-        processingSetQueue.put((file_name, None))
+    if file_name not in g_processing_set_queue_set:
+        g_processing_set_queue_set.add( file_name )
+        g_processing_set_queue.put((file_name, None))
 
 
 class IncludeFileEventHandler(watchdog.events.FileSystemEventHandler) :
@@ -911,7 +911,7 @@ def on_deleted_main_thread(file_path) :
     if is_active(file_path) :
             return
 
-    node = nodes.get(file_path)
+    node = g_nodes.get(file_path)
     if node is None :
         return
 
@@ -925,10 +925,10 @@ def is_active(file_name) :
 class ProcessQueueThread(watchdog.utils.DaemonThread) :
     def run(self) :
         while self.should_keep_running() :
-            (file_name, view_buffer) = processingSetQueue.get()
+            (file_name, view_buffer) = g_processing_set_queue.get()
 
             try:
-                processingSetQueueSet.remove( file_name )
+                g_processing_set_queue_set.remove( file_name )
             except:
                 pass
 
@@ -959,7 +959,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
         process_buffer(view_buffer, current_node)
 
     def process_existing_include(self, file_name) :
-        current_node = nodes.get(file_name)
+        current_node = g_nodes.get(file_name)
         if current_node is None or not os.path.exists( file_name ):
             return
 
@@ -1037,10 +1037,10 @@ def get_or_add_node(file_name) :
         Though I am not implementing this here to save time and performance
     """
 
-    node = nodes.get(file_name)
+    node = g_nodes.get(file_name)
     if node is None :
         node = Node(file_name)
-        nodes[file_name] = node
+        g_nodes[file_name] = node
         return (node, True)
 
     return (node, False)
@@ -1088,7 +1088,7 @@ class Node(object):
         node.parents.remove(self)
 
         if len(node.parents) <= 0 :
-            nodes.pop(node.file_name)
+            g_nodes.pop(node.file_name)
 
     def remove_all_children_and_funcs(self) :
         for child in self.children :
