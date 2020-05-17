@@ -11,6 +11,9 @@
     // ( true / false ) Enable IntelTip PopUp inside function calls
     "enable_inteltip_calls": true,
 
+    // ( true / false ) The scope color for the IntelTip PopUp mark
+    "enable_inteltip_color": "inteltip.pawn",
+
     // ( true / false ) Enable Auto-Increment Build/Version
     "enable_buildversion": false,
 

@@ -44,9 +44,11 @@ import sublime_plugin
 
 from AmxxEditor.AmxxEditor import PawnParse
 from AmxxEditor.AmxxEditor import Node
+from AmxxEditor.AmxxEditor import _on_settings_modified
 
 # Import and reload the debugger
 sublime_plugin.reload_plugin( "AmxxEditor.AmxxEditor" )
+_on_settings_modified()
 
 from debug_tools.utilities import get_relative_path
 from debug_tools import getLogger

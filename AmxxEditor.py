@@ -38,19 +38,17 @@
 
 import os
 import re
-import string
 import sys
-import sublime, sublime_plugin
+import sublime
+import sublime_plugin
 import webbrowser
-import datetime
 import time
-import urllib.request
+import threading
 
 from io import StringIO
 from functools import wraps
-from collections import defaultdict, OrderedDict, deque
-from queue import *
-from threading import Timer, Thread
+from collections import deque
+from xml.etree import ElementTree
 
 sys.path.append(os.path.dirname(__file__))
 from enum34 import Enum
@@ -58,9 +56,6 @@ import watchdog.events
 import watchdog.observers
 import watchdog.utils
 from watchdog.utils.bricks import OrderedSetQueue
-
-from os.path import basename
-import logging
 
 # Enable editor debug messages: (bitwise)
 #
@@ -102,6 +97,7 @@ g_add_paremeters = False
 g_new_file_syntax = "Packages/%s/%sPawn.sublime-syntax" % (CURRENT_PACKAGE_NAME, CURRENT_PACKAGE_NAME)
 g_word_autocomplete = False
 g_function_autocomplete = False
+g_enable_inteltip_color = "inteltip.pawn"
 
 processingSetQueue = OrderedSetQueue()
 processingSetQueueSet = set()
@@ -132,6 +128,10 @@ def plugin_unloaded():
 
 
 def plugin_loaded():
+    threading.Thread(target=_plugin_loaded).start()
+
+
+def _plugin_loaded():
     settings = sublime.load_settings("%s.sublime-settings" % CURRENT_PACKAGE_NAME)
 
     install_build_systens("AmxxEditor.sh")
@@ -146,7 +146,7 @@ def plugin_loaded():
     g_is_package_loading=True
     sublime.set_timeout( unlock_is_package_loading, 10000 )
 
-    on_settings_modified();
+    _on_settings_modified()
     settings.add_on_change(CURRENT_PACKAGE_NAME, on_settings_modified)
 
 
@@ -420,7 +420,9 @@ class AmxxEditor(sublime_plugin.EventListener):
 
             # log( 1, "html: %s", html )
             view.show_popup(html, 0, location, max_width=700, on_navigate=self.on_navigate)
-            view.add_regions("inteltip", [ word_region ], "inteltip.pawn")
+
+            if g_enable_inteltip_color:
+                view.add_regions("inteltip", [ word_region ], g_enable_inteltip_color)
 
         else:
             view.hide_popup()
@@ -486,7 +488,7 @@ class AmxxEditor(sublime_plugin.EventListener):
             self.delay_queue.cancel()
 
         if g_delay_time > 0.3:
-            self.delay_queue = Timer( float( g_delay_time ), add_to_queue_forward, [ view ] )
+            self.delay_queue = threading.Timer( float( g_delay_time ), add_to_queue_forward, [ view ] )
             self.delay_queue.start()
 
     def on_query_completions(self, view, prefix, locations):
@@ -604,10 +606,49 @@ def is_amxmodx_file(view) :
     return view.match_selector(0, 'source.sma')
 
 
+def check_color_scope_setting():
+    """ https://stackoverflow.com/questions/45734287/list-of-colors-for-highlightwords-sublime-plugin """
+    global g_enable_inteltip_color
+    found_scope = False
+
+    active_window = sublime.active_window()
+    settings = active_window.active_view().settings()
+
+    try:
+        color_scheme = settings.get("color_scheme")
+        xml_file = sublime.load_resource(color_scheme)
+        xml_tree = ElementTree.fromstring(xml_file)
+        xml_subtree = xml_tree.find("./dict/array")
+
+        if xml_subtree is None:
+            print("No color scheme xml_subtree found")
+            return
+
+        for child in xml_subtree:
+
+            for i in range(0, len(child), 2):
+
+                if child[i].tag == "key" and child[i].text == "scope":
+
+                    if g_enable_inteltip_color in child[i + 1].text:
+                        found_scope = True
+
+        if not found_scope:
+            g_enable_inteltip_color = ""
+
+    except Exception as error:
+        print("Error loading color scheme", error)
+
+
 def on_settings_modified():
+    threading.Thread(target=_on_settings_modified).start()
+
+
+def _on_settings_modified():
     log(4, "on_settings_modified" )
     global g_enable_inteltip
     global g_enable_inteltip_calls
+    global g_enable_inteltip_color
     global g_new_file_syntax
     global g_word_autocomplete
     global g_function_autocomplete
@@ -644,6 +685,7 @@ def on_settings_modified():
 
     g_enable_inteltip       = settings.get('enable_inteltip', True)
     g_enable_inteltip_calls = settings.get('enable_inteltip_calls', True)
+    g_enable_inteltip_color = settings.get('enable_inteltip_color', "inteltip.pawn")
     g_enable_buildversion   = settings.get('enable_buildversion', False)
     g_word_autocomplete     = settings.get('word_autocomplete', False)
     g_function_autocomplete = settings.get('function_autocomplete', False)
@@ -652,6 +694,7 @@ def on_settings_modified():
     g_delay_time            = settings.get('live_refresh_delay', 1.0)
     g_add_paremeters        = settings.get('add_function_parameters', False)
 
+    check_color_scope_setting()
     g_include_dir.clear()
     include_directory = settings.get('include_directory', './include')
 
@@ -666,9 +709,9 @@ def on_settings_modified():
         if os.path.isdir( real_path ): g_include_dir.add( real_path )
 
     file_observer.unschedule_all()
-    log(4, "( on_settings_modified ) debug_level: %d", log.debug_level)
-    log(4, "( on_settings_modified ) g_include_dir: %s", g_include_dir)
-    log(4, "( on_settings_modified ) g_add_paremeters: %s", g_add_paremeters)
+    log(4, "debug_level: %d", log.debug_level)
+    log(4, "g_include_dir: %s", g_include_dir)
+    log(4, "g_add_paremeters: %s", g_add_paremeters)
 
     for directory in g_include_dir:
         file_observer.schedule( file_event_handler, directory, True )
@@ -1088,7 +1131,7 @@ class PawnParse(object):
             if self.save_const_timer :
                 self.save_const_timer.cancel()
 
-            self.save_const_timer = Timer(4.0, self.save_constants)
+            self.save_const_timer = threading.Timer(4.0, self.save_constants)
             self.save_const_timer.start()
 
         log(8, "(analyzer) CODE PARSE End [%s]" % node.file_name)
