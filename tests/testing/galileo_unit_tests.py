@@ -47,20 +47,10 @@ from AmxxEditor.AmxxEditor import Node
 
 # Import and reload the debugger
 sublime_plugin.reload_plugin( "AmxxEditor.AmxxEditor" )
-sublime_plugin.reload_plugin( "AmxxEditor.tests.testing.main_unit_tests" )
 
+from debug_tools.utilities import get_relative_path
 from debug_tools import getLogger
 log = getLogger( __name__.split('.')[-1], 127 )
-
-
-def get_relative_path(relative_path, script_file):
-    """
-        Computes a relative path for a file on the same folder as this class file declaration.
-        https://stackoverflow.com/questions/4381569/python-os-module-open-file-above-current-directory-with-relative-path
-    """
-    basepath = os.path.dirname( script_file )
-    filepath = os.path.abspath( os.path.join( basepath, relative_path ) )
-    return filepath
 
 
 class MainUnitTests(unittest.TestCase):
@@ -75,7 +65,7 @@ class MainUnitTests(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_doc_strings(self):
+    def test_galileo_doc_strings(self):
         file_name = get_relative_path( 'galileo.sma', __file__ )
         # log( 1, "file_name: %s", file_name )
 
