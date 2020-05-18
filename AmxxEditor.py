@@ -407,12 +407,13 @@ class AmxxEditor(sublime_plugin.EventListener):
             html += '<span class="func_type">' + FUNC_TYPES(found.function_type).name \
                     +':</span> <span class="func_name">' + found.function_name + '</span>'
 
+            if found.return_type :
+                html += '<span class="file"> -> </span>'
+                html += '<span class="return">Return:</span> <span class="return_type">' + found.return_type + '</span>'
+
             html += '<br>'
             html += '<span class="params">Params:</span> <span class="params_definition">(' + simple_escape(found.parameters) + ')</span>'
             html += '<br>'
-
-            if found.return_type :
-                html += '<span class="return">Return:</span> <span class="return_type">' + found.return_type + '</span>'
 
             html += '</div>'                                    ############################## END
 
