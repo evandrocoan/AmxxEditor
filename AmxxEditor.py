@@ -337,44 +337,6 @@ class AmxxEditor(sublime_plugin.EventListener):
         else :
             self.inteltip_function(view, region, flags, location)
 
-    def inteltip_include(self, view, region, flags, location=None) :
-        location = location or view.word(region).end() + 1
-        text     = view.substr(view.line(region))
-        include  = includes_regex.match(text).group(1)
-
-        file_name_view = view.file_name()
-
-        if file_name_view is None:
-            return
-        else:
-            ( file_name, the_include_exists ) = get_file_name( file_name_view, include )
-
-            if not the_include_exists :
-                return
-
-        link_local = file_name + '#'
-        if not '.' in include :
-            link_web = include + '#'
-            include += ".inc"
-        else :
-            link_web = None
-
-        html  = '<style>'+ g_inteltip_style +'</style>'
-        html += '<div class="top">'
-        html += '<a class="file" href="'+link_local+'">'+include+'</a>'
-        if link_web :
-            html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
-
-        html += '</div><div class="bottom">'
-
-        html += '<span class="func_type">Location:</span><br>'
-        html += '<span class="func_name">'
-        html += new_line_regex.sub( "<br />", "".join(hard_wrap(file_name, 80, '')) )
-        html += '</span>'
-        html += '</div>'
-
-        view.show_popup(html, flags=flags, location=location, max_width=700, on_navigate=self.on_navigate)
-
     def inteltip_function(self, view, region, flags, location=None) :
         file_name = view.file_name()
         if not file_name:
@@ -486,6 +448,44 @@ class AmxxEditor(sublime_plugin.EventListener):
             do_position()
         else :
             webbrowser.open_new_tab("http://www.amxmodx.org/api/"+file+"/"+search)
+
+    def inteltip_include(self, view, region, flags, location=None) :
+        location = location or view.word(region).end() + 1
+        text     = view.substr(view.line(region))
+        include  = includes_regex.match(text).group(1)
+
+        file_name_view = view.file_name()
+
+        if file_name_view is None:
+            return
+        else:
+            ( file_name, the_include_exists ) = get_file_name( file_name_view, include )
+
+            if not the_include_exists :
+                return
+
+        link_local = file_name + '#'
+        if not '.' in include :
+            link_web = include + '#'
+            include += ".inc"
+        else :
+            link_web = None
+
+        html  = '<style>'+ g_inteltip_style +'</style>'
+        html += '<div class="top">'
+        html += '<a class="file" href="'+link_local+'">'+include+'</a>'
+        if link_web :
+            html += ' | <a class="file" href="'+link_web+'">WebAPI</a>'
+
+        html += '</div><div class="bottom">'
+
+        html += '<span class="func_type">Location:</span><br>'
+        html += '<span class="func_name">'
+        html += new_line_regex.sub( "<br />", "".join(hard_wrap(file_name, 80, '')) )
+        html += '</span>'
+        html += '</div>'
+
+        view.show_popup(html, flags=flags, location=location, max_width=700, on_navigate=self.on_navigate)
 
     def on_activated_async(self, view) :
         view_size = view.size()
