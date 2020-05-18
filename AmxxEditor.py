@@ -418,7 +418,7 @@ class AmxxEditor(sublime_plugin.EventListener):
             html += '</div>'                                    ############################## END
 
             html += '<div class="file" style="margin-top: 7px;">'
-            html += new_line_regex.sub( "<br />", wrap_text( found.doc_comment, wrap=100 ) )
+            html += html_newline( wrap_text( found.doc_comment, wrap=100 ) )
             html += '</div>'
 
             # log( 1, "html: %s", html )
@@ -482,7 +482,7 @@ class AmxxEditor(sublime_plugin.EventListener):
 
         html += '<span class="func_type">Location:</span><br>'
         html += '<span class="func_name">'
-        html += new_line_regex.sub( "<br />", "".join(hard_wrap(file_name, 80, '')) )
+        html += html_newline( simple_escape( "".join( hard_wrap( file_name, 80, '' ) ) ) )
         html += '</span>'
         html += '</div>'
 
@@ -1957,6 +1957,10 @@ def process_include_file(node) :
 
 def simple_escape(html) :
     return html.replace('&', '&amp;')
+
+
+def html_newline(html) :
+    return new_line_regex.sub( "<br />", html )
 
 
 pawnParse = PawnParse()
