@@ -60,7 +60,7 @@
 			<key>name</key>
 			<string>Pawn Function - Pawn String</string>
 			<key>scope</key>
-			<string>support.function, string</string>
+			<string>support.function - support.function.call.paren, string</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
