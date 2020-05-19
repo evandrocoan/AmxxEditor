@@ -352,12 +352,15 @@ class AmxxEditor(sublime_plugin.EventListener):
         self.generate_doctset_recur(node, doctset, visited)
         found = doctset.get(search_func)
         location = location or word_region.end()
+        actual_parameter = -1
 
+        # log('search_func', search_func)
         if not found:
             scope = view.scope_name(region.begin())
 
             if "function.call.paren" in scope:
                 counter = 100
+                actual_parameter += 1
 
                 while counter > 0 and not found:
                     counter -= 1
@@ -365,6 +368,10 @@ class AmxxEditor(sublime_plugin.EventListener):
                     word_region = view.word(begin)
                     search_func = view.substr(word_region)
                     scope = view.scope_name(word_region.begin())
+
+                    # log('search_func', search_func)
+                    if search_func.strip() == ',':
+                        actual_parameter += 1
 
                     if "function.call" not in scope:
                         break
@@ -376,8 +383,9 @@ class AmxxEditor(sublime_plugin.EventListener):
                         found = doctset.get(search_func)
 
         if found:
-            log(4, "param2: [%s]" % simple_escape(found.parameters))
+            parameters = simple_escape(found.parameters)
             filename = os.path.basename(found.file_name)
+            log(4, "param2: [%s] '%s'", parameters, filename)
 
             if found.function_type :
 
@@ -412,7 +420,19 @@ class AmxxEditor(sublime_plugin.EventListener):
                 html += '<span class="return">Return:</span> <span class="return_type">' + found.return_type + '</span>'
 
             html += '<br>'
-            html += '<span class="params">Params:</span> <span class="params_definition">(' + simple_escape(found.parameters) + ')</span>'
+            html += '<span class="params">Params:</span> '
+            html += '<span class="params_definition">'
+
+            # log('actual_parameter', actual_parameter, 'parameters', parameters)
+            if actual_parameter != -1 and parameters:
+                parameters = parameters.split(",")
+                if actual_parameter < len( parameters ):
+                    parameters[actual_parameter] = '<span class="file">' + parameters[actual_parameter] + '</span>'
+                html += ", ".join(parameters)
+            else:
+                html += parameters
+
+            html += '</span>'
             html += '<br>'
 
             html += '</div>'                                    ############################## END
@@ -1054,7 +1074,7 @@ class TooltipDocumentation(object):
             For `function_type` see FUNC_TYPES.
         """
         self.function_name = function_name
-        self.parameters = parameters
+        self.parameters = parameters.strip()
         self.file_name = file_name
         self.function_type = function_type
         self.return_type = return_type
