@@ -43,8 +43,6 @@ import unittest
 
 import io
 import pstats
-import cProfile
-
 import sublime_plugin
 
 from AmxxEditor.AmxxEditor import PawnParse
@@ -92,6 +90,8 @@ class MainUnitTests(unittest.TestCase):
             with open( node.file_name ) as file:
                 pawnParse.start(file, node)
 
+        # cProfile can't be imported on Linux - https://github.com/sublimehq/sublime_text/issues/127
+        import cProfile
         profiller = cProfile.Profile()
         profiller.enable()
 
