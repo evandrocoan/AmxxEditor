@@ -137,7 +137,7 @@ stock [MAX_FMT_LENGTH]fmt4(const format[], any:...) {
     rg_fire_bullets3(something, other);
     fmt(something, other);
     fmt1(something, other);
-    fmt2(something, other);
+    fmt2(something, rg_fire_bullets1(other, something));
     fmt3(something, other);
     fmt4(something, other);
 }
