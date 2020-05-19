@@ -29,7 +29,7 @@
 				<string>#3399FF</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Comment</string>
@@ -55,7 +55,7 @@
 				<string>bold</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn Function - Pawn String</string>
@@ -67,7 +67,7 @@
 				<string>#FF0000</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn Function IntelTip Selection</string>
@@ -81,7 +81,7 @@
 				<string>#17A1EB22</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn Define Constant - Pawn Include Path - Pawn Define/Include</string>
@@ -104,7 +104,7 @@
 				<string>#007700</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn Tag</string>
@@ -118,7 +118,7 @@
 				<string>#007700</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Pawn Types</string>
@@ -132,7 +132,7 @@
 				<string>#007700</string>
 			</dict>
 		</dict>
-		
+
 		<dict>
 			<key>name</key>
 			<string>Invalid – Illegal</string>
