@@ -300,46 +300,75 @@ class AmxxEditor(sublime_plugin.EventListener):
 
         view.run_command("amxx_build_ver")
 
-    def on_hover(self, view, point, hover_zone):
+    def on_hover(self, view, location, hover_zone):
         if hover_zone != sublime.HOVER_TEXT:
             return
         if not is_amxmodx_file(view) or not g_enable_inteltip :
             return
-        region = view.word(point)
+        region = view.word(location)
         begin = region.begin()
 
-        # log('point', point, region, view.substr(region))
+        # log('location', location, region, view.substr(region))
         region = sublime.Region(begin, begin)
-        self.selection_modified(region, view, sublime.HIDE_ON_MOUSE_MOVE_AWAY, point)
+        html, location, word_region = self.is_valid_location(view, region)
 
-    def on_selection_modified(self, view) :
-        if not is_amxmodx_file(view) or not g_enable_inteltip or not g_enable_inteltip_calls:
-            return
-        if view.is_popup_visible():
-            # don't let the popup blink
-            return
+        if html:
+            def on_hide_hover():
+                view.add_regions("inteltip", [ ])
 
-        region = view.sel()[0]
-        self.selection_modified(region, view, 0)
+            view.show_popup(
+                html,
+                flags=sublime.HIDE_ON_MOUSE_MOVE_AWAY,
+                location=location,
+                max_width=700,
+                on_navigate=self.on_navigate,
+                on_hide=on_hide_hover
+            )
 
-    def selection_modified(self, region, view, flags, location=None) :
+            if g_enable_inteltip_color:
+                view.add_regions("inteltip", [ word_region ], g_enable_inteltip_color)
+
+    def is_valid_location(self, view, region):
         scope = view.scope_name(region.begin())
         # log(1, "scope_name: [%s]" % scope)
 
         if ( not "support.function" in scope and not "include_path.pawn" in scope ) \
                 or region.size() > 1 :
-            view.add_regions("inteltip", [ ])
-            return
+            return None, None, None
 
         if "include_path.pawn" in scope :
-            self.inteltip_include(view, region, flags, location)
+            html, location, word_region = self.inteltip_include(view, region)
         else :
-            self.inteltip_function(view, region, flags, location)
+            html, location, word_region = self.inteltip_function(view, region)
 
-    def inteltip_function(self, view, region, flags, location=None) :
+        return html, location, word_region
+
+    def on_selection_modified(self, view) :
+        if not is_amxmodx_file(view) or not g_enable_inteltip or not g_enable_inteltip_calls:
+            return
+
+        region = view.sel()[0]
+        html, location, word_region = self.is_valid_location(view, region)
+        view.erase_phantoms("AmxxEditor")
+
+        if html:
+            row, col = view.rowcol(word_region.begin())
+            if col > 80:
+                new_begin = view.text_point(row, 80)
+                word_region = sublime.Region(new_begin, new_begin)
+
+            view.add_phantom(
+                "AmxxEditor",
+                word_region,
+                html.replace("margin: -5px;", "margin: +5px; height: 150px; overflow: scroll;"),
+                sublime.LAYOUT_BELOW,
+                self.on_navigate,
+            )
+
+    def inteltip_function(self, view, region) :
         file_name = view.file_name()
         if not file_name:
-            return
+            return None, None, None
 
         word_region = view.word(region)
         search_func = view.substr(word_region)
@@ -350,7 +379,7 @@ class AmxxEditor(sublime_plugin.EventListener):
 
         self.generate_doctset_recur(node, doctset, visited)
         found = doctset.get(search_func)
-        location = location or word_region.end()
+        location = word_region.end()
         actual_parameter = -1
 
         # log('search_func', search_func)
@@ -441,14 +470,8 @@ class AmxxEditor(sublime_plugin.EventListener):
             html += '</div>'
 
             # log( 1, "html: %s", html )
-            view.show_popup(html, flags=flags, location=location, max_width=700, on_navigate=self.on_navigate)
-
-            if g_enable_inteltip_color:
-                view.add_regions("inteltip", [ word_region ], g_enable_inteltip_color)
-
-        else:
-            view.hide_popup()
-            view.add_regions("inteltip", [ ])
+            return html, location, word_region
+        return None, None, None
 
     def on_navigate(self, link) :
         (file, search) = link.split('#')
@@ -469,20 +492,21 @@ class AmxxEditor(sublime_plugin.EventListener):
         else :
             webbrowser.open_new_tab("http://www.amxmodx.org/api/"+file+"/"+search)
 
-    def inteltip_include(self, view, region, flags, location=None) :
-        location = location or view.word(region).end() + 1
+    def inteltip_include(self, view, region) :
+        word_region = view.word(region)
+        location = word_region.end() + 1
         text     = view.substr(view.line(region))
         include  = includes_regex.match(text).group(1)
 
         file_name_view = view.file_name()
 
         if file_name_view is None:
-            return
+            return None, None, None
         else:
             ( file_name, the_include_exists ) = get_file_name( file_name_view, include )
 
             if not the_include_exists :
-                return
+                return None, None, None
 
         link_local = file_name + '#'
         if not '.' in include :
@@ -505,7 +529,7 @@ class AmxxEditor(sublime_plugin.EventListener):
         html += '</span>'
         html += '</div>'
 
-        view.show_popup(html, flags=flags, location=location, max_width=700, on_navigate=self.on_navigate)
+        return html, location, word_region
 
     def on_activated_async(self, view) :
         view_size = view.size()

@@ -8,7 +8,7 @@
     // ( true / false ) Enable IntelTip PopUp
     "enable_inteltip": true,
 
-    // ( true / false ) Enable IntelTip PopUp inside function calls
+    // ( true / false ) Enable IntelTip Phantom PopUp on function calls
     "enable_inteltip_calls": true,
 
     // ( true / false ) The scope color for the IntelTip PopUp mark
