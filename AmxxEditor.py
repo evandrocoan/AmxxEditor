@@ -360,7 +360,7 @@ class AmxxEditor(sublime_plugin.EventListener):
             view.add_phantom(
                 "AmxxEditor",
                 word_region,
-                html.replace("margin: -5px;", "margin: +5px; height: 150px; overflow: scroll;"),
+                html.replace("margin: -5px;", "margin: +5px; height: 125px; overflow: scroll;"),
                 sublime.LAYOUT_BELOW,
                 self.on_navigate,
             )
