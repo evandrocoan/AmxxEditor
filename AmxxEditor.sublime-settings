@@ -5,10 +5,14 @@
     // ( true / false ) Enable the parameters addition when auto completing
     "add_function_parameters": true,
 
-    // ( true / false ) Enable IntelTip PopUp
+    // ( true / false ) Enable IntelTip PopUp by hovering functions with the mouse
     "enable_inteltip": true,
 
+    // ( true / false ) Enable IntelTip PopUp by selecting the function name only
+    "enable_inteltip_name": false,
+
     // ( true / false ) Enable IntelTip Phantom PopUp on function calls
+    // by selecting function name
     "enable_inteltip_calls": true,
 
     // ( true / false ) The scope color for the IntelTip PopUp mark

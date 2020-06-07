@@ -90,6 +90,7 @@ g_constants_list = set()
 g_inteltip_style = ""
 g_enable_inteltip = False
 g_enable_inteltip_calls = False
+g_enable_inteltip_name = False
 g_enable_buildversion = False
 g_delay_time = 1.0
 g_include_dir = set()
@@ -310,23 +311,28 @@ class AmxxEditor(sublime_plugin.EventListener):
 
         # log('location', location, region, view.substr(region))
         region = sublime.Region(begin, begin)
-        html, location, word_region = self.is_valid_location(view, region)
+        html, location, word_region, scope = self.is_valid_location(view, region)
 
-        if html:
-            def on_hide_hover():
-                view.add_regions("inteltip", [ ])
+        if not scope:
+            return
 
-            view.show_popup(
-                html,
-                flags=sublime.HIDE_ON_MOUSE_MOVE_AWAY,
-                location=location,
-                max_width=700,
-                on_navigate=self.on_navigate,
-                on_hide=on_hide_hover
-            )
+        self.show_popup(view, html, location, word_region)
 
-            if g_enable_inteltip_color:
-                view.add_regions("inteltip", [ word_region ], g_enable_inteltip_color)
+    def show_popup(self, view, html, location, word_region):
+        def on_hide_hover():
+            view.add_regions("inteltip", [ ])
+
+        view.show_popup(
+            html,
+            flags=sublime.HIDE_ON_MOUSE_MOVE_AWAY,
+            location=location,
+            max_width=700,
+            on_navigate=self.on_navigate,
+            on_hide=on_hide_hover
+        )
+
+        if g_enable_inteltip_color:
+            view.add_regions("inteltip", [ word_region ], g_enable_inteltip_color)
 
     def is_valid_location(self, view, region):
         scope = view.scope_name(region.begin())
@@ -334,36 +340,53 @@ class AmxxEditor(sublime_plugin.EventListener):
 
         if ( not "support.function" in scope and not "include_path.pawn" in scope ) \
                 or region.size() > 1 :
-            return None, None, None
+            return None, None, None, None
 
         if "include_path.pawn" in scope :
             html, location, word_region = self.inteltip_include(view, region)
         else :
             html, location, word_region = self.inteltip_function(view, region)
 
-        return html, location, word_region
+        return html, location, word_region, scope
 
     def on_selection_modified(self, view) :
-        if not is_amxmodx_file(view) or not g_enable_inteltip or not g_enable_inteltip_calls:
+        if not is_amxmodx_file(view):
+            return
+        if not g_enable_inteltip:
             return
 
         region = view.sel()[0]
-        html, location, word_region = self.is_valid_location(view, region)
+        html, location, word_region, scope = self.is_valid_location(view, region)
+
+        if not scope or ( not g_enable_inteltip_calls and not g_enable_inteltip_name ):
+            return
+
+        if g_enable_inteltip_name:
+            if not "keyword.brackets.paren.begin" in scope and not "support.function.call.pawn" in scope:
+                if "function.call.paren" in scope:
+                    return
+
+        if g_enable_inteltip_calls:
+            self.show_phantom(view, html, location, word_region)
+
+        else:
+            self.show_popup(view, html, location, word_region)
+
+    def show_phantom(self, view, html, location, word_region):
         view.erase_phantoms("AmxxEditor")
+        row, col = view.rowcol(word_region.begin())
 
-        if html:
-            row, col = view.rowcol(word_region.begin())
-            if col > 80:
-                new_begin = view.text_point(row, 80)
-                word_region = sublime.Region(new_begin, new_begin)
+        if col > 80:
+            new_begin = view.text_point(row, 80)
+            word_region = sublime.Region(new_begin, new_begin)
 
-            view.add_phantom(
-                "AmxxEditor",
-                word_region,
-                html.replace("margin: -5px;", "margin: +5px; height: 125px; overflow: scroll;"),
-                sublime.LAYOUT_BELOW,
-                self.on_navigate,
-            )
+        view.add_phantom(
+            "AmxxEditor",
+            word_region,
+            html.replace("margin: -5px;", "margin: +5px; height: 125px; overflow: scroll;"),
+            sublime.LAYOUT_BELOW,
+            self.on_navigate,
+        )
 
     def inteltip_function(self, view, region) :
         file_name = view.file_name()
@@ -730,6 +753,7 @@ def _on_settings_modified():
     log(4, "")
     global g_enable_inteltip
     global g_enable_inteltip_calls
+    global g_enable_inteltip_name
     global g_enable_inteltip_color
     global g_new_file_syntax
     global g_word_autocomplete
@@ -744,6 +768,7 @@ def _on_settings_modified():
 
         g_enable_inteltip = False
         g_enable_inteltip_calls = False
+        g_enable_inteltip_name = False
         return
 
     # check package path
@@ -767,6 +792,7 @@ def _on_settings_modified():
 
     g_enable_inteltip       = settings.get('enable_inteltip', True)
     g_enable_inteltip_calls = settings.get('enable_inteltip_calls', True)
+    g_enable_inteltip_name  = settings.get('enable_inteltip_name', False)
     g_enable_inteltip_color = settings.get('enable_inteltip_color', "inteltip.pawn")
     g_enable_buildversion   = settings.get('enable_buildversion', False)
     g_word_autocomplete     = settings.get('word_autocomplete', False)

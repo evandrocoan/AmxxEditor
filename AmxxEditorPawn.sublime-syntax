@@ -164,10 +164,11 @@ contexts:
         1: storage.type.function.pawn
         2: storage.modifier.tag.pawn
         3: support.function.definition.pawn
-        4: function.parens.pawn
+        4: function.parens.begin.pawn keyword.brackets.paren.begin.AmxxPawn
       push:
+        - meta_scope: amxxsupport.function.definition
         - match: \)
-          scope: function.parens.pawn
+          scope: function.parens.end.pawn keyword.brackets.paren.end.AmxxPawn
           pop: true
         - include: main
         - include: function_block
@@ -175,10 +176,11 @@ contexts:
       captures:
         1: storage.modifier.tag.pawn
         2: support.function.definition.pawn
-        3: function.parens.pawn
+        3: function.parens.begin.pawn keyword.brackets.paren.begin.AmxxPawn
       push:
+        - meta_scope: amxxsupport.function.definition
         - match: \)
-          scope: function.parens.pawn
+          scope: function.parens.end.pawn keyword.brackets.paren.end.AmxxPawn
           pop: true
         - include: main
         - include: function_block
@@ -200,11 +202,11 @@ contexts:
     - match: \s*([A-Za-z_][\w_]*)[\s|\\n]*(\()
       captures:
         1: support.function.call.pawn
-        2: function.parens.pawn support.function.call.paren.pawn
+        2: function.parens.begin.pawn support.function.call.paren.pawn keyword.brackets.paren.begin.AmxxPawn
       push:
         - meta_content_scope: support.function.call.paren.pawn
         - match: \)
-          scope: function.parens.pawn support.function.call.paren.pawn
+          scope: function.parens.end.pawn support.function.call.paren.pawn keyword.brackets.paren.end.AmxxPawn
           pop: true
         - include: main
 
