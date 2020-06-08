@@ -824,6 +824,10 @@ def _on_settings_modified():
     for directory in g_include_dir:
         g_file_observer.schedule( file_event_handler, directory, True )
 
+    for window in sublime.windows():
+        for view in window.views():
+            view.erase_phantoms("AmxxEditor")
+
 
 def is_invalid_settings(settings):
     general_error = "You are not set correctly settings for AmxxEditor.\n\n"
