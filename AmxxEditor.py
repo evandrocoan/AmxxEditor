@@ -358,12 +358,14 @@ class AmxxEditor(sublime_plugin.EventListener):
         region = view.sel()[0]
         html, location, word_region, scope = self.is_valid_location(view, region)
 
-        if not scope or ( not g_enable_inteltip_calls and not g_enable_inteltip_name ):
+        if not html or ( not g_enable_inteltip_calls and not g_enable_inteltip_name ):
+            view.erase_phantoms("AmxxEditor")
             return
 
         if g_enable_inteltip_name:
             if not "keyword.brackets.paren.begin" in scope and not "support.function.call.pawn" in scope:
                 if "function.call.paren" in scope:
+                    view.erase_phantoms("AmxxEditor")
                     return
 
         if g_enable_inteltip_calls:
