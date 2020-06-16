@@ -313,7 +313,7 @@ class AmxxEditor(sublime_plugin.EventListener):
         region = sublime.Region(begin, begin)
         html, location, word_region, scope = self.is_valid_location(view, region)
 
-        if not scope:
+        if not html:
             return
 
         self.show_popup(view, html, location, word_region)
