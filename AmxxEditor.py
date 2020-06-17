@@ -1081,6 +1081,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
 def get_file_name(view_file_name, base_file_name) :
     log(4, "g_include_dir: %s", g_include_dir)
+    file_name = ""
     path_exists = False
 
     # True, if `base_file_name` is a include file name, instead of full file path
