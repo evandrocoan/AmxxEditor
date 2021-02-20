@@ -342,10 +342,15 @@ class AmxxEditor(sublime_plugin.EventListener):
                 or region.size() > 1 :
             return None, None, None, None
 
-        if "include_path.pawn" in scope :
-            html, location, word_region = self.inteltip_include(view, region)
-        else :
-            html, location, word_region = self.inteltip_function(view, region)
+        try:
+            if "include_path.pawn" in scope :
+                html, location, word_region = self.inteltip_include(view, region)
+            else :
+                html, location, word_region = self.inteltip_function(view, region)
+
+        except Exception as error:
+            log(1, "Exception: %s" % error)
+            return None, None, None, None
 
         return html, location, word_region, scope
 
