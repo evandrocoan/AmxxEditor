@@ -194,7 +194,7 @@ def attempt_to_install_file( target_directory, target_file, input_file_string ):
     # TypeError: 'str' does not support the buffer interface
     # https://stackoverflow.com/questions/5471158/typeerror-str-does-not-support-the-buffer-interface
     if not os.path.exists( target_file ):
-        text_file = open( target_file, "wb" )
+        text_file = open( target_file, "wb", errors="ignore" )
         text_file.write( bytes(input_file_string, 'UTF-8') )
         text_file.close()
 
@@ -1046,7 +1046,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
 
         base_includes = set()
 
-        with open(file_name, 'r') as f :
+        with open(file_name, 'r', errors="ignore") as f :
             log(2, "Processing Include File %s" % file_name)
             includes = includes_regex.findall(f.read())
 
@@ -1074,7 +1074,7 @@ class ProcessQueueThread(watchdog.utils.DaemonThread) :
         if not node_added :
             return
 
-        with open(file_name, 'r') as f :
+        with open(file_name, 'r', errors="ignore") as f :
             log(2, "Processing Include File %s" % file_name)
             includes = includes_regex.findall(f.read())
 
@@ -1285,7 +1285,7 @@ class PawnParse(object):
 
         file_name = os.path.join(sublime.packages_path(), CURRENT_PACKAGE_NAME, "AmxxEditorConsts.sublime-syntax")
 
-        f = open(file_name, 'w')
+        f = open(file_name, 'w', errors="ignore")
         f.write(syntax)
         f.close()
 
@@ -2032,7 +2032,7 @@ def process_buffer(text, node) :
 
 
 def process_include_file(node) :
-    with open(node.file_name) as file :
+    with open(node.file_name, errors="ignore") as file :
         pawnParse.start(file, node)
 
 
