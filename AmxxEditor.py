@@ -194,7 +194,7 @@ def attempt_to_install_file( target_directory, target_file, input_file_string ):
     # TypeError: 'str' does not support the buffer interface
     # https://stackoverflow.com/questions/5471158/typeerror-str-does-not-support-the-buffer-interface
     if not os.path.exists( target_file ):
-        text_file = open( target_file, "wb", errors="ignore" )
+        text_file = open( target_file, "wb" )
         text_file.write( bytes(input_file_string, 'UTF-8') )
         text_file.close()
 
