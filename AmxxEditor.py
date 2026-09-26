@@ -264,9 +264,9 @@ class AboutAmxxEditorCommand(sublime_plugin.WindowCommand):
 
 class AmxxBuildVerCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        region = self.view.find("^#define\s+(?:PLUGIN_)?VERSION\s+\".+\"", 0, sublime.IGNORECASE)
+        region = self.view.find(r"^#define\s+(?:PLUGIN_)?VERSION\s+\".+\"", 0, sublime.IGNORECASE)
         if region == None :
-            region = self.view.find("new\s+const\s+(?:PLUGIN_)?VERSION\s*\[\s*\]\s*=\s*\".+\"", 0, sublime.IGNORECASE)
+            region = self.view.find(r"new\s+const\s+(?:PLUGIN_)?VERSION\s*\[\s*\]\s*=\s*\".+\"", 0, sublime.IGNORECASE)
             if region == None :
                 return
 
@@ -728,6 +728,8 @@ def check_color_scope_setting():
 
     try:
         color_scheme = settings.get("color_scheme")
+        if not color_scheme or not color_scheme.endswith(".tmTheme"):
+            return
         xml_file = sublime.load_resource(color_scheme)
         xml_tree = ElementTree.fromstring(xml_file)
         xml_subtree = xml_tree.find("./dict/array")
@@ -828,7 +830,7 @@ def _on_settings_modified():
     log(4, "g_include_dir: %s", g_include_dir)
     log(4, "g_add_paremeters: %s", g_add_paremeters)
 
-    for directory in g_include_dir:
+    for directory in g_include_dir.copy():
         g_file_observer.schedule( file_event_handler, directory, True )
 
     for window in sublime.windows():
@@ -912,7 +914,7 @@ def is_inside_sublime_package(file_path):
 def fix_path(settings, key) :
     org_path = settings.get(key)
 
-    if org_path is "${file_path}" :
+    if org_path == "${file_path}" :
         return
 
     path = os.path.normpath(org_path)
@@ -1092,7 +1094,7 @@ def get_file_name(view_file_name, base_file_name) :
     # True, if `base_file_name` is a include file name, instead of full file path
     if local_regex.search(base_file_name) == None:
 
-        for directory in g_include_dir:
+        for directory in g_include_dir.copy():
             file_name = os.path.join(directory, base_file_name + '.inc')
 
             if os.path.exists(file_name):
@@ -1281,7 +1283,7 @@ class PawnParse(object):
             constants += "|" + const
 
         syntax = "%YAML 1.2\n---\nscope: source.sma\nhidden: true\ncontexts:\n  main:\n    - match: \\b(" \
-                + constants + ")\\b\s*(?!\()\n      scope: constant.vars.pawn\n\n"
+                + constants + ")\\b\\s*(?!\\()\n      scope: constant.vars.pawn\n\n"
 
         file_name = os.path.join(sublime.packages_path(), CURRENT_PACKAGE_NAME, "AmxxEditorConsts.sublime-syntax")
 
