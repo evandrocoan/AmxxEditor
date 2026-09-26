@@ -718,38 +718,62 @@ def is_amxmodx_file(view) :
     return view.match_selector(0, 'source.sma')
 
 
+def _color_scheme_has_scope(color_scheme, scope):
+    if color_scheme.endswith(".tmTheme"):
+        xml_tree = ElementTree.fromstring(sublime.load_resource(color_scheme))
+        xml_subtree = xml_tree.find("./dict/array")
+        if xml_subtree is None:
+            return False
+
+        for rule in xml_subtree:
+            values = list(rule)
+            for index in range(0, len(values) - 1, 2):
+                if values[index].tag == "key" and values[index].text == "scope":
+                    selector = values[index + 1].text
+                    if selector and sublime.score_selector(scope, selector) > 0:
+                        return True
+
+    elif color_scheme.endswith(".sublime-color-scheme"):
+        # Sublime merges rules from resources with the same file name.
+        filename = color_scheme.rsplit("/", 1)[-1]
+        resources = sublime.find_resources(filename)
+        if color_scheme not in resources:
+            resources.append(color_scheme)
+
+        for resource in resources:
+            data = sublime.decode_value(sublime.load_resource(resource))
+            if not isinstance(data, dict):
+                continue
+
+            for rule in data.get("rules", []):
+                if not isinstance(rule, dict):
+                    continue
+                selector = rule.get("scope")
+                if isinstance(selector, str) and sublime.score_selector(scope, selector) > 0:
+                    return True
+
+    return False
+
+
 def check_color_scope_setting():
-    """ https://stackoverflow.com/questions/45734287/list-of-colors-for-highlightwords-sublime-plugin """
     global g_enable_inteltip_color
-    found_scope = False
+
+    if not g_enable_inteltip_color:
+        return
 
     active_window = sublime.active_window()
-    settings = active_window.active_view().settings()
+    if active_window is None:
+        return
+    active_view = active_window.active_view()
+    if active_view is None:
+        return
 
     try:
-        color_scheme = settings.get("color_scheme")
-        if not color_scheme or not color_scheme.endswith(".tmTheme"):
+        color_scheme = active_view.settings().get("color_scheme")
+        if not color_scheme or not color_scheme.endswith((".tmTheme", ".sublime-color-scheme")):
             return
-        xml_file = sublime.load_resource(color_scheme)
-        xml_tree = ElementTree.fromstring(xml_file)
-        xml_subtree = xml_tree.find("./dict/array")
-
-        if xml_subtree is None:
-            print("No color scheme xml_subtree found")
-            return
-
-        for child in xml_subtree:
-
-            for i in range(0, len(child), 2):
-
-                if child[i].tag == "key" and child[i].text == "scope":
-
-                    if g_enable_inteltip_color in child[i + 1].text:
-                        found_scope = True
-
-        if not found_scope:
+        if not _color_scheme_has_scope(color_scheme, g_enable_inteltip_color):
             g_enable_inteltip_color = ""
-
     except Exception as error:
         print("Error loading color scheme", error)
 
